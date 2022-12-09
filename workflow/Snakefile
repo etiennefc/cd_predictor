@@ -1,0 +1,23 @@
+import os
+
+configfile: "../config/config.json"
+
+include: "rules/common.smk"
+include: "rules/downloads.smk"
+include: "rules/sno_literature_processing.smk"
+include: "rules/sno_tgirt_seq_processing.smk"
+include: "rules/sno_families.smk"
+
+rule all:
+    input:
+        df = 'data/references/infernal/sno_families_filtered.tsv'
+
+
+rule all_downloads:
+    input:
+        blat_installation_file = "data/blat_test.txt",
+        genome = expand('data/references/genome_fa/{species}_genome.fa', **config)
+
+
+
+

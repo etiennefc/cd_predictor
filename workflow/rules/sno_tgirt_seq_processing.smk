@@ -1,0 +1,31 @@
+### T. thermophila and S. pombe TGIRT-Seq datasets are 
+### kept as external validation datasets 
+
+rule get_expressed_snoRNAs_location:
+    """ From the snoRNAs with TGIRT-Seq (human, mouse and 
+        S. cerevisiae), separate the snoRNAs that are 
+        expressed (> 1 TPM in at least one average sample) 
+        from those that are not expressed (snoRNA 
+        pseudogenes in the case of human snoRNAs). The snoRNA 
+        type info comes from snoDB for human (legacy version), 
+        rnacentral (for mouse from the Abundance determinants
+        paper) and from the UMass yeast snoRNA database 
+        (Samarksy et al., NAR, 1999). Then, get their 
+        location/sequence from their respective gtf"""
+    input: 
+        tpm_df = 'data/references/tgirt_seq_output/{species}_merged_tpm_w_biotype.tsv',  # TO DO:  Add these datasets on Zenodo
+        sno_type_df = lambda wildcards: config['sno_type_df'][wildcards.species],  # # TO DO:  Add to Zenodo
+        gtf = get_species_gtf,
+        genome = get_species_genome
+    output: 
+        expressed_sno_df = 'data/references/tgirt_seq_output/{species}_expressed_snoRNAs.tsv'
+    params:
+        human_pseudosno = 'data/references/tgirt_seq_output/homo_sapiens_pseudogene_snoRNAs.tsv'
+    wildcard_constraints:
+        species=join_list(config['species'], ["homo_sapiens", "mus_musculus", 
+                "saccharomyces_cerevisiae"])
+    conda:
+        "../envs/python_new.yaml"
+    script: 
+        "../scripts/python/get_expressed_snoRNAs.py"
+

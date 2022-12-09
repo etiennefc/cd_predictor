@@ -1,0 +1,14 @@
+__default__:
+    job-name: "SM.{rule}"
+    nodes: 1
+    cpus-per-task: 1
+    mem: 4G
+    time: 0-2:30:00
+    mail-user: "etienne.fafard-couture@usherbrooke.ca"
+    mail-type: FAIL
+
+trimming:
+    cpus-per-task: 4
+    mem: 16G
+    time: 0-4:00:00
+

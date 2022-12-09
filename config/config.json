@@ -1,0 +1,142 @@
+{
+  "species": ["macaca_mulatta", "tetrahymena_thermophila", "ornithorhynchus_anatinus", "gallus_gallus", 
+              "caenorhabditis_elegans", "drosophila_melanogaster", "leishmania_major", 
+              "dictyostelium_discoideum", "giardia_lamblia", "arabidopsis_thaliana", "oryza_sativa", 
+              "ostreococcus_tauri"],
+  "sno_fasta": ["macaca_mulatta_cd_Zhang_2010", "tetrahymena_thermophila_cd_Andersen_2012", 
+              "ornithorhynchus_anatinus_cd_Schmitz_2008", "gallus_gallus_cd_Shao_2009", 
+              "caenorhabditis_elegans_cd_Zemann_2006", "drosophila_melanogaster_cd_Huang_2005", 
+              "leishmania_major_cd_Liang_2007", "dictyostelium_discoideum_cd_Aspegren_2004", 
+              "giardia_lamblia_cd_Yang_2005", "arabidopsis_thaliana_cd_Barneche_2001", 
+              "arabidopsis_thaliana_cd_Chen_2009", "oryza_sativa_cd_Chen_2003", 
+              "ostreococcus_tauri_cd_Bousquet_2020"],
+  "species_tgirt": ["homo_sapiens", "mus_musculus", "tetrahymena_thermophila", 
+                  "saccharomyces_cerevisiae", "schizosaccharomyces_cerevisiae"],
+  "dataset_attributes": 
+  {
+    "macaca_mulatta_cd_Zhang_2010": 
+    {
+      "genome_version": "Mmul_10",
+      "species_name": "M_mulatta",
+      "species_classification": "Animal",
+      "validation_method": "cDNA_library;Northern_blot;Infernal;SnoReport",
+      "article": "Zhang_et_al_BMC_Genomics_2010"
+    },
+    "tetrahymena_thermophila_cd_Andersen_2012": 
+    {
+      "genome_version": "TGD_2020",
+      "species_name": "T_thermophila",
+      "species_classification": "Protist",
+      "validation_method": "cDNA_library;Infernal",
+      "article": "Andersen_et_al_NAR_2012"
+    },
+    "ornithorhynchus_anatinus_cd_Schmitz_2008": 
+    {
+      "genome_version": "OrnAna1",
+      "species_name": "O_anatinus",
+      "species_classification": "Animal",
+      "validation_method": "cDNA_library;Manual_annotation",
+      "article": "Schmitz_et_al_NAR_2008"
+    },
+    "gallus_gallus_cd_Shao_2009": 
+    {
+      "genome_version": "GRCg7b",
+      "species_name": "G_gallus",
+      "species_classification": "Animal",
+      "validation_method": "cDNA_library;RT-PCR;snoSeeker",
+      "article": "Shao_et_al_BMC_Genomics_2009"
+    },
+    "caenorhabditis_elegans_cd_Zemann_2006": 
+    {
+      "genome_version": "WBcel235",
+      "species_name": "C_elegans",
+      "species_classification": "Animal",
+      "validation_method": "cDNA_library;Northern_blot;Manual_annotation",
+      "article": "Zemann_et_al_NAR_2006"
+    },
+    "drosophila_melanogaster_cd_Huang_2005": 
+    {
+      "genome_version": "BDGP6.32",
+      "species_name": "D_melanogaster",
+      "species_classification": "Animal",
+      "validation_method": "cDNA_library;Northern_blot;Manual_annotation",
+      "article": "Huang_et_al_RNA_2005"
+    },
+    "leishmania_major_cd_Liang_2007": 
+    {
+      "genome_version": "ASM272v2",
+      "species_name": "L_major",
+      "species_classification": "Protist",
+      "validation_method": "sequence_alignment;Northern_blot;Manual_annotation",
+      "article": "Liang_et_al_Eukaryotic_Cell_2007"
+    },
+    "dictyostelium_discoideum_cd_Aspegren_2004": 
+    {
+      "genome_version": "dicty_2.7",
+      "species_name": "D_discoideum",
+      "species_classification": "Protist",
+      "validation_method": "cDNA_library;Northern_blot;Manual_annotation",
+      "article": "Aspegren_et_al_NAR_2004"
+    },
+    "giardia_lamblia_cd_Yang_2005": 
+    {
+      "genome_version": "GL2",
+      "species_name": "G_lamblia",
+      "species_classification": "Protist",
+      "validation_method": "cDNA_library;Northern_blot;Manual_annotation",
+      "article": "Yang_et_al_BBRC_2005"
+    },
+    "arabidopsis_thaliana_cd_Barneche_2001": 
+    {
+      "genome_version": "TAIR10",
+      "species_name": "A_thaliana",
+      "species_classification": "Plant",
+      "validation_method": "snoRNA_prediction;Primer_extension",
+      "article": "Barneche_et_al_JMB_2001"
+    },
+    "arabidopsis_thaliana_cd_Chen_2009": 
+    {
+      "genome_version": "TAIR10",
+      "species_name": "A_thaliana",
+      "species_classification": "Plant",
+      "validation_method": "small_RNA_seq_reanalysis;Northern_blot;Manual_annotation",
+      "article": "Chen_et_al_NAR_2009"
+    },
+    "oryza_sativa_cd_Chen_2003": 
+    {
+      "genome_version": "IRGSP-1.0",
+      "species_name": "O_sativa",
+      "species_classification": "Plant",
+      "validation_method": "cDNA_library;snoRNA_prediction",
+      "article": "Chen_et_al_NAR_2003"
+    },
+    "ostreococcus_tauri_cd_Bousquet_2020": 
+    {
+      "genome_version": "version_140606",
+      "species_name": "O_tauri",
+      "species_classification": "Plant",
+      "validation_method": "mncRNA-Seq;Northern_blot",
+      "article": "Bousquet_et_al_NARGAB_2020"
+    }
+  },
+  "sno_type_df": 
+  {
+    "homo_sapiens": "data/references/sno_type_df/homo_sapiens_snotype_snoDB.tsv",
+    "mus_musculus": "data/references/sno_type_df/mus_musculus_snotype_rnacentral.tsv",
+    "saccharomyces_cerevisiae": "data/references/sno_type_df/saccharomyces_cerevisiae_snotype_umass.tsv"
+  },
+  "path":
+  {
+    "genome_v101": ""
+  },
+  "download":
+  {
+    "libpng": "http://downloads.sourceforge.net/project/libpng/libpng16/older-releases/1.6.2/libpng-1.6.2.tar.gz",
+    "blat": "http://users.soe.ucsc.edu/~kent/src/blatSrc35.zip",
+    "rfam_cm": "ftp://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz",
+    "t_thermophila_genome": "https://zenodo.org/record/7335173/files/t_thermophila_genome.fa",
+    "o_tauri_genome": "https://zenodo.org/record/7361719/files/ostreococcus_tauri_genome.fa",
+    "human_gtf": "https://zenodo.org/record/6799536/files/hg38_Ensembl_V101_Scottlab_2020.gtf",
+    "mouse_gtf": "https://ftp.ensembl.org/pub/release-108/gtf/mus_musculus/Mus_musculus.GRCm39.108.gtf.gz"
+  }
+}
