@@ -10,7 +10,7 @@ include: "rules/sno_families.smk"
 
 rule all:
     input:
-        df = 'data/references/infernal/sno_families_filtered.tsv'
+        df = 'data/references/infernal/cd_rfam_filtered_tuning_set.tsv'
 
 
 rule all_downloads:

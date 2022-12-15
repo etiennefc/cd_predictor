@@ -76,7 +76,8 @@ for i in range(0, len(sno_df)):
                 expressed_sno.append(str(temp_df.loc[i, 'gene_id']))
                 break
 
-# Get sno location and sequence
+# Get species, sno location and sequence
+sno_df['species_name'] = str(snakemake.wildcards.species)
 sno_df = sno_df.merge(sno_gtf[['seqname', 'strand', 'start', 'end', 'gene_id']], how='left', on='gene_id')
 sno_df = sno_df.rename(columns={'seqname': 'chr'})
 sno_df['sequence'] = sno_df['gene_id'].map(d)
