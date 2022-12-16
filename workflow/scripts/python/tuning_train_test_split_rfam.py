@@ -82,9 +82,11 @@ for id, df in sno_big_families.items():
                     sno_ids.append(sno_id)
                     i += 1
         j += 1
+    
     # Create list of 1 df from appended sno rows
     sno_rows_df_list = [pd.DataFrame((sno_rows), 
-                        columns=['gene_id', 'sequence', 'rfam_family_id', 'species_name'])]
+                        columns=['gene_id', 'chr', 'strand', 'start', 'end', 
+                                'sequence', 'rfam_family_id', 'species_name'])]
     # Complete with randomly chosen snoRNAs if 10 snoRNAs are not already chosen per family
     if remaining > 0:
         remaining_rows = temp_df[~temp_df['gene_id'].isin(sno_ids)].sample(n=remaining,

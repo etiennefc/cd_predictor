@@ -7,7 +7,7 @@ rule get_sno_sequences:
                     species=['homo_sapiens', 'mus_musculus', 'saccharomyces_cerevisiae'])
     output:
         fa = 'data/references/all_expressed_cd_sequences.fa',
-        df = 'data/references/all_expressed_cd_sequences.tsv'
+        df = 'data/references/all_expressed_cd_sequences_location.tsv'
     conda:
         "../envs/python_new.yaml"
     script:
