@@ -4,6 +4,8 @@ import numpy as np
 import itertools as it
 from pybedtools import BedTool
 import subprocess as sp
+
+extension = snakemake.params.extension
 cols = ['match', 'mismatch', 'rep_match', 'Ns', 'query_gap_count', 'query_gap_bases',
         'target_gap_count', 'target_gap_bases', 'strand', 'gene_name', 'query_size',
         'query_start', 'query_end', 'chr', 'target_size', 'start', 'end', 'block_count', 
@@ -118,6 +120,28 @@ final_df['sequence'] = final_df['gene_name'].map(seq_dict)
 # Remove offset of 1 nt created by bedtools when converting to bed
 final_df['start'] = final_df['start'] + 1
 
+# Create an extended_sequence by adding 15 nt up- and downstream of each snoRNA
+tempo_df = final_df.copy()
+tempo_df[['dot1', 'dot2', 'source', 'feature']] = '.', '.', 'ensembl', 'gene'
+tempo_df[['chr', 'start', 'end', 'gene_id', 'dot1', 'strand', 'source', 
+        'feature', 'dot2', 'gene_name']].to_csv('temp_cd_'+snakemake.wildcards.sno_fasta+'.tsv', 
+                                                sep='\t', index=False, header=False)
+cd_bed = BedTool('temp_cd_'+snakemake.wildcards.sno_fasta+'.tsv')
+extended_cd = cd_bed.slop(g=snakemake.input.chr_size, l=extension+1, r=extension)
+sequences = extended_cd.sequence(fi=snakemake.input.genome, s=True, nameOnly=True)
+extended_seq_dict = {}
+with open(sequences.seqfn, 'r') as f:
+    for line in f:
+        if '>' in line:
+            cd_id = line.replace('\n', '').replace('>', '').replace('(+)', '').replace('(-)', '')
+        else:
+            seq_ = line.replace('\n', '')
+            extended_seq_dict[cd_id] = seq_
+final_df['extended_sequence'] = final_df['gene_id'].map(extended_seq_dict)
+
+
 sp.call('rm temp_sno_bed_seq_'+snakemake.wildcards.sno_fasta, shell=True)
+sp.call('rm temp_cd_'+snakemake.wildcards.sno_fasta+'.tsv', shell=True)
+
 
 final_df.to_csv(snakemake.output.df, sep='\t', index=False)

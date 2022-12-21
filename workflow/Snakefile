@@ -10,6 +10,8 @@ include: "rules/sno_families.smk"
 
 rule all:
     input:
+        #df = expand('data/sno_literature_processing/{sno_fasta}_location_formated.tsv', **config),
+        #dd = expand('data/references/tgirt_seq_output/{species}_expressed_snoRNAs.tsv', species=config['species_tgirt'])
         df = 'data/references/infernal/cd_rfam_filtered_tuning_set.tsv'
 
 

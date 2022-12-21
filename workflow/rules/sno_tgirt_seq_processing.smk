@@ -1,6 +1,20 @@
 ### T. thermophila and S. pombe TGIRT-Seq datasets are 
 ### kept as external validation datasets 
 
+rule get_chr_size_tgirt:
+    """ Get the chr size from genome fasta. Species is defined in 
+        sno_families.smk in the inputs of rule get_sno_sequences."""
+    input:
+        genome = get_species_genome
+    output:
+        chr_size = 'data/references/chr_size/{species}_chr_size.tsv'
+    conda:
+        "../envs/samtools.yaml"
+    shell:
+        "samtools faidx {input.genome} --fai-idx {wildcards.species}_temp.fai && "
+        "cut -f1,2 {wildcards.species}_temp.fai > {output.chr_size} && "
+        "rm {wildcards.species}_temp.fai"
+
 rule get_expressed_snoRNAs_location:
     """ From the snoRNAs with TGIRT-Seq (human, mouse and 
         S. cerevisiae), separate the snoRNAs that are 
@@ -16,11 +30,13 @@ rule get_expressed_snoRNAs_location:
         tpm_df = 'data/references/tgirt_seq_output/{species}_merged_tpm_w_biotype.tsv',  # TO DO:  Add these datasets on Zenodo
         sno_type_df = lambda wildcards: config['sno_type_df'][wildcards.species],  # # TO DO:  Add to Zenodo
         gtf = get_species_gtf,
-        genome = get_species_genome
+        genome = get_species_genome,
+        chr_size = rules.get_chr_size_tgirt.output.chr_size
     output: 
         expressed_sno_df = 'data/references/tgirt_seq_output/{species}_expressed_snoRNAs.tsv'
     params:
-        human_pseudosno = 'data/references/tgirt_seq_output/homo_sapiens_pseudogene_snoRNAs.tsv'
+        human_pseudosno = 'data/references/tgirt_seq_output/homo_sapiens_pseudogene_snoRNAs.tsv',
+        extension = 15
     wildcard_constraints:
         species=join_list(config['species'], ["homo_sapiens", "mus_musculus", 
                 "saccharomyces_cerevisiae"])

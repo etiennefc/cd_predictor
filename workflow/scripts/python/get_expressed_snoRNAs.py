@@ -13,13 +13,14 @@ sno_type_df = pd.read_csv(snakemake.input.sno_type_df, sep='\t')
 gtf = read_gtf(snakemake.input.gtf)
 genome = snakemake.input.genome
 species = str(snakemake.wildcards.species)
-
+extension = snakemake.params.extension
 
 # Create bed of all snoRNAs from the gtf
 sno_gtf = gtf[(gtf['feature'] == 'gene') & (gtf['gene_biotype'] == 'snoRNA')]
 sno_gtf['dot'], sno_gtf['dot2'] = '.', '.'
 bed = sno_gtf[['seqname', 'start', 'end', 'gene_id', 'dot', 
                     'strand', 'source', 'feature', 'dot2', 'gene_biotype']]
+bed['start'] = bed['start'] - 1  # tweak because bed is 0 based whereas gtf is 1-based
 bed.to_csv(f'sno_bed_temp_{species}.tsv', sep='\t', index=False, header=False)
 sno_bed = BedTool(f'sno_bed_temp_{species}.tsv')
 
@@ -81,6 +82,19 @@ sno_df['species_name'] = str(snakemake.wildcards.species)
 sno_df = sno_df.merge(sno_gtf[['seqname', 'strand', 'start', 'end', 'gene_id']], how='left', on='gene_id')
 sno_df = sno_df.rename(columns={'seqname': 'chr'})
 sno_df['sequence'] = sno_df['gene_id'].map(d)
+
+# Get sno extended sequence (15 nt up- and downstream of the sno)
+extended_sno = sno_bed.slop(g=snakemake.input.chr_size, r=extension, l=extension)
+sequences_sno = extended_sno.sequence(fi=snakemake.input.genome, s=True, nameOnly=True)
+extended_seq_dict = {}
+with open(sequences_sno.seqfn, 'r') as f:
+    for line in f:
+        if '>' in line:
+            cd_id = line.replace('\n', '').replace('>', '').replace('(+)', '').replace('(-)', '')
+        else:
+            seq_ = line.replace('\n', '')
+            extended_seq_dict[cd_id] = seq_
+sno_df['extended_sequence'] = sno_df['gene_id'].map(extended_seq_dict)
 
 # Select only expressed snoRNAs
 expressed_sno_df = sno_df[sno_df['gene_id'].isin(expressed_sno)]

@@ -1,6 +1,6 @@
 rule get_sno_sequences:
     """ Get all expressed C/D snoRNA sequences (from the literature and 
-        TGIRT-seq) in a fasta file."""
+        TGIRT-seq) regrouped in a fasta file."""
     input:
         sno_literature = rules.merge_sno_location_species.output.df,
         sno_tgirt = expand(rules.get_expressed_snoRNAs_location.output.expressed_sno_df, 
@@ -30,7 +30,6 @@ rule infernal:
         "cmscan --cut_ga --rfam --nohmmonly -o {output.infernal_alignments} "
         "--tblout {output.infernal_tblout} {input.rfam_cm} {input.sno_fasta}"
 
-# DON'T FORGET snoRNAs with no Rfam family
 rule filter_infernal:
     """ Filter infernal output to return the Rfam family id per snoRNA."""
     input:
@@ -63,20 +62,4 @@ rule tuning_train_test_split_rfam:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/tuning_train_test_split_rfam.py"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -1,3 +1,16 @@
+rule get_chr_size_literature:
+    """ Get the chr size from genome fasta."""
+    input:
+        genome = get_species_genome
+    output:
+        chr_size = 'data/references/chr_size/{sno_fasta}_chr_size.tsv'
+    conda:
+        "../envs/samtools.yaml"
+    shell:
+        "samtools faidx {input.genome} --fai-idx {wildcards.sno_fasta}_temp.fai && "
+        "cut -f1,2 {wildcards.sno_fasta}_temp.fai > {output.chr_size} && "
+        "rm {wildcards.sno_fasta}_temp.fai"
+
 rule blat_sno_genome:
     """ Get the genomic location of a given snoRNA sequence 
         in a given species genome using BLAT (expressed C/D box 
@@ -22,11 +35,13 @@ rule format_blat_output:
         and potential mismatches mainly)."""
     input:
         blat = rules.blat_sno_genome.output.sno_location,
-        genome = get_species_genome
+        genome = get_species_genome,
+        chr_size = rules.get_chr_size_literature.output.chr_size
     output:
         df = 'data/sno_literature_processing/{sno_fasta}_location_formated.tsv'
     params:
-        dataset_attribute = lambda wildcards: config['dataset_attributes'][wildcards.sno_fasta]
+        dataset_attribute = lambda wildcards: config['dataset_attributes'][wildcards.sno_fasta],
+        extension = 15
     conda:
         "../envs/python_new.yaml"
     script:
