@@ -8,6 +8,9 @@ rule get_chr_size_tgirt:
         genome = get_species_genome
     output:
         chr_size = 'data/references/chr_size/{species}_chr_size.tsv'
+    wildcard_constraints:
+        species = join_list(config['species_tgirt'], ["homo_sapiens", "mus_musculus", 
+                "saccharomyces_cerevisiae"])
     conda:
         "../envs/samtools.yaml"
     shell:

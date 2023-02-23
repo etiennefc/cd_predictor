@@ -4,22 +4,12 @@ rule download_blat:
         (in fasta). Must enter sudo password at 
         a given point in the download."""
     output:
-        tmp_file = "data/blat_test.txt"
+        tmp_file = "data/references/blat/blat_test.txt"
     params:
-        libpng = config['download']['libpng'],
         blat = config['download']['blat']
     shell:
-        "cd data/references/ && wget {params.libpng} && "
-        "tar -xvzf libpng-1.6.2.tar.gz && cd libpng-1.6.2/ && "
-        "./configure --prefix=`pwd` && make && "
-        "sudo make install && LIBPNGDIR=`pwd` && cd ../ && "
-        "wget {params.blat} && unzip blatSrc35.zip && cd blatSrc/ && "
-        "cp $LIBPNGDIR/png.h lib/ && cp $LIBPNGDIR/pngconf.h lib/ && "
-        "cp $LIBPNGDIR/pnglibconf.h lib/ && echo $MACHTYPE && "
-        "MACHTYPE=x86_64 && export MACHTYPE && mkdir -p ~/bin/$MACHTYPE && "
-        "make && echo 'export MACHTYPE=x86_64' >> ~/.bashrc && "
-        "echo 'export PATH=$PATH:~/bin/$MACHTYPE/blat' >> ~/.bashrc && "
-        "source ~/.bashrc && cd ../../../ && touch {output.tmp_file}"
+        "mkdir -p ./data/references/blat/ && "
+        "rsync -aP {params.blat} ./data/references/blat/ &> {output.tmp_file}"
 
 rule download_rfam_covariance_models:
     """ Download the Rfam library of covariance models that 
@@ -155,3 +145,50 @@ rule download_human_gtf:
     shell:
         "wget -O {output.gtf} {params.link} && "
         "sed -i 's/[\t]$//g' {output.gtf}"
+
+rule download_rnacentral_ncRNA:
+    """ Download rnacentral bed file of all ncRNAs per species 
+        (will be useful for tRNAs, snRNAs and pre-miRNA). 
+        **Ostreococcus tauri is not present in rnacentral """
+    output:
+        bed = 'data/references/rnacentral/{species}.bed'
+    wildcard_constraints:
+        species=join_list(config['species']+config['species_tgirt'], 
+                ["ostreococcus_tauri", "schizosaccharomyces_pombe"], remove=True)
+    params:
+        link = config['download']['rnacentral'] 
+    shell:
+        "wget -O temp_rnacentral_{wildcards.species}.gz {params.link}{wildcards.species}*.bed.gz && "
+        "gunzip temp_rnacentral_{wildcards.species}.gz && "
+        "mv temp_rnacentral_{wildcards.species} {output.bed}"
+
+rule download_gallus_gallus_gff:
+    """ Download from rnacentral the latest version of Gallus gallus gff (bGalGal1/GRCg7b) to 
+        convert the location of the old version (which is used in RNAcentral)"""
+    output:
+        gff = "data/references/rnacentral/gallus_gallus_bGalGal1_GRCg7b.gff3"  
+    params:
+        link = config['download']['gallus_gallus_gff']
+    shell:
+        "wget -O gff_gallus.gz {params.link} && "
+        "gunzip gff_gallus.gz && mv gff_gallus {output.gff}"
+
+rule download_eukaryote_HACA_snoRNAs:
+    """ Download all H/ACA present in RNAcentral (v21) for all eukaryotes. It was done 
+        manually by searching for snoRNAs and then selecting H/ACA snoRNAs (89 489 sequences). 
+        ***Need to put that fasta on Zenodo for posterity***"""
+    output:
+        HACA_fa = 'data/references/HACA/HACA_eukaryotes.fa'  # to put on Zenodo
+    params:
+        link = config['download']['haca_rnacentral']
+    shell:
+        "wget -O {output.HACA_fa} {params.link}"
+
+rule download_eukaryote_tRNAs:
+    """ Download all tRNAs present in GtRNAdb (Release 20) for all eukaryotes"""
+    output:
+        tRNA_df = 'data/references/tRNA/tRNA_eukaryotes.tsv'  # to put on Zenodo
+    params:
+        link = 'http://gtrnadb.ucsc.edu/download/GtRNAdb/search/gtrnadb-search187174.out'  
+    shell:
+        "wget -O {output.tRNA_df} {params.link}"

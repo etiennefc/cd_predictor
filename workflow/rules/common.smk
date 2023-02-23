@@ -20,6 +20,14 @@ def get_species_genome(wildcards):
     return path
     print(path)
 
+def get_all_genomes(dir):
+    # Get all the fasta files of genomes in a given directory
+    return glob.glob(dir)
+
+def get_chr_size(species):
+    # Get the size of all chr of a given species
+    return glob.glob(f'data/references/chr_size/{species}*_chr_size.tsv')[0]
+
 def get_species_gtf(species):
     # Get the gtf of the genome of a given species
     species = str(species)

@@ -4,6 +4,8 @@ rule get_chr_size_literature:
         genome = get_species_genome
     output:
         chr_size = 'data/references/chr_size/{sno_fasta}_chr_size.tsv'
+    wildcard_constraints:
+        sno_fasta = join_list(config['sno_fasta'], config['sno_fasta'])
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -22,7 +24,7 @@ rule blat_sno_genome:
     output:
         sno_location = "data/sno_literature_processing/{sno_fasta}_location.psl"
     params:
-        blat_path = "~/bin/x86_64/blat"
+        blat_path = "data/references/blat/blat"
     shell:
         "{params.blat_path} {input.genome} {input.sno_sequences} "
         "{output.sno_location}"

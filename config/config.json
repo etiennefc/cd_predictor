@@ -11,7 +11,10 @@
               "arabidopsis_thaliana_cd_Chen_2009", "oryza_sativa_cd_Chen_2003", 
               "ostreococcus_tauri_cd_Bousquet_2020"],
   "species_tgirt": ["homo_sapiens", "mus_musculus", "tetrahymena_thermophila", 
-                  "saccharomyces_cerevisiae", "schizosaccharomyces_cerevisiae"],
+                  "saccharomyces_cerevisiae", "schizosaccharomyces_pombe"],
+  "missing_tRNA_species": ["ostreococcus_tauri", "giardia_lamblia", "dictyostelium_discoideum", 
+                            "gallus_gallus", "tetrahymena_thermophila", "macaca_mulatta", 
+                            "ornithorhynchus_anatinus"],
   "dataset_attributes": 
   {
     "macaca_mulatta_cd_Zhang_2010": 
@@ -117,6 +120,24 @@
       "species_classification": "Plant",
       "validation_method": "mncRNA-Seq;Northern_blot",
       "article": "Bousquet_et_al_NARGAB_2020"
+    },
+    "saccharomyces_cerevisiae_cd_TGIRT": 
+    {
+      "genome_version": "R64-1-1",
+      "species_name": "S_cerevisiae",
+      "species_classification": "Fungi"
+    },
+    "homo_sapiens_cd_TGIRT": 
+    {
+      "genome_version": "GRCh38",
+      "species_name": "H_sapiens",
+      "species_classification": "Animal"
+    },
+    "mus_musculus_cd_TGIRT": 
+    {
+      "genome_version": "GRCh39",
+      "species_name": "M_musculus",
+      "species_classification": "Animal"
     }
   },
   "sno_type_df": 
@@ -131,12 +152,14 @@
   },
   "download":
   {
-    "libpng": "http://downloads.sourceforge.net/project/libpng/libpng16/older-releases/1.6.2/libpng-1.6.2.tar.gz",
-    "blat": "http://users.soe.ucsc.edu/~kent/src/blatSrc35.zip",
+    "blat": "rsync://hgdownload.soe.ucsc.edu/genome/admin/exe/linux.x86_64/blat/",
     "rfam_cm": "ftp://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz",
     "t_thermophila_genome": "https://zenodo.org/record/7335173/files/t_thermophila_genome.fa",
     "o_tauri_genome": "https://zenodo.org/record/7361719/files/ostreococcus_tauri_genome.fa",
     "human_gtf": "https://zenodo.org/record/6799536/files/hg38_Ensembl_V101_Scottlab_2020.gtf",
-    "mouse_gtf": "https://ftp.ensembl.org/pub/release-108/gtf/mus_musculus/Mus_musculus.GRCm39.108.gtf.gz"
+    "mouse_gtf": "https://ftp.ensembl.org/pub/release-108/gtf/mus_musculus/Mus_musculus.GRCm39.108.gtf.gz",
+    "rnacentral": "ftp://ftp.ebi.ac.uk/pub/databases/RNAcentral/releases/21.0/genome_coordinates/bed/",
+    "gallus_gallus_gff": "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/releases/21.0/genome_coordinates/gff3/gallus_gallus.bGalGal1.mat.broiler.GRCg7b.gff3.gz",
+    "haca_rnacentral": "TO ADD ON ZENODO****"
   }
 }
