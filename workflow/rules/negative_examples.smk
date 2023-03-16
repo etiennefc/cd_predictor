@@ -149,15 +149,3 @@ rule select_random_intergenic_intronic_regions:
        # random_intronic_regions = rules.select_random_intergenic_intronic_regions.output.random_intronic_regions,
         #random_intergenic_regions = rules.select_random_intergenic_intronic_regions.output.random_intergenic_regions,
         #human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno
-
-rule predict_missing_tRNA:
-    """ Didn't use that rule***. Predict with tRNAscanSE tRNAs in 
-        eukaryotes not in Gtrnadb"""
-    input:
-        genome = 'data/references/genome_fa/{missing_tRNA_species}_genome.fa'
-    output:
-        predicted_tRNAs = 'data/references/predicted_tRNAs/{missing_tRNA_species}_predicted_tRNAs.tsv'
-    conda:
-        "../envs/trnascan_se.yaml"
-    shell:
-        "tRNAscan-SE {input.genome} -o {output.predicted_tRNAs}"
