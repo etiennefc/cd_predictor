@@ -55,7 +55,8 @@ rule tuning_train_test_split_rfam:
     output:
         tuning = 'data/references/infernal/cd_rfam_filtered_tuning_set.tsv',
         training = 'data/references/infernal/cd_rfam_filtered_training_set.tsv',
-        test = 'data/references/infernal/cd_rfam_filtered_test_set.tsv'
+        test = 'data/references/infernal/cd_rfam_filtered_test_set.tsv',
+        all_positives = 'data/references/positives/cd_rfam_filtered_all.tsv'
     params:
         random_seed = 42
     conda:

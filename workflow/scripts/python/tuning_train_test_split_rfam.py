@@ -175,6 +175,13 @@ final_tuning.to_csv(snakemake.output.tuning, sep='\t', index=False)
 final_train.to_csv(snakemake.output.training, sep='\t', index=False)
 final_test.to_csv(snakemake.output.test, sep='\t', index=False)
 
+# Concat all in a df
+final_tuning['dataset'] = 'Tuning'
+final_train['dataset'] = 'Training'
+final_test['dataset'] = 'Test'
+final_all = pd.concat([final_tuning, final_train, final_test])
+final_all.to_csv(snakemake.output.all_positives, sep='\t', index=False)
+
 
 
 

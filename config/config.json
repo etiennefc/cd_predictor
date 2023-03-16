@@ -15,6 +15,24 @@
   "missing_tRNA_species": ["ostreococcus_tauri", "giardia_lamblia", "dictyostelium_discoideum", 
                             "gallus_gallus", "tetrahymena_thermophila", "macaca_mulatta", 
                             "ornithorhynchus_anatinus"],
+  "species_short_name":
+  {
+    "O_anatinus": "ornithorhynchus_anatinus",
+    "M_musculus": "mus_musculus",
+    "H_sapiens": "homo_sapiens",
+    "M_mulatta": "macaca_mulatta",
+    "A_thaliana": "arabidopsis_thaliana",
+    "O_sativa": "oryza_sativa",
+    "C_elegans": "caenorhabditis_elegans",
+    "L_major": "leishmania_major",
+    "G_gallus": "gallus_gallus",
+    "D_melanogaster": "drosophila_melanogaster", 
+    "S_cerevisiae": "saccharomyces_cerevisiae",
+    "T_thermophila": "tetrahymena_thermophila",
+    "G_lamblia": "giardia_lamblia",
+    "D_discoideum": "dictyostelium_discoideum",
+    "O_tauri": "ostreococcus_tauri"
+  },
   "dataset_attributes": 
   {
     "macaca_mulatta_cd_Zhang_2010": 
@@ -158,6 +176,7 @@
     "o_tauri_genome": "https://zenodo.org/record/7361719/files/ostreococcus_tauri_genome.fa",
     "human_gtf": "https://zenodo.org/record/6799536/files/hg38_Ensembl_V101_Scottlab_2020.gtf",
     "mouse_gtf": "https://ftp.ensembl.org/pub/release-108/gtf/mus_musculus/Mus_musculus.GRCm39.108.gtf.gz",
+    "tetrahymena_gtf": "https://zenodo.org/record/6391187/files/t_thermophila_complete_2021.gtf",
     "rnacentral": "ftp://ftp.ebi.ac.uk/pub/databases/RNAcentral/releases/21.0/genome_coordinates/bed/",
     "gallus_gallus_gff": "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/releases/21.0/genome_coordinates/gff3/gallus_gallus.bGalGal1.mat.broiler.GRCg7b.gff3.gz",
     "haca_rnacentral": "TO ADD ON ZENODO****"

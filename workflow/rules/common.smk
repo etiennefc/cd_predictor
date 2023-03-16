@@ -31,12 +31,24 @@ def get_chr_size(species):
 def get_species_gtf(species):
     # Get the gtf of the genome of a given species
     species = str(species)
+    protists = ["leishmania_major", "dictyostelium_discoideum", "giardia_lamblia"]
+    animals = ['macaca_mulatta', 'ornithorhynchus_anatinus', 'gallus_gallus', 
+                'caenorhabditis_elegans', 'drosophila_melanogaster']
+    plants = ['arabidopsis_thaliana', 'oryza_sativa']
     if 'saccharomyces' in species:
         path = rules.download_yeast_gtf.output.gtf
     elif species == 'homo_sapiens':
         path = rules.download_human_gtf.output.gtf
     elif species == 'mus_musculus':
         path = rules.download_mouse_gtf.output.gtf
+    elif species == 'tetrahymena_thermophila':
+        path = rules.download_tetrahymena_gtf.output.gtf
+    elif species in protists:
+        path = rules.download_protist_gtf.output.gtf
+    elif species in plants:
+        path = rules.download_plant_gtf.output.gtf
+    elif species in animals:
+        path = rules.download_animal_gtf.output.gtf
     return path
 
 def join_list(l, subl, remove=False):

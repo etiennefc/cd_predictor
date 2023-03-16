@@ -12,14 +12,10 @@ include: "rules/negative_examples.smk"
 
 rule all:
     input:
-        df = 'data/references/infernal/cd_rfam_filtered_tuning_set.tsv',
         shuffled_sno = 'data/references/negatives/shuffle_sno/random_shuffle_all_expressed_cd.tsv',
-        #random_ncRNA = 'data/references/negatives/random_ncRNA/random_ncRNA.tsv',
-        rnacentral_filtered_df = 'data/references/rnacentral/filtered_tRNA_snRNA_pre_miRNA.tsv',
-        df_haca = expand("data/references/HACA/{species}_HACA_location_formated.tsv", species=[sp for sp in 
-                    config['species'] + config['species_tgirt'] if sp not in 
-                    ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 'tetrahymena_thermophila']])
-
+        intronic_regions_bed = expand('data/references/negatives/random_regions/selected_intronic_regions_{species}.bed', 
+                                        species=[sp for sp in config['species']+config['species_tgirt'] 
+                                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']])
 
 rule all_downloads:
     input:
@@ -28,7 +24,10 @@ rule all_downloads:
         bed = expand('data/references/rnacentral/{species}.bed', 
                 species=[sp for sp in config['species']+config['species_tgirt'] 
                         if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']]),
-        gallus_gallus_gff = "data/references/rnacentral/gallus_gallus_bGalGal1_GRCg7b.gff3"
+        gallus_gallus_gff = "data/references/rnacentral/gallus_gallus_bGalGal1_GRCg7b.gff3",
+        gtf = expand('data/references/gtf/{species}.gtf', species=[sp for sp in 
+                        config['species']+config['species_tgirt'] if sp not in 
+                        ['ostreococcus_tauri', 'schizosaccharomyces_pombe']])
 
 
 

@@ -146,6 +146,60 @@ rule download_human_gtf:
         "wget -O {output.gtf} {params.link} && "
         "sed -i 's/[\t]$//g' {output.gtf}"
 
+rule download_tetrahymena_gtf:
+    """ Download gtf of Tetrahymena thermophila genome from Zenodo. Remove trailing tabs."""
+    output:
+        gtf = 'data/references/gtf/tetrahymena_thermophila.gtf'
+    params:
+        link = config['download']['tetrahymena_gtf']
+    shell:
+        "wget -O {output.gtf} {params.link} && "
+        "sed -i 's/[\t]$//g' {output.gtf}"
+
+rule download_protist_gtf:
+    """ Download the annotation (gtf) of different protists 
+        from ENSEMBL ftp servers."""
+    output:
+        gtf = 'data/references/gtf/{species}.gtf'
+    wildcard_constraints:
+        species=join_list(config['species'], ["leishmania_major", 
+              "dictyostelium_discoideum", "giardia_lamblia"])
+    params:
+        link = "ftp://ftp.ensemblgenomes.org/pub/protists/release-55/gtf/{species}/*[^chr].gtf.gz"
+    shell:
+        "wget -O temp.gz {params.link} && "
+        "gunzip temp.gz && "
+        "mv temp {output.gtf}"
+    
+rule download_plant_gtf:
+    """ Download the annotation (gtf) of different plants
+        from ENSEMBL ftp servers."""
+    output:
+        gtf = 'data/references/gtf/{species}.gtf'
+    wildcard_constraints:
+        species=join_list(config['species'], ["oryza_sativa", "arabidopsis_thaliana"])
+    params:
+        link = "ftp://ftp.ensemblgenomes.org/pub/plants/release-55/gtf/{species}/*[^chr].gtf.gz"
+    shell:
+        "wget -O temp.gz {params.link} && "
+        "gunzip temp.gz && "
+        "mv temp {output.gtf}"
+
+rule download_animal_gtf:
+    """ Download the annotation (gtf) of different animals
+        from ENSEMBL ftp servers."""
+    output:
+        gtf = 'data/references/gtf/{species}.gtf'
+    wildcard_constraints:
+        species=join_list(config['species'], ['macaca_mulatta', 'ornithorhynchus_anatinus', 
+                    'gallus_gallus', 'caenorhabditis_elegans', 'drosophila_melanogaster'])
+    params:
+        link = "ftp://ftp.ensembl.org/pub/release-108/gtf/{species}/*[^chrabinitio].gtf.gz"
+    shell:
+        "wget -O temp.gz {params.link} && "
+        "gunzip temp.gz && "
+        "mv temp {output.gtf}"
+
 rule download_rnacentral_ncRNA:
     """ Download rnacentral bed file of all ncRNAs per species 
         (will be useful for tRNAs, snRNAs and pre-miRNA). 
@@ -192,3 +246,4 @@ rule download_eukaryote_tRNAs:
         link = 'http://gtrnadb.ucsc.edu/download/GtRNAdb/search/gtrnadb-search187174.out'  
     shell:
         "wget -O {output.tRNA_df} {params.link}"
+
