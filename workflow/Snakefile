@@ -16,7 +16,6 @@ rule all:
         intronic_regions_bed = expand('data/references/negatives/random_regions/selected_intronic_regions_{species}.bed', 
                                         species=[sp for sp in config['species']+config['species_tgirt'] 
                                         if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']])
-
 rule all_downloads:
     input:
         blat_installation_file = "data/references/blat/blat_test.txt",

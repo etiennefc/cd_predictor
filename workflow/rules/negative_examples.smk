@@ -131,10 +131,17 @@ rule select_random_intergenic_intronic_regions:
     input:
         expressed_cd_all_sets = rules.tuning_train_test_split_rfam.output.all_positives,
         intronic_regions = rules.get_intergenic_intronic_regions.output.intronic_regions_bed,
-        intergenic_regions = rules.get_intergenic_intronic_regions.output.intergenic_regions_bed
+        intergenic_regions = rules.get_intergenic_intronic_regions.output.intergenic_regions_bed,
+        genome = get_species_genome
     output:
         random_intronic_regions = 'data/references/negatives/random_regions/selected_intronic_regions_{species}.bed',
         random_intergenic_regions = 'data/references/negatives/random_regions/selected_intergenic_regions_{species}.bed'
+    params:
+        random_state = 42
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/select_random_intergenic_intronic_regions.py"
 
 #rule get_final_negatives:
  #   """ From all negative examples (other ncRNA sequences (H/ACA, 
@@ -148,4 +155,4 @@ rule select_random_intergenic_intronic_regions:
       #  shuffle_sno = rules.random_shuffle_sno.output.shuffled_sno_df,
        # random_intronic_regions = rules.select_random_intergenic_intronic_regions.output.random_intronic_regions,
         #random_intergenic_regions = rules.select_random_intergenic_intronic_regions.output.random_intergenic_regions,
-        #human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno
+        #human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno  # control for rfam family as with the positives?
