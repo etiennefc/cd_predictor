@@ -98,12 +98,10 @@ rule select_random_ncRNA:
     script:
         "../scripts/python/select_random_ncRNA.py"
 
-rule get_intergenic_intronic_regions:
-    """ Select all intronic and intergenic regions in the genomes 
-        of various species that do not overlap with expressed C/D or 
-        other chosen random ncRNAs. Make sure that these random regions 
-        are the same length distributions of the expressed C/D in each 
-        species."""
+rule get_intergenic_intronic_exonic_regions:
+    """ Select all intronic, exonic and intergenic regions in the genomes 
+        of various species that do not overlap with expressed C/D 
+        or other chosen random ncRNAs."""
     input:
         expressed_cd_all_sets = rules.tuning_train_test_split_rfam.output.all_positives,
         ncRNA = rules.filter_rnacentral_tRNA_snRNA_pre_miRNA.output.df,
@@ -115,44 +113,50 @@ rule get_intergenic_intronic_regions:
         genome_size = glob.glob('data/references/chr_size/*.tsv')
     output:
         intronic_regions_bed = 'data/references/negatives/random_regions/all_intronic_regions_{species}.bed',
-        intergenic_regions_bed = 'data/references/negatives/random_regions/all_intergenic_regions_{species}.bed'
+        intergenic_regions_bed = 'data/references/negatives/random_regions/all_intergenic_regions_{species}.bed',
+        exonic_regions_bed = 'data/references/negatives/random_regions/all_exonic_regions_{species}.bed'
     params:
         species_dict = config['species_short_name']
     conda:
         "../envs/python_new.yaml"
     script:
-        "../scripts/python/get_intergenic_intronic_regions.py"
+        "../scripts/python/get_intergenic_intronic_exonic_regions.py"
 
-rule select_random_intergenic_intronic_regions:
-    """ Select random intronic and intergenic regions in the genomes 
+rule select_random_intergenic_intronic_exonic_regions:
+    """ Select random intronic, exonic and intergenic regions in the genomes 
         of various species. Make sure that these random regions 
         are the same length distributions of the expressed C/D in each 
         species."""
     input:
         expressed_cd_all_sets = rules.tuning_train_test_split_rfam.output.all_positives,
-        intronic_regions = rules.get_intergenic_intronic_regions.output.intronic_regions_bed,
-        intergenic_regions = rules.get_intergenic_intronic_regions.output.intergenic_regions_bed,
+        intronic_regions = rules.get_intergenic_intronic_exonic_regions.output.intronic_regions_bed,
+        intergenic_regions = rules.get_intergenic_intronic_exonic_regions.output.intergenic_regions_bed,
+        exonic_regions = rules.get_intergenic_intronic_exonic_regions.output.exonic_regions_bed,
         genome = get_species_genome
     output:
         random_intronic_regions = 'data/references/negatives/random_regions/selected_intronic_regions_{species}.bed',
-        random_intergenic_regions = 'data/references/negatives/random_regions/selected_intergenic_regions_{species}.bed'
+        random_intergenic_regions = 'data/references/negatives/random_regions/selected_intergenic_regions_{species}.bed',
+        random_exonic_regions = 'data/references/negatives/random_regions/selected_exonic_regions_{species}.bed'
     params:
         random_state = 42
     conda:
         "../envs/python_new.yaml"
     script:
-        "../scripts/python/select_random_intergenic_intronic_regions.py"
+        "../scripts/python/select_random_intergenic_intronic_exonic_regions.py"
 
-#rule get_final_negatives:
- #   """ From all negative examples (other ncRNA sequences (H/ACA, 
-  #      tRNA, snRNA, pre-miRNA), shuffle of C/D sequences, random 
-   #     sequences in introns and intergenic regions, and potentially
-    #    snoRNA pseudogene sequences?), select the wanted proportion 
-     #   of each of these negatives relative to the number of positive 
-     #   examples (expressed C/D)."""
-    #input:
-     #   random_ncRNA = rules.select_random_ncRNA.output.random_ncRNA,  # this previous rule could be included within this rule instead
-      #  shuffle_sno = rules.random_shuffle_sno.output.shuffled_sno_df,
-       # random_intronic_regions = rules.select_random_intergenic_intronic_regions.output.random_intronic_regions,
-        #random_intergenic_regions = rules.select_random_intergenic_intronic_regions.output.random_intergenic_regions,
+
+rule get_final_negatives:
+    """ From all negative examples (other ncRNA sequences (H/ACA, 
+        tRNA, snRNA, pre-miRNA), shuffle of C/D sequences, random 
+        sequences in introns, exons, and intergenic regions, and potentially
+        snoRNA pseudogene sequences?), select the wanted proportion 
+        of each of these negatives relative to the number of positive 
+        examples (expressed C/D)."""
+    input:
+        random_ncRNA = rules.select_random_ncRNA.output.random_ncRNA,  # this previous rule could be included within this rule instead
+        shuffle_sno = rules.random_shuffle_sno.output.shuffled_sno_df,
+        random_intronic_regions = rules.select_random_intergenic_intronic_regions.output.random_intronic_regions,
+        random_intergenic_regions = rules.select_random_intergenic_intronic_regions.output.random_intergenic_regions,
+        random_exonic_regions = 
         #human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno  # control for rfam family as with the positives?
+

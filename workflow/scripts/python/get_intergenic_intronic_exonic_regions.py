@@ -19,6 +19,8 @@ else:
     haca_path = [path for path in snakemake.input.haca if species in path][0]
 intronic_output = snakemake.output.intronic_regions_bed
 intergenic_output = snakemake.output.intergenic_regions_bed
+exonic_output = snakemake.output.exonic_regions_bed
+
 bed_cols = ['seqname', 'start', 'end', 'gene_id', 'score', 
             'strand', 'feature', 'gene_biotype']
 df_cols = ['chr', 'start', 'end', 'gene_id', 
@@ -111,12 +113,32 @@ def get_intronic_regions(gtf_df, species_name, chr_size, intergenic_bed, ncRNA_b
     sp.call(f'rm all_exons_{species_name}*.bed temp2_chr_size{species_name}.tsv', shell=True)
 
 
+def get_exonic_regions(gtf_df, species_name, ncRNA_bed, output):
+    """ Get the exonic regions in biotypes of interest (exonic regions that don't 
+        overlap with ncRNAs (negative examples))."""
+    # Select the exons of all genes that are not snoRNA/snRNA/tRNA
+    gene_gtf = gtf_df[(gtf_df['feature'] == 'exon') & (~gtf_df['gene_biotype'].isin(['snoRNA', 'snRNA', 'tRNA']))]
+
+    gene_gtf[bed_cols].to_csv(f'all_exons_real_{species_name}.bed', 
+                        sep='\t', index=False, header=False)
+    sp.call(f'sort -k1,1 -k2,2n all_exons_real_{species_name}.bed > all_exons_real_{species_name}_sorted.bed', 
+            shell=True)
+    gene_bed = BedTool(f'all_exons_real_{species_name}_sorted.bed')
+
+
+    # Subtract to make sure all ncRNAs obtained before are not included in these regions
+    final_exonic_regions = gene_bed.subtract(b=ncRNA_bed).saveas(output)
+
+    sp.call(f'rm all_exons_real_{species_name}*.bed', shell=True)
+
+
 def main():
     ncRNA_bed_final = get_bed_ncRNA(all_ncRNA_df, species)
     intergenic_bed = get_intergenic_regions(gtf, species, chr_size_file, 
                                 ncRNA_bed_final, intergenic_output)
     get_intronic_regions(gtf, species, chr_size_file, intergenic_bed, 
                                 ncRNA_bed_final, intronic_output)
+    get_exonic_regions(gtf, species, ncRNA_bed_final, exonic_output)
     sp.call(f'rm all_ncRNA_{species}.*bed', shell=True)
 
 main()

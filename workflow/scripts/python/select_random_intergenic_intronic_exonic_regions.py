@@ -12,10 +12,15 @@ intergenic_regions = pd.read_csv(snakemake.input.intergenic_regions,
                         sep='\t', names=['chr', 'start', 'end'])
 intronic_regions = pd.read_csv(snakemake.input.intronic_regions, 
                         sep='\t', names=['chr', 'start', 'end'])
+exonic_regions = pd.read_csv(snakemake.input.exonic_regions, 
+                        sep='\t', names=['chr', 'start', 'end', 'gene_id', 'score', 
+                                        'strand', 'feature', 'gene_biotype'])
+exonic_regions = exonic_regions[['chr', 'start', 'end', 'strand']]
 bed_cols = ['chr', 'start', 'end', 'gene_id', 'score', 'strand', 'gene_biotype']
 
 output_intergenic = snakemake.output.random_intergenic_regions
 output_intronic = snakemake.output.random_intronic_regions
+output_exonic = snakemake.output.random_exonic_regions
 
 
 # Get length of all positive examples (expressed C/D snoRNAs with flanking 15 nt)
@@ -83,8 +88,10 @@ def select_regions(df, location, output):
 # Select intergenic regions
 select_regions(intergenic_regions, 'intergenic', output_intergenic)
 
+# Select exonic regions
+select_regions(exonic_regions, 'exonic', output_exonic)
 
-# Select intronic regions
+# Select intronic regions for species with a high number of large introns
 if species not in ['giardia_lamblia', 'leishmania_major', 
                     'saccharomyces_cerevisiae', 
                     'dictyostelium_discoideum']:
@@ -92,17 +99,9 @@ if species not in ['giardia_lamblia', 'leishmania_major',
 # There is a limited number of intronic regions in G. lamblia, L. major, S.cerevisiae and D. discoideum
 # (not enough to have equal number compared to expressed CD)
 else:
+    df = pd.DataFrame(columns=['Not enough large introns to select introns'])
+    df.to_csv(output_intronic, sep='\t', index=False)
 
-    # First, select introns that are >= smallest positive example
-    print(intronic_regions)
-    intronic_regions['len'] = intronic_regions['end'] - intronic_regions['start']
-    intronic_regions = intronic_regions[intronic_regions['len'] >= min(lengths)]
-    print(positives)
-    print(intronic_regions)
-    #print(sorted(list(intronic_regions.len)))
-    #print(min(lengths), max(lengths))
-    #print(len(intronic_regions[intronic_regions['len'] > max(lengths) + 2]))
-    #print(species)
 
 
 
