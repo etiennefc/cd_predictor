@@ -23,7 +23,7 @@ output_intronic = snakemake.output.random_intronic_regions
 output_exonic = snakemake.output.random_exonic_regions
 
 
-# Get length of all positive examples (expressed C/D snoRNAs with flanking 15 nt)
+# Get length of all positive examples (expressed C/D snoRNAs with flanking 15 nt) #Extended sequence!
 seqs = list(positives.extended_sequence)
 lengths = [len(seq) for seq in seqs]
 

@@ -14,4 +14,12 @@ for sno_id, seq in seq_dict.items():
 
 sno_df['shuffled_seq'] = sno_df.gene_id.map(shuffled_seq_dict)
 
+# Iterate over all expressed C/D and add shuffled extended sequence as column
+ext_seq_dict, shuffled_ext_seq_dict = dict(zip(sno_df.gene_id, sno_df.extended_sequence)), {}
+for sno_id_ext, ext_seq in ext_seq_dict.items():
+    shuf_ext = ''.join(shuffle(shuffle(ext_seq, random_state=rs), random_state=rs))  # double shuffle
+    shuffled_ext_seq_dict[sno_id_ext] = shuf_ext
+
+sno_df['shuffled_extended_seq'] = sno_df.gene_id.map(shuffled_ext_seq_dict)
+
 sno_df.to_csv(output, sep='\t', index=False)

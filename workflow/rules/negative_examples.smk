@@ -27,9 +27,12 @@ rule filter_rnacentral_tRNA_snRNA_pre_miRNA:
                 species=[sp for sp in config['species'] + config['species_tgirt'] 
                             if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 'tetrahymena_thermophila']]),
         genomes = get_all_genomes('data/references/genome_fa/*.fa'),
+        chr_sizes = get_all_genomes('data/references/chr_size/*.tsv'),
         gallus_gallus_gff = rules.download_gallus_gallus_gff.output.gff
     output:
         df = 'data/references/rnacentral/filtered_tRNA_snRNA_pre_miRNA.tsv'
+    params:
+        extension = 15
     conda:
         "../envs/python_new.yaml"
     script:
@@ -79,24 +82,12 @@ rule format_blat_haca_output:
     output:
         df = 'data/references/HACA/{species}_HACA_location_formated.tsv'
     params:
-        dataset_attribute = config['dataset_attributes']
+        dataset_attribute = config['dataset_attributes'],
+        extension = 15
     conda:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/format_blat_haca_output.py"
-
-rule select_random_ncRNA:
-    """ Select randomly chosen ncRNAs (H/ACA box snoRNAs, tRNAs, 
-        snRNAs, pre-miRNA) from various species. ******TO IMPLEMENT**********"""
-    input:
-        t_sn_pre_miRNA = rules.filter_rnacentral_tRNA_snRNA_pre_miRNA.output.df,
-        haca = rules.format_blat_haca_output.output.df
-    output:
-        random_ncRNA = 'data/references/negatives/random_ncRNA/random_ncRNA.tsv'
-    conda:
-        "../envs/python_new.yaml"
-    script:
-        "../scripts/python/select_random_ncRNA.py"
 
 rule get_intergenic_intronic_exonic_regions:
     """ Select all intronic, exonic and intergenic regions in the genomes 
@@ -144,8 +135,7 @@ rule select_random_intergenic_intronic_exonic_regions:
     script:
         "../scripts/python/select_random_intergenic_intronic_exonic_regions.py"
 
-
-rule get_final_negatives:
+rule get_all_initial_negatives:
     """ From all negative examples (other ncRNA sequences (H/ACA, 
         tRNA, snRNA, pre-miRNA), shuffle of C/D sequences, random 
         sequences in introns, exons, and intergenic regions, and potentially
@@ -153,10 +143,16 @@ rule get_final_negatives:
         of each of these negatives relative to the number of positive 
         examples (expressed C/D)."""
     input:
-        random_ncRNA = rules.select_random_ncRNA.output.random_ncRNA,  # this previous rule could be included within this rule instead
+        ncRNA = rules.filter_rnacentral_tRNA_snRNA_pre_miRNA.output.df,
+        haca = expand(rules.format_blat_haca_output.output.df, 
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
+                        'tetrahymena_thermophila']]),
         shuffle_sno = rules.random_shuffle_sno.output.shuffled_sno_df,
-        random_intronic_regions = rules.select_random_intergenic_intronic_regions.output.random_intronic_regions,
-        random_intergenic_regions = rules.select_random_intergenic_intronic_regions.output.random_intergenic_regions,
-        random_exonic_regions = 
+        random_intronic_regions = rules.select_random_intergenic_intronic_exonic_regions.output.random_intronic_regions,
+        random_intergenic_regions = rules.select_random_intergenic_intronic_exonic_regions.output.random_intergenic_regions,
+        random_exonic_regions = rules.select_random_intergenic_intronic_exonic_regions.output.random_exonic_regions
         #human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno  # control for rfam family as with the positives?
-
+    output:
+        tuning = 'data/references/negatives/initial/negatives_tuning_set.tsv',
+        

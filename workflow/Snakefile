@@ -8,14 +8,16 @@ include: "rules/sno_literature_processing.smk"
 include: "rules/sno_tgirt_seq_processing.smk"
 include: "rules/sno_families.smk"
 include: "rules/negative_examples.smk"
+#include: "rules/tune_train_test_sets.smk"
 
 
 rule all:
     input:
         shuffled_sno = 'data/references/negatives/shuffle_sno/random_shuffle_all_expressed_cd.tsv',
-        intronic_regions_bed = expand('data/references/negatives/random_regions/selected_intronic_regions_{species}.bed', 
-                                        species=[sp for sp in config['species']+config['species_tgirt'] 
-                                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']])
+        #intronic_regions_bed = expand('data/references/negatives/random_regions/selected_intronic_regions_{species}.bed', 
+         #                               species=[sp for sp in config['species']+config['species_tgirt'] 
+          #                              if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']]),
+        df = 'data/references/rnacentral/filtered_tRNA_snRNA_pre_miRNA.tsv'
 
 rule all_downloads:
     input:

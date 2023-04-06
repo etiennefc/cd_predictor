@@ -9,6 +9,9 @@ cols = ['match', 'mismatch', 'rep_match', 'Ns', 'query_gap_count', 'query_gap_ba
         'target_gap_count', 'target_gap_bases', 'strand', 'gene_name', 'query_size',
         'query_start', 'query_end', 'chr', 'target_size', 'start', 'end', 'block_count', 
         'block_sizes', 'query_starts', 'target_starts']
+
+extension = snakemake.params.extension
+
 # where query is a snoRNA and target is a location in the species genome
 df = pd.read_csv(snakemake.input.blat, sep='\t', skiprows=5, names=cols)
 
@@ -55,6 +58,20 @@ merged_df = pd.read_csv('temp_sno_bed_seq_'+snakemake.wildcards.species+'.sorted
 # Add sequence col to final_df
 merged_df['sequence'] = merged_df['gene_name'].map(seq_dict)
 
+# Add extended sequence (15 nt flanking up/downstream of the H/ACA box snoRNA) to merged_df
+extended_haca = merged_bed.slop(g=snakemake.input.chr_size, r=extension, l=extension)
+extended_sequences_fa = extended_haca.sequence(fi=snakemake.input.genome, s=True, nameOnly=True)
+ext_seq_dict = {}
+with open(extended_sequences_fa.seqfn, 'r') as fa:
+    for line in fa:
+        if '>' in line:
+            sno_name = line.strip('\n').replace('>', '').replace('(+)', '').replace('(-)', '')
+        else:
+            seq = line.strip('\n')
+            ext_seq_dict[sno_name] = seq
+
+merged_df['extended_sequence'] = merged_df['gene_name'].map(ext_seq_dict)
+
 # Remove offset of 1 nt created by bedtools when converting to bed
 merged_df['start'] = merged_df['start'] + 1
 
@@ -69,7 +86,7 @@ for k,v in attributes_dict.items():
 
 merged_df = merged_df[['gene_name', 'chr', 'strand', 'start', 'end', 
                         'genome_version', 'species_name', 'species_classification', 
-                        'sequence']]
+                        'sequence', 'extended_sequence']]
 
 merged_df['gene_name'] = merged_df['gene_name'].str.replace(',', '_')
 
