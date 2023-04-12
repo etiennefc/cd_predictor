@@ -3,14 +3,20 @@ rule get_three_sets_initial:
         tuning (10%), training (70%) and test (20%) sets. This is 
         the initial split based on sequence only without any 
         snoRNA pseudogenes in the negative examples. It is a 
-        stratified split (same proprotion of pos/neg examples 
+        stratified split (same proportion of pos/neg examples 
         across the 3 sets)."""
     input:
         tune_pos = rules.tuning_train_test_split_rfam.output.tuning,
         train_pos = rules.tuning_train_test_split_rfam.output.training,
         test_pos = rules.tuning_train_test_split_rfam.output.test,
-        tune_neg = rules.get_final_negatives.output.
-    
+        tune_neg = rules.get_all_initial_negatives.output.tuning,
+        train_neg = rules.get_all_initial_negatives.output.training,
+        test_neg = rules.get_all_initial_negatives.output.test
+    output:
+        tuning = '',
+        training = '',
+        test = ''
+
 
 
 # rule same as initial but with snoRNA pseudogenes as negatives

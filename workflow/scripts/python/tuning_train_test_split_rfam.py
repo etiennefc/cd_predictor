@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import pandas as pd
 import collections as coll 
-from sklearn.utils import shuffle, resample
+from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 seed = snakemake.params.random_seed
 
@@ -20,7 +20,12 @@ sno_species_df['species_name'] = sno_species_df['species_name'].str.replace('mus
 sno_species_df['species_name'] = sno_species_df['species_name'].str.replace('homo_', 'H_')
 sno_species_df['species_name'] = sno_species_df['species_name'].str.replace('saccharomyces_', 'S_')
 sno_rfam = pd.read_csv(snakemake.input.sno_rfam, sep='\t')
+sno_rfam = sno_rfam.drop(columns=['species_name'])
 sno_rfam = sno_rfam.merge(sno_species_df, how='left', on='gene_id')
+
+# Keep only 1 copy per snoRNA duplicates with exactly the same extended sequences
+sno_rfam = sno_rfam.drop_duplicates(subset=['extended_sequence'])
+
 
 # Remove U3 (RF00012, RF01846, RF01848) snoRNA families and a SCARNA (RF01296), as they are way larger and 
 # different (other types of boxes) than other types of C/D snoRNAs
@@ -112,7 +117,7 @@ print(selected_sno_nb)
 # Count the remaining number of sno needed in each set
 tuning_nb, train_nb, test_nb = round(selected_sno_nb * 0.1), round(selected_sno_nb * 0.7), round(selected_sno_nb * 0.2)
 tuning_nb_remaining = tuning_nb - len(sno_no_or_1_rfam_tuning)  # 53 C/D
-train_nb_remaining = train_nb - len(sno_no_or_1_rfam_train)  # 377 C/D
+train_nb_remaining = train_nb - len(sno_no_or_1_rfam_train)  # 375 C/D
 test_nb_remaining = test_nb - len(sno_no_or_1_rfam_test)  # 108 C/D
 
 print(tuning_nb_remaining)
@@ -122,6 +127,8 @@ print(test_nb_remaining)
 fam_len_dict = {k:len(v) for k,v in remaining_sno_dict.items()}
 print(fam_len_dict)
 tuning, train, test = [], [], []
+
+
 # To get to the 53 remaining C/D to add in the tuning set,
 # randomly choose a family of 10, 10, 10, 6, 4, 4, 3, 2, 2, 2 snoRNAs (53 snoRNAs)
 # This combination of 10, 10, 10, 6, 4, 4, ... 2 was manually picked to ensure a total of 53
@@ -132,7 +139,7 @@ def sample_cd(dictio, nb_per_family, given_list, big_df, n_samples, rs):
         in given_list from another dataset"""
     selected_fams = [id for id, val in dictio.items() if (len(val) == nb_per_family) & (id not in given_list)]
     df_ = big_df[big_df['rfam_family_id'].isin(selected_fams)].drop_duplicates(subset=['rfam_family_id'])
-    sno_selected = resample(df_, n_samples=n_samples, random_state=rs)
+    sno_selected = df_.sample(n=n_samples, random_state=rs)
     return sno_selected.rfam_family_id.tolist()
 
 tuning_occurences = [3, 1, 2, 1, 3]
@@ -160,7 +167,7 @@ for i, number in enumerate([10, 8, 7, 6, 5, 4, 3, 2]):
 test_df = filtered_df[filtered_df['rfam_family_id'].isin(test)]  # 108 C/D
 
 # For training set, select the remaining snoRNAs not in the test nor tuning sets
-train_df = filtered_df[~filtered_df['rfam_family_id'].isin(test+tuning)]  # 377 C/D
+train_df = filtered_df[~filtered_df['rfam_family_id'].isin(test+tuning)]  # 375 C/D
 
 # Concat the sets composed of families of 2-10 members to their respective set 
 # composed of families with 0 or 1 rfam id

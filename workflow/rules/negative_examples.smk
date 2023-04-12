@@ -141,7 +141,9 @@ rule get_all_initial_negatives:
         sequences in introns, exons, and intergenic regions, and potentially
         snoRNA pseudogene sequences?), select the wanted proportion 
         of each of these negatives relative to the number of positive 
-        examples (expressed C/D)."""
+        examples (expressed C/D). The positives are used to filter out 
+        shuffled CD sequences that are not present in the positives 
+        (because we limited the number of sno per Rfam family to be max 10)"""
     input:
         ncRNA = rules.filter_rnacentral_tRNA_snRNA_pre_miRNA.output.df,
         haca = expand(rules.format_blat_haca_output.output.df, 
@@ -149,10 +151,30 @@ rule get_all_initial_negatives:
                         if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
                         'tetrahymena_thermophila']]),
         shuffle_sno = rules.random_shuffle_sno.output.shuffled_sno_df,
-        random_intronic_regions = rules.select_random_intergenic_intronic_exonic_regions.output.random_intronic_regions,
-        random_intergenic_regions = rules.select_random_intergenic_intronic_exonic_regions.output.random_intergenic_regions,
-        random_exonic_regions = rules.select_random_intergenic_intronic_exonic_regions.output.random_exonic_regions
+        random_intronic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions.output.random_intronic_regions,
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
+                        'tetrahymena_thermophila']]),
+        random_intergenic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions.output.random_intergenic_regions,
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
+                        'tetrahymena_thermophila']]),
+        random_exonic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions.output.random_exonic_regions,
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
+                        'tetrahymena_thermophila']]),
+        positives = rules.tuning_train_test_split_rfam.output.all_positives
         #human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno  # control for rfam family as with the positives?
     output:
         tuning = 'data/references/negatives/initial/negatives_tuning_set.tsv',
+        training = 'data/references/negatives/initial/negatives_training_set.tsv',
+        test = 'data/references/negatives/initial/negatives_test_set.tsv'
+    params:
+        short_name_dict = config['species_short_name'],
+        random_state = 42
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/get_all_initial_negatives.py"
+
         
