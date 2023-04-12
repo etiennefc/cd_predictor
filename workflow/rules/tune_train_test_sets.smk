@@ -1,21 +1,23 @@
 rule get_three_sets_initial:
-    """ Merge the positives and negative examples into the 
+    """ Concat the positives and negative examples into the 
         tuning (10%), training (70%) and test (20%) sets. This is 
         the initial split based on sequence only without any 
         snoRNA pseudogenes in the negative examples. It is a 
         stratified split (same proportion of pos/neg examples 
-        across the 3 sets)."""
+        across the 3 sets, i.e. ~ 20:1 (negatives:positives))."""
     input:
-        tune_pos = rules.tuning_train_test_split_rfam.output.tuning,
-        train_pos = rules.tuning_train_test_split_rfam.output.training,
-        test_pos = rules.tuning_train_test_split_rfam.output.test,
-        tune_neg = rules.get_all_initial_negatives.output.tuning,
-        train_neg = rules.get_all_initial_negatives.output.training,
-        test_neg = rules.get_all_initial_negatives.output.test
+        positives = rules.tuning_train_test_split_rfam.output,
+        negatives = rules.get_all_initial_negatives.output
     output:
-        tuning = '',
-        training = '',
-        test = ''
+        tuning = 'data/references/positives_and_negatives/initial/initial_tuning_set.tsv',
+        training = 'data/references/positives_and_negatives/initial/initial_training_set.tsv',
+        test = 'data/references/positives_and_negatives/initial/initial_test_set.tsv'
+    params:
+        random_state = 42
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/get_three_sets_initial.py"
 
 
 

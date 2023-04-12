@@ -74,8 +74,6 @@ all_negatives = all_negatives.drop_duplicates(subset=['extended_seq'])
 # Keep all shuffled snoRNA sequence (1:1 ratio compared to positives)
 final_negatives = [all_negatives[all_negatives['gene_biotype'] == 'shuffled_expressed_CD_snoRNA']]
 
-import collections as coll 
-
 # Keep a ratio of 1:1 for H/ACA, tRNA, snRNA and premiRNA compared to positives (total 4:1)
 for mncRNA in ['HACA_snoRNA', 'pre_miRNA', 'tRNA', 'snRNA']:
     mncRNA_df = all_negatives[all_negatives.gene_biotype == mncRNA]

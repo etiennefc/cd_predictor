@@ -8,12 +8,13 @@ include: "rules/sno_literature_processing.smk"
 include: "rules/sno_tgirt_seq_processing.smk"
 include: "rules/sno_families.smk"
 include: "rules/negative_examples.smk"
-#include: "rules/tune_train_test_sets.smk"
+include: "rules/tune_train_test_sets.smk"
+include: "rules/one_hot_encoding_and_normalization.smk"
 
 
 rule all:
     input:
-        tuning_negatives = 'data/references/negatives/initial/negatives_tuning_set.tsv'
+        normalized_test = 'data/references/positives_and_negatives/initial/initial_encoded_scaled_test_set.tsv'
 
 rule all_downloads:
     input:
