@@ -247,3 +247,12 @@ rule download_eukaryote_tRNAs:
     shell:
         "wget -O {output.tRNA_df} {params.link}"
 
+rule download_rfam_clans:
+    """ Download the clans in RFam, i.e. ~superfamilies (Release 14.9)"""
+    output:
+        df = 'data/references/rfam/fam_clans_families.tsv' 
+    params:
+        link = 'https://ftp.ebi.ac.uk/pub/databases/Rfam/14.9/database_files/clan_membership.txt.gz'  
+    shell:
+        "wget -O {output.df}.gz {params.link} && "
+        "gunzip {output.df}.gz"

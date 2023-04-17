@@ -26,7 +26,8 @@ rule all_downloads:
         gallus_gallus_gff = "data/references/rnacentral/gallus_gallus_bGalGal1_GRCg7b.gff3",
         gtf = expand('data/references/gtf/{species}.gtf', species=[sp for sp in 
                         config['species']+config['species_tgirt'] if sp not in 
-                        ['ostreococcus_tauri', 'schizosaccharomyces_pombe']])
+                        ['ostreococcus_tauri', 'schizosaccharomyces_pombe']]),
+        rfam_clans = "data/references/rfam/fam_clans_families.tsv"
 
 
 

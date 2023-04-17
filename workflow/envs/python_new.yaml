@@ -13,3 +13,5 @@ dependencies:
   - pybedtools = 0.9.0
   - shap = 0.41.0
   - gtfparse = 1.2.1
+  - tensorflow = 2.11.0
+

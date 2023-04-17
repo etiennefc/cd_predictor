@@ -13,7 +13,8 @@ rule get_three_sets_initial:
         training = 'data/references/positives_and_negatives/initial/initial_training_set.tsv',
         test = 'data/references/positives_and_negatives/initial/initial_test_set.tsv'
     params:
-        random_state = 42
+        random_state = 42,
+        short_name_dict = config['species_short_name']
     conda:
         "../envs/python_new.yaml"
     script:

@@ -45,13 +45,14 @@ rule filter_infernal:
 
 rule tuning_train_test_split_rfam:
     """ Split expressed C/D in 3 datasets (tuning (10%), training (70%) 
-        and test set (20%)). SnoRNAs of a same family are all kept within 
-        the same set so that we limit overfitting. """
+        and test set (20%)). SnoRNAs of a same Rfam clan (then Rfam family) 
+        are all kept within the same set so that we limit overfitting. """
     input:
         sno_rfam = rules.filter_infernal.output.df,
         sno_literature = rules.merge_sno_location_species.output.df,
         sno_tgirt = expand(rules.get_expressed_snoRNAs_location.output.expressed_sno_df, 
-                                species=['homo_sapiens', 'mus_musculus', 'saccharomyces_cerevisiae'])
+                                species=['homo_sapiens', 'mus_musculus', 'saccharomyces_cerevisiae']),
+        rfam_clans = rules.download_rfam_clans.output.df
     output:
         tuning = 'data/references/infernal/cd_rfam_filtered_tuning_set.tsv',
         training = 'data/references/infernal/cd_rfam_filtered_training_set.tsv',
