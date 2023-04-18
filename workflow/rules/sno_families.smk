@@ -13,6 +13,27 @@ rule get_sno_sequences:
     script:
         "../scripts/python/get_sno_sequences.py"
 
+rule get_sno_sequences_fixed_length_520nt:
+    """ Get all expressed C/D snoRNA sequences (from the literature and 
+        TGIRT-seq) regrouped in a fasta file. Get a fixed extended 
+        length = 520 nt (i.e. longest expressed snoRNA + 15 nt up/downstream)"""
+    input:
+        sno_literature = rules.merge_sno_location_species.output.df,
+        sno_tgirt = expand(rules.get_expressed_snoRNAs_location.output.expressed_sno_df, 
+                    species=['homo_sapiens', 'mus_musculus', 'saccharomyces_cerevisiae']),
+        genomes = get_all_genomes('data/references/genome_fa/*.fa'),
+        chr_size = get_all_genomes('data/references/chr_size/*.tsv')
+    output:
+        fa = 'data/references/all_expressed_cd_sequences_fixed_length_520nt.fa',
+        df = 'data/references/all_expressed_cd_sequences_location_fixed_length_520nt.tsv'
+    params:
+        fixed_length = 520,
+        species_short_name = config['species_short_name']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/get_sno_sequences_fixed_length_520nt.py"
+
 rule infernal:
     """ Use Infernal and Rfam covariance 
         models to identify the Rfam family 
@@ -52,7 +73,8 @@ rule tuning_train_test_split_rfam:
         sno_literature = rules.merge_sno_location_species.output.df,
         sno_tgirt = expand(rules.get_expressed_snoRNAs_location.output.expressed_sno_df, 
                                 species=['homo_sapiens', 'mus_musculus', 'saccharomyces_cerevisiae']),
-        rfam_clans = rules.download_rfam_clans.output.df
+        rfam_clans = rules.download_rfam_clans.output.df,
+        extended_520nt_sno_seq = rules.get_sno_sequences_fixed_length_520nt.output.df
     output:
         tuning = 'data/references/infernal/cd_rfam_filtered_tuning_set.tsv',
         training = 'data/references/infernal/cd_rfam_filtered_training_set.tsv',
@@ -64,4 +86,5 @@ rule tuning_train_test_split_rfam:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/tuning_train_test_split_rfam.py"
+
 

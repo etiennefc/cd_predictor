@@ -53,25 +53,23 @@ ncRNA['gene_id'] = ncRNA['rnacentral_id']
 haca['gene_id'] = haca['gene_name']
 
 # Format extended sequence column
-for i, df in enumerate([ncRNA, haca, shuffle_sno, intronic, intergenic, exonic]):
-    if i <= 1:
-        df['extended_seq'] = df['extended_sequence']
-    elif i == 2:
-        df['extended_seq'] = df['shuffled_extended_seq']
+for i, df in enumerate([shuffle_sno, intronic, intergenic, exonic]):
+    if i == 0:
+        df['extended_520nt_sequence'] = df['shuffled_extended_520nt_seq']
     else:
-        df['extended_seq'] = df['sequence']  # this is also an extended sequence
+        df['extended_520nt_sequence'] = df['sequence']  # this is also an extended sequence
 
 
 # Concat all negatives
 all_dfs = []
 for neg_df in [ncRNA, haca, shuffle_sno, intronic, intergenic, exonic]:
-    df_ = neg_df[['gene_id', 'gene_biotype', 'species', 'extended_seq']]
+    df_ = neg_df[['gene_id', 'gene_biotype', 'species', 'extended_520nt_sequence']]
     all_dfs.append(df_)
 
 all_negatives = pd.concat(all_dfs)
 
 # Drop duplicate negatives (only in intergenic regions that have multiple NNNNNN)
-all_negatives = all_negatives.drop_duplicates(subset=['extended_seq'])
+all_negatives = all_negatives.drop_duplicates(subset=['extended_520nt_sequence'])
 
 # Keep all shuffled snoRNA sequence (1:1 ratio compared to positives)
 final_negatives = [all_negatives[all_negatives['gene_biotype'] == 'shuffled_expressed_CD_snoRNA']]
@@ -99,7 +97,6 @@ for region in ['random_intronic_region', 'random_intergenic_region', 'random_exo
 # Concat all selected negatives
 final_negatives_df = pd.concat(final_negatives)
 final_negatives_df = final_negatives_df.rename(columns={
-                            'extended_seq': 'extended_sequence',
                             'species': 'species_name'})
 
 

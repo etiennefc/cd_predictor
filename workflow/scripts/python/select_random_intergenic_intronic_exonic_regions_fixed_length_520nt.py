@@ -24,9 +24,8 @@ output_exonic = snakemake.output.random_exonic_regions
 
 
 # Get length of all positive examples (expressed C/D snoRNAs with flanking 15 nt) #Extended sequence!
-seqs = list(positives.extended_sequence)
-lengths = [len(seq) for seq in seqs]
-positives['len'] = positives.end - positives.start
+seqs = list(positives.extended_520nt_sequence)
+max_length = max([len(seq) for seq in seqs])  # they're all 520 nt long
 
 # The intergenic/intronic regions are given without strand, so
 # we need to define a random choice between + or - for these
@@ -43,18 +42,17 @@ intergenic_regions['strand'] = intergenic_regions['strand'].map(strand_dict)
 
 def select_regions(df, location, output):
     """ Select n intergenic/intronic regions of size s in the pool of regions, 
-        where n is the number of positive examples and s is a size in the 
-        distribution of positive example lengths."""
+        where n is the number of positive examples and s is the size of the
+        positive examples (i.e. 520  nt)."""
     # Select only regions that are at least as large as the longest positive
     df['len'] = df['end'] - df['start']
-    df = df[df['len'] >= max(lengths) + 2] # regions are least greater than 1 nt than sno length
+    df = df[df['len'] >= max_length + 2] # regions are least greater than 1 nt than sno length
 
-    # Select randomly n regions of size s (where n=nb of positives 
-    # and s is part of the size distribution of n)
+    # Select randomly n regions of size s (where n=nb of positives)
     random_df = df.sample(n=len(positives), random_state=rs)
     random_df = random_df.reset_index(drop=True)
     rows = []
-    for i, length in enumerate(lengths):
+    for i, length in enumerate([max_length] * len(positives)):
         row_dict = dict(random_df.iloc[i, :])
         # Get a random start/end in the given region that respects the overall sno length
         random_start_index = int(np.random.choice(range(0, row_dict['len'] - length)))

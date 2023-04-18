@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split
 seed = snakemake.params.random_seed
 
 # Load dfs
+extended_520nt_seq = pd.read_csv(snakemake.input.extended_520nt_sno_seq, sep='\t')
+ext_dict = dict(zip(extended_520nt_seq.gene_id, extended_520nt_seq.extended_520nt_sequence))
 rfam_clans = pd.read_csv(snakemake.input.rfam_clans, sep='\t', 
                 names=['rfam_clan_id', 'rfam_family_id'])
 sno_literature = pd.read_csv(snakemake.input.sno_literature, sep='\t')
@@ -25,8 +27,12 @@ sno_rfam = pd.read_csv(snakemake.input.sno_rfam, sep='\t')
 sno_rfam = sno_rfam.drop(columns=['species_name'])
 sno_rfam = sno_rfam.merge(sno_species_df, how='left', on='gene_id')
 
+# Create extended_520nt_sequence column
+sno_rfam['extended_520nt_sequence'] = sno_rfam['gene_id'].map(ext_dict)
+
 # Keep only 1 copy per snoRNA duplicates with exactly the same extended sequences
 sno_rfam = sno_rfam.drop_duplicates(subset=['extended_sequence'])
+sno_rfam = sno_rfam.drop_duplicates(subset=['extended_520nt_sequence'])
 
 
 # Remove U3 (RF00012, RF01846, RF01848) snoRNA families and a SCARNA (RF01296), as they are way larger and 
@@ -34,6 +40,10 @@ sno_rfam = sno_rfam.drop_duplicates(subset=['extended_sequence'])
 #sno_to_remove = ['RF00012', 'RF01846', 'RF01848', 'RF01296']
 #sno_rfam = sno_rfam[~sno_rfam['rfam_family_id'].isin(sno_to_remove)]
 
+# Exclude these U3 snoRNAs (ENSG00000264940, ENSG00000265185) because they are too long (i.e. misannotated: 
+# they're probably way shorter (~220 nt instead of 581 nt and 758 nt respectively, 
+# based on read accumulation in healthy human tissues))
+sno_rfam = sno_rfam[~sno_rfam.gene_id.isin(['ENSG00000264940', 'ENSG00000265185'])]
 
 # For the snoRNAs with a Rfam id, separate between those with 1 vs 2 to 10 members vs >10 members per family
 sno_w_rfam = shuffle(sno_rfam[~sno_rfam['rfam_family_id'].isna()], 
@@ -84,7 +94,8 @@ for id, df in sno_big_families.items():
     # Create list of 1 df from appended sno rows
     sno_rows_df_list = [pd.DataFrame((sno_rows), 
                         columns=['gene_id', 'chr', 'strand', 'start', 'end', 
-                                'sequence', 'extended_sequence', 'rfam_family_id', 'species_name'])]
+                                'sequence', 'extended_sequence', 'rfam_family_id', 
+                                'species_name', 'extended_520nt_sequence'])]
     # Complete with randomly chosen snoRNAs if 10 snoRNAs are not already chosen per family
     if remaining > 0:
         remaining_rows = temp_df[~temp_df['gene_id'].isin(sno_ids)].sample(n=remaining,
@@ -242,7 +253,6 @@ import collections as coll
 print(coll.Counter(final_tuning.species_name))
 print(coll.Counter(final_train.species_name))
 print(coll.Counter(final_test.species_name))
-
 
 
 

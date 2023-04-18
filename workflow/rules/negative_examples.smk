@@ -130,6 +130,9 @@ rule select_random_intergenic_intronic_exonic_regions:
         random_exonic_regions = 'data/references/negatives/random_regions/selected_exonic_regions_{species}.bed'
     params:
         random_state = 42
+    wildcard_constraints:
+        species=join_list(config['species']+config['species_tgirt'], 
+                            ['ostreococcus_tauri', 'schizosaccharomyces_pombe'], remove=True)
     conda:
         "../envs/python_new.yaml"
     script:
@@ -153,16 +156,13 @@ rule get_all_initial_negatives:
         shuffle_sno = rules.random_shuffle_sno.output.shuffled_sno_df,
         random_intronic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions.output.random_intronic_regions,
                     species=[sp for sp in config['species']+config['species_tgirt'] 
-                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
-                        'tetrahymena_thermophila']]),
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']]),
         random_intergenic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions.output.random_intergenic_regions,
                     species=[sp for sp in config['species']+config['species_tgirt'] 
-                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
-                        'tetrahymena_thermophila']]),
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']]),
         random_exonic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions.output.random_exonic_regions,
                     species=[sp for sp in config['species']+config['species_tgirt'] 
-                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
-                        'tetrahymena_thermophila']]),
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']]),
         positives = rules.tuning_train_test_split_rfam.output.all_positives
         #human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno  # control for rfam family as with the positives?
     output:
