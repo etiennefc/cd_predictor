@@ -15,6 +15,7 @@
   "missing_tRNA_species": ["ostreococcus_tauri", "giardia_lamblia", "dictyostelium_discoideum", 
                             "gallus_gallus", "tetrahymena_thermophila", "macaca_mulatta", 
                             "ornithorhynchus_anatinus"],
+  "fixed_length": [211],
   "species_short_name":
   {
     "O_anatinus": "ornithorhynchus_anatinus",

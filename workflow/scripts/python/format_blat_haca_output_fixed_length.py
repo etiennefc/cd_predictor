@@ -11,7 +11,7 @@ cols = ['match', 'mismatch', 'rep_match', 'Ns', 'query_gap_count', 'query_gap_ba
         'query_start', 'query_end', 'chr', 'target_size', 'start', 'end', 'block_count', 
         'block_sizes', 'query_starts', 'target_starts']
 
-fixed_length = int(snakemake.params.fixed_length)
+fixed_length = int(snakemake.wildcards.fixed_length)
 chr_size = snakemake.input.chr_size 
 genome = snakemake.input.genome
 
@@ -62,7 +62,7 @@ merged_df = pd.read_csv('temp_sno_bed_seq_'+snakemake.wildcards.species+'.sorted
 merged_df['sequence'] = merged_df['gene_name'].map(seq_dict)
 
 
-# Extend each H/ACA snoRNA sequence to obtain 520 nt (i.e. longest expressed CD + 15 nt up/downstream)
+# Extend each H/ACA snoRNA sequence to obtain 211 nt (i.e. longest expressed CD + 15 nt up/downstream)
 ext_seq_dict = {}
 for i_row in merged_bed:
     length_haca = int(i_row[2]) - int(i_row[1])
@@ -87,7 +87,7 @@ for i_row in merged_bed:
                     ext_seq_dict[haca_name] = seq
 
 
-merged_df['extended_520nt_sequence'] = merged_df['gene_name'].map(ext_seq_dict)
+merged_df[f'extended_{fixed_length}nt_sequence'] = merged_df['gene_name'].map(ext_seq_dict)
 
 # Remove offset of 1 nt created by bedtools when converting to bed
 merged_df['start'] = merged_df['start'] + 1
@@ -103,9 +103,12 @@ for k,v in attributes_dict.items():
 
 merged_df = merged_df[['gene_name', 'chr', 'strand', 'start', 'end', 
                         'genome_version', 'species_name', 'species_classification', 
-                        'sequence', 'extended_520nt_sequence']]
+                        'sequence', f'extended_{fixed_length}nt_sequence']]
 
 merged_df['gene_name'] = merged_df['gene_name'].str.replace(',', '_')
+
+# Remove long H/ACA (> 211 nt) so that their extended sequence is NaN
+merged_df = merged_df[~merged_df[f'extended_{fixed_length}nt_sequence'].isna()]
 
 sp.call('rm temp_sno_bed_seq_'+snakemake.wildcards.species+'*', shell=True)
 merged_df.to_csv(snakemake.output.df, sep='\t', index=False)

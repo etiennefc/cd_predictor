@@ -6,6 +6,7 @@ import numpy as np
 
 species = str(snakemake.wildcards.species)
 rs = snakemake.params.random_state
+fixed_length = snakemake.wildcards.fixed_length
 np.random.seed(rs) # set a fixed reproducible randomness
 positives = pd.read_csv(snakemake.input.expressed_cd_all_sets, sep='\t')
 intergenic_regions = pd.read_csv(snakemake.input.intergenic_regions, 
@@ -24,8 +25,8 @@ output_exonic = snakemake.output.random_exonic_regions
 
 
 # Get length of all positive examples (expressed C/D snoRNAs with flanking 15 nt) #Extended sequence!
-seqs = list(positives.extended_520nt_sequence)
-max_length = max([len(seq) for seq in seqs])  # they're all 520 nt long
+seqs = list(positives[f'extended_{fixed_length}nt_sequence'])
+max_length = max([len(seq) for seq in seqs])  # they're all 211 nt long
 
 # The intergenic/intronic regions are given without strand, so
 # we need to define a random choice between + or - for these
@@ -43,7 +44,7 @@ intergenic_regions['strand'] = intergenic_regions['strand'].map(strand_dict)
 def select_regions(df, location, output):
     """ Select n intergenic/intronic regions of size s in the pool of regions, 
         where n is the number of positive examples and s is the size of the
-        positive examples (i.e. 520  nt)."""
+        positive examples (i.e. 211  nt)."""
     # Select only regions that are at least as large as the longest positive
     df['len'] = df['end'] - df['start']
     df = df[df['len'] >= max_length + 2] # regions are least greater than 1 nt than sno length

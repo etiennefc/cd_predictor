@@ -4,6 +4,7 @@ def get_species_genome(wildcards):
     # Get the fasta of the genome of a given species
     # The wildcard here is sno_fasta
     species_name = str(wildcards).split('_cd_')[0]
+    species_name = species_name.split(' ')[0]
     protists = ["leishmania_major", "dictyostelium_discoideum", "giardia_lamblia"]
     if species_name == 'tetrahymena_thermophila':
         path = rules.download_tetrahymena_genome.output.genome
@@ -26,7 +27,8 @@ def get_all_genomes(dir):
 
 def get_chr_size(species):
     # Get the size of all chr of a given species
-    return glob.glob(f'data/references/chr_size/{species}*_chr_size.tsv')[0]
+    sp = str(species).split(' ')[0]
+    return glob.glob(f'data/references/chr_size/{sp}*_chr_size.tsv')[0]
 
 def get_species_gtf(species):
     # Get the gtf of the genome of a given species
@@ -58,3 +60,4 @@ def join_list(l, subl, remove=False):
     if remove==True:
         small_list = [a for a in l if a not in subl]
     return "{}".format("|".join(small_list))
+

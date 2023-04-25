@@ -8,6 +8,7 @@ le = preprocessing.LabelEncoder()
 short_dict = snakemake.params.short_name_dict
 rs = snakemake.params.random_state
 positives = pd.read_csv(snakemake.input.positives, sep='\t')
+fixed_length = snakemake.wildcards.fixed_length
 
 tuning_output = snakemake.output.tuning
 training_output = snakemake.output.training
@@ -36,10 +37,7 @@ shuffle_sno = shuffle_sno[shuffle_sno.gene_id.isin(positives.gene_id)]
 
 # Format species column
 haca['species'] = haca['species_name'].map(short_dict)
-shuffle_sno['species'] = shuffle_sno['species_name'].str.replace('homo_sapiens', 'H_sapiens')
-shuffle_sno['species'] = shuffle_sno['species'].str.replace('saccharomyces_cerevisiae', 'S_cerevisiae')
-shuffle_sno['species'] = shuffle_sno['species'].str.replace('mus_musculus', 'M_musculus')
-shuffle_sno['species'] = shuffle_sno['species'].map(short_dict)
+shuffle_sno['species'] = shuffle_sno['species_name']
 intronic['species'] = intronic['gene_id'].replace(r'_intronic_region_[0-9]*', '', regex=True)
 intergenic['species'] = intergenic['gene_id'].replace(r'_intergenic_region_[0-9]*', '', regex=True)
 exonic['species'] = exonic['gene_id'].replace(r'_exonic_region_[0-9]*', '', regex=True)
@@ -55,21 +53,21 @@ haca['gene_id'] = haca['gene_name']
 # Format extended sequence column
 for i, df in enumerate([shuffle_sno, intronic, intergenic, exonic]):
     if i == 0:
-        df['extended_520nt_sequence'] = df['shuffled_extended_520nt_seq']
+        df[f'extended_{fixed_length}nt_sequence'] = df[f'shuffled_extended_{fixed_length}nt_sequence']
     else:
-        df['extended_520nt_sequence'] = df['sequence']  # this is also an extended sequence
+        df[f'extended_{fixed_length}nt_sequence'] = df['sequence']  # this is also an extended sequence
 
 
 # Concat all negatives
 all_dfs = []
 for neg_df in [ncRNA, haca, shuffle_sno, intronic, intergenic, exonic]:
-    df_ = neg_df[['gene_id', 'gene_biotype', 'species', 'extended_520nt_sequence']]
+    df_ = neg_df[['gene_id', 'gene_biotype', 'species', f'extended_{fixed_length}nt_sequence']]
     all_dfs.append(df_)
 
 all_negatives = pd.concat(all_dfs)
 
 # Drop duplicate negatives (only in intergenic regions that have multiple NNNNNN)
-all_negatives = all_negatives.drop_duplicates(subset=['extended_520nt_sequence'])
+all_negatives = all_negatives.drop_duplicates(subset=[f'extended_{fixed_length}nt_sequence'])
 
 # Keep all shuffled snoRNA sequence (1:1 ratio compared to positives)
 final_negatives = [all_negatives[all_negatives['gene_biotype'] == 'shuffled_expressed_CD_snoRNA']]
@@ -102,6 +100,7 @@ final_negatives_df = final_negatives_df.rename(columns={
 
 # Shuffle on last time and split the negatives into the tuning, training and test set
 final_negatives_df = shuffle(shuffle(final_negatives_df, random_state=rs), random_state=rs)
+
 le.fit(list(pd.unique(final_negatives_df.gene_biotype)))
 y = le.transform(list(final_negatives_df.gene_biotype))  # this is to stratify according to the negative types
 
@@ -115,7 +114,4 @@ train, test = train_test_split(rest, train_size=0.78, # 78% of the remaining 90%
 tuning.to_csv(tuning_output, sep='\t', index=False)
 train.to_csv(training_output, sep='\t', index=False)
 test.to_csv(test_output, sep='\t', index=False)
-
-
-
 

@@ -8,7 +8,7 @@ output = snakemake.output.df
 rnacentral_df_paths = snakemake.input.beds
 genomes = snakemake.input.genomes
 chr_sizes = snakemake.input.chr_sizes
-fixed_length = int(snakemake.params.fixed_length)
+fixed_length = int(snakemake.wildcards.fixed_length)
 gff_gallus = pd.read_csv(snakemake.input.gallus_gallus_gff, sep='\t', 
                 names=['chr', 'source', 'feature', 'start', 'end', 
                         'dot', 'strand', 'dot2', 'attributes'], skiprows=1)
@@ -97,7 +97,7 @@ for path in list(pd.unique(rnacentral_df_paths)):
     merged_bed['species'] = species_name
     merged_bed['sequence'] = merged_bed['rnacentral_id'].map(dictio_seq)
 
-    # Extend sequence to flanking nt of ncRNA to obtain length of 520 nt
+    # Extend sequence to flanking nt of ncRNA to obtain length of 211 nt
     ext_seq_dict = {}
     for i_row in merged_bed_real:
         length_ncRNA = int(i_row[2]) - int(i_row[1])
@@ -121,7 +121,7 @@ for path in list(pd.unique(rnacentral_df_paths)):
                         seq = line.strip('\n')
                         ext_seq_dict[ncRNA_name] = seq
 
-    merged_bed['extended_520nt_sequence'] = merged_bed['rnacentral_id'].map(ext_seq_dict)
+    merged_bed[f'extended_{fixed_length}nt_sequence'] = merged_bed['rnacentral_id'].map(ext_seq_dict)
     
     
     dfs.append(merged_bed)
@@ -131,7 +131,7 @@ for path in list(pd.unique(rnacentral_df_paths)):
 # Concat all dfs and drop duplicate based on sequence
 final_df = pd.concat(dfs)
 final_df = final_df.drop_duplicates(subset=['sequence'])
-final_df = final_df.drop_duplicates(subset=['extended_520nt_sequence'])
+final_df = final_df.drop_duplicates(subset=[f'extended_{fixed_length}nt_sequence'])
 
 
 

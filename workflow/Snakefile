@@ -8,19 +8,16 @@ include: "rules/sno_literature_processing.smk"
 include: "rules/sno_tgirt_seq_processing.smk"
 include: "rules/sno_families.smk"
 include: "rules/negative_examples.smk"
-include: "rules/negative_examples_fixed_length_520nt.smk"
+include: "rules/negative_examples_fixed_length.smk"
 include: "rules/tune_train_test_sets.smk"
 include: "rules/one_hot_encoding_and_normalization.smk"
+include: "rules/figures.smk"
 
 
 rule all:
     input:
-        shuffled_sno_df = 'data/references/negatives/shuffle_sno/random_shuffle_all_expressed_cd_fixed_length_520nt.tsv',
-        df = 'data/references/rnacentral/filtered_tRNA_snRNA_pre_miRNA_fixed_length_520nt.tsv',
-        df_haca = expand('data/references/HACA/{species}_HACA_location_formated_fixed_length_520nt.tsv', species=[sp for sp in config['species'] + config['species_tgirt'] 
-                            if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 'tetrahymena_thermophila']]),
-        test_df = 'data/references/positives_and_negatives/initial/initial_test_set.tsv',
-        test = 'data/references/negatives/initial/negatives_test_set_fixed_length_520nt.tsv'
+        test = expand('data/references/positives_and_negatives/initial/initial_test_set_fixed_length_{fixed_length}nt.tsv', **config)
+        # also do for unfixed length for HMM
         #normalized_test = 'data/references/positives_and_negatives/initial/initial_encoded_scaled_test_set.tsv'
 
 rule all_downloads:
@@ -35,6 +32,10 @@ rule all_downloads:
                         config['species']+config['species_tgirt'] if sp not in 
                         ['ostreococcus_tauri', 'schizosaccharomyces_pombe']]),
         rfam_clans = "data/references/rfam/fam_clans_families.tsv"
+
+rule all_figures:
+    input:
+        density = 'results/figures/density/length_selection_positives.svg'
 
 
 

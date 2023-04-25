@@ -5,7 +5,7 @@ import collections as coll
 from pybedtools import BedTool
 import subprocess as sp 
 
-fixed_length = int(snakemake.params.fixed_length)
+fixed_length = int(snakemake.wildcards.fixed_length)
 species_short_name_dict = snakemake.params.species_short_name
 genomes = snakemake.input.genomes
 chr_size = snakemake.input.chr_size
@@ -28,7 +28,9 @@ for path in snakemake.input.sno_tgirt:
 # Concat all cd dfs together
 all_cd_df = pd.concat(sno_dfs)
 
-# Extend to 520 nt total around each snoRNA (520 nt = length of the longest expressed CD + 15 nt up/down stream)
+# Extend to fixed_length nt total around each snoRNA 
+# (fixed_length nt (i.e. 211 nt) = length of the longest 
+# expressed CD below the 95th percentile (181 nt) + 15 nt up/down stream)
 ext_seq_dict = {}
 for species in pd.unique(all_cd_df.species_name):
     genome_path = [path for path in genomes if species in path][0]
@@ -51,7 +53,7 @@ for species in pd.unique(all_cd_df.species_name):
                         'strand', 'species_name', 'feature', 'dot2', 'gene_biotype']]
         bed.to_csv(f'cd_fixed_bed_temp_{species}.tsv', sep='\t', index=False, header=False)
         sno_bed = BedTool(f'cd_fixed_bed_temp_{species}.tsv')
-        extended_sno_bed = sno_bed.slop(g=chr_size_path, l=l_extension, r=r_extension)  # extend sequence to obtain 520 nt
+        extended_sno_bed = sno_bed.slop(g=chr_size_path, l=l_extension, r=r_extension)  # extend sequence to obtain 211 nt
         extended_sequence_fa = extended_sno_bed.sequence(fi=genome_path, s=True, nameOnly=True)
 
         with open(extended_sequence_fa.seqfn, 'r') as fa:
@@ -66,13 +68,13 @@ for species in pd.unique(all_cd_df.species_name):
 
 
 
-# Create extended_520nt_sequence columns
-all_cd_df['extended_520nt_sequence'] = all_cd_df['gene_id'].map(ext_seq_dict)
+# Create extended_211nt_sequence columns
+all_cd_df[f'extended_{fixed_length}nt_sequence'] = all_cd_df['gene_id'].map(ext_seq_dict)
 all_cd_df = all_cd_df.drop(columns='extended_sequence')
 all_cd_df.to_csv(snakemake.output.df, sep='\t', index=False)
 
-# Create fasta of all extended expressed C/D sno sequences with fixed length of 520 nt
-d = dict(zip(all_cd_df.gene_id, all_cd_df.extended_520nt_sequence))
+# Create fasta of all extended expressed C/D sno sequences with fixed length of 211 nt
+d = dict(zip(all_cd_df.gene_id, all_cd_df[f'extended_{fixed_length}nt_sequence']))
 
 with open(snakemake.output.fa, 'w') as f:
     for id, sequence in d.items():

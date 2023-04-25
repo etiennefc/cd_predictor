@@ -13,10 +13,11 @@ rule get_sno_sequences:
     script:
         "../scripts/python/get_sno_sequences.py"
 
-rule get_sno_sequences_fixed_length_520nt:
+rule get_sno_sequences_fixed_length:
     """ Get all expressed C/D snoRNA sequences (from the literature and 
         TGIRT-seq) regrouped in a fasta file. Get a fixed extended 
-        length = 520 nt (i.e. longest expressed snoRNA + 15 nt up/downstream)"""
+        length (i.e. longest expressed snoRNA (below the 95th 
+        percentile) + 15 nt up/downstream)"""
     input:
         sno_literature = rules.merge_sno_location_species.output.df,
         sno_tgirt = expand(rules.get_expressed_snoRNAs_location.output.expressed_sno_df, 
@@ -24,15 +25,14 @@ rule get_sno_sequences_fixed_length_520nt:
         genomes = get_all_genomes('data/references/genome_fa/*.fa'),
         chr_size = get_all_genomes('data/references/chr_size/*.tsv')
     output:
-        fa = 'data/references/all_expressed_cd_sequences_fixed_length_520nt.fa',
-        df = 'data/references/all_expressed_cd_sequences_location_fixed_length_520nt.tsv'
+        fa = 'data/references/all_expressed_cd_sequences_fixed_length_{fixed_length}nt.fa',
+        df = 'data/references/all_expressed_cd_sequences_location_fixed_length_{fixed_length}nt.tsv'
     params:
-        fixed_length = 520,
         species_short_name = config['species_short_name']
     conda:
         "../envs/python_new.yaml"
     script:
-        "../scripts/python/get_sno_sequences_fixed_length_520nt.py"
+        "../scripts/python/get_sno_sequences_fixed_length.py"
 
 rule infernal:
     """ Use Infernal and Rfam covariance 
@@ -74,7 +74,7 @@ rule tuning_train_test_split_rfam:
         sno_tgirt = expand(rules.get_expressed_snoRNAs_location.output.expressed_sno_df, 
                                 species=['homo_sapiens', 'mus_musculus', 'saccharomyces_cerevisiae']),
         rfam_clans = rules.download_rfam_clans.output.df,
-        extended_520nt_sno_seq = rules.get_sno_sequences_fixed_length_520nt.output.df
+        #extended_sno_seq = rules.get_sno_sequences_fixed_length.output.df
     output:
         tuning = 'data/references/infernal/cd_rfam_filtered_tuning_set.tsv',
         training = 'data/references/infernal/cd_rfam_filtered_training_set.tsv',
@@ -86,5 +86,28 @@ rule tuning_train_test_split_rfam:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/tuning_train_test_split_rfam.py"
+
+rule tuning_train_test_split_rfam_fixed_length:
+    """ Split expressed C/D in 3 datasets (tuning (10%), training (70%) 
+        and test set (20%)). SnoRNAs of a same Rfam clan (then Rfam family) 
+        are all kept within the same set so that we limit overfitting. """
+    input:
+        sno_rfam = rules.filter_infernal.output.df,
+        sno_literature = rules.merge_sno_location_species.output.df,
+        sno_tgirt = expand(rules.get_expressed_snoRNAs_location.output.expressed_sno_df, 
+                                species=['homo_sapiens', 'mus_musculus', 'saccharomyces_cerevisiae']),
+        rfam_clans = rules.download_rfam_clans.output.df,
+        extended_sno_seq = rules.get_sno_sequences_fixed_length.output.df
+    output:
+        tuning = 'data/references/infernal/cd_rfam_filtered_tuning_set_fixed_length_{fixed_length}nt.tsv',
+        training = 'data/references/infernal/cd_rfam_filtered_training_set_fixed_length_{fixed_length}nt.tsv',
+        test = 'data/references/infernal/cd_rfam_filtered_test_set_fixed_length_{fixed_length}nt.tsv',
+        all_positives = 'data/references/positives/cd_rfam_filtered_all_fixed_length_{fixed_length}nt.tsv'
+    params:
+        random_seed = 42
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/tuning_train_test_split_rfam_fixed_length.py"
 
 
