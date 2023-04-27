@@ -44,3 +44,19 @@ def density_percentile(df, xlabel, ylabel, title, path, percentile_list, percent
                 fontsize=20)
     fig.suptitle(title, fontsize=65, weight='bold', x=0.36, y=1)
     plt.savefig(path, dpi=600, bbox_inches='tight')
+
+def lineplot(df, x_col, y_col, hue_col, xlabel, ylabel, title, color_dict, path, **kwargs):
+    """ 
+    Create a vertical connected dot plot or lineplot.
+    """
+    plt.rcParams['svg.fonttype'] = 'none'
+    rc = {'ytick.labelsize': 20, 'xtick.labelsize': 20}
+    plt.rcParams.update(**rc)    
+    fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+    sns.lineplot(df, x=x_col, y=y_col, hue=hue_col, palette=color_dict, 
+                    marker='o', markeredgecolor='grey', **kwargs)
+    ax.set_xlabel(xlabel, fontdict={'fontsize': 25})
+    ax.set_ylabel(ylabel, fontdict={'fontsize': 25})
+    ax.set_ylim(0, 1.05)
+    fig.suptitle(title, fontsize=65, weight='bold', x=0.36, y=1)
+    plt.savefig(path, dpi=600, bbox_inches='tight')

@@ -33,7 +33,9 @@ exonic = concat_dfs(snakemake.input.random_exonic_regions)
 
 # Filter out shuffled C/D sequences that are not present in the positives 
 # (because we limited the number of sno per RFAM family to max 10)
-shuffle_sno = shuffle_sno[shuffle_sno.gene_id.isin(positives.gene_id)]
+shuffle_sno['id_modified'] = shuffle_sno['gene_id'].str.replace('_shuffle$', '', regex=True)
+shuffle_sno = shuffle_sno[shuffle_sno.id_modified.isin(positives.gene_id)]
+shuffle_sno = shuffle_sno.drop(columns=['id_modified'])
 
 # Format species column
 haca['species'] = haca['species_name'].map(short_dict)

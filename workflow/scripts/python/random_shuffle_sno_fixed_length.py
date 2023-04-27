@@ -23,4 +23,7 @@ for sno_id_ext, ext_seq in ext_seq_dict.items():
 
 sno_df[f'shuffled_extended_{fixed_length}nt_sequence'] = sno_df.gene_id.map(shuffled_ext_seq_dict)
 
+# Modify gene_id so it will be different from the original gene_id not shuffled
+sno_df['gene_id'] = sno_df['gene_id'] + '_shuffle'
+
 sno_df.to_csv(output, sep='\t', index=False)

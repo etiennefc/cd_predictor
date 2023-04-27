@@ -256,3 +256,13 @@ rule download_rfam_clans:
     shell:
         "wget -O {output.df}.gz {params.link} && "
         "gunzip {output.df}.gz"
+
+rule download_rDNA:
+    """ Download ribosomal DNA fasta file per species 
+        (it's needed to run snoscan). """ # TO PUT ON ZENODO!!!
+    output:
+        rDNA_fa = 'data/references/rDNA/rDNA_species.fa'
+    params:
+        link = config['download']['rDNA'] 
+    shell:
+        "wget -O {output.rDNA_fa} {params.link}"

@@ -11,13 +11,17 @@ include: "rules/negative_examples.smk"
 include: "rules/negative_examples_fixed_length.smk"
 include: "rules/tune_train_test_sets.smk"
 include: "rules/one_hot_encoding_and_normalization.smk"
+include: "rules/existing_cd_predictors.smk"
 include: "rules/figures.smk"
 
 
 rule all:
     input:
-        test = expand('data/references/positives_and_negatives/initial/initial_test_set_fixed_length_{fixed_length}nt.tsv', **config)
-        # also do for unfixed length for HMM
+        test = expand('data/references/positives_and_negatives/initial/initial_test_set_fixed_length_{fixed_length}nt.tsv', **config),
+        snoreport_predictions = expand('results/predictions/snoreport2/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
+        snoscan_predictions = expand('results/predictions/snoscan/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
+        infernal_tblout = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/test_predictions.tsv', **config)
+        # also do for unfixed length for HMM  # regenerate shuffle with modified shuffle id
         #normalized_test = 'data/references/positives_and_negatives/initial/initial_encoded_scaled_test_set.tsv'
 
 rule all_downloads:
@@ -35,7 +39,9 @@ rule all_downloads:
 
 rule all_figures:
     input:
-        density = 'results/figures/density/length_selection_positives.svg'
+        density = 'results/figures/density/length_selection_positives.svg',
+        dotplot = expand('results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}.svg', **config)
+        #roc = expand('results/figures/roc/existing_cd_predictors_{fixed_length}.svg', **config)
 
 
 
