@@ -79,6 +79,19 @@ rule select_random_intergenic_intronic_exonic_regions_fixed_length:
     script:
         "../scripts/python/select_random_intergenic_intronic_exonic_regions_fixed_length.py"
 
+rule get_human_snoRNA_pseudogenes:
+    """ Get human snoRNA pseudogenes (i.e. not expressed) extended sequence"""
+    input:
+        human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno,
+        human_genome = expand(rules.download_mammal_genome.output.genome, species='homo_sapiens'),
+        human_chr_size = expand(rules.get_chr_size_tgirt.output.chr_size, species='homo_sapiens')
+    output:
+        pseudogenes = 'data/references/negatives/snoRNA_pseudogenes/homo_sapiens_pseudogene_snoRNAs_{fixed_length}nt.tsv'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/get_human_snoRNA_pseudogenes.py"
+
 rule get_all_initial_negatives_fixed_length:
     """ From all negative examples (other ncRNA sequences (H/ACA, 
         tRNA, snRNA, pre-miRNA), shuffle of C/D sequences, random 

@@ -11,7 +11,7 @@ with open(fa, 'r') as f:
     for line in f:
         if line.startswith('>>'):
             gene_id = line.split(' ')[1]
-            if gene_id not in predictions_id:
+            if gene_id not in predictions_id.keys():
                 predictions_id[gene_id] = 'expressed_CD_snoRNA'
 
 # Create the snoscan_prediction column
