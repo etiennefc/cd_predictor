@@ -7,6 +7,7 @@ import collections as coll
 model = str(snakemake.wildcards.cd_predictors)
 df_path = [path for path in snakemake.input if model in path][0]
 df = pd.read_csv(df_path, sep='\t')
+df = df[df['gene_biotype'] != 'snoRNA_pseudogene'] # don't count these as FP or FN
 bar_all = snakemake.output.bar_all
 bar_FN_FP = snakemake.output.bar_FN_FP
 species_colors = snakemake.params.species_colors

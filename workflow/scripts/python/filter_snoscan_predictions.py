@@ -14,6 +14,9 @@ with open(fa, 'r') as f:
             if gene_id not in predictions_id.keys():
                 predictions_id[gene_id] = 'expressed_CD_snoRNA'
 
+# Drop snoRNA pseudogene predictions
+test_set = test_set[test_set['gene_biotype'] != 'snoRNA_pseudogene']
+
 # Create the snoscan_prediction column
 test_set['snoscan_prediction'] = test_set['gene_id'].map(predictions_id)
 test_set['snoscan_prediction'] = test_set['snoscan_prediction'].fillna('other')

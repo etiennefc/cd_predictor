@@ -19,6 +19,9 @@ df = snoreport.merge(snoscan[['gene_id', 'snoscan_prediction']],
 df = df.merge(infernal_rfam[['gene_id', 'infernal_rfam_prediction']], 
                         how='left', on='gene_id')
 
+# Keep only the prediction made on negatives other than snoRNA pseudogenes (i.e. a separate class to predict)
+df = df[df['gene_biotype'] != 'snoRNA_pseudogene']
+
 # Compute the different metrics for each model
 dfs = []
 for model in color_dict.keys():

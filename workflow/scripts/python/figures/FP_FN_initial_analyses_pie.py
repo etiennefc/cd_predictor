@@ -23,6 +23,7 @@ biotype_colors = [ty_colors[biot] for biot in biotype]
 ax_titles = []
 species_count, neg_type_count = [], []
 for i, df in enumerate([snoreport, snoscan, infernal_rfam]):
+    df = df[df['gene_biotype'] != 'snoRNA_pseudogene']  # don't count these in the predictions
     if error == 'FP':
         fp = df[(df['target'] == 'other') & (df[f'{mods[i]}_prediction'] == 'expressed_CD_snoRNA')]
         err = 'false positives'

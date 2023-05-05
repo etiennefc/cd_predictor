@@ -117,8 +117,8 @@ rule get_all_initial_negatives_fixed_length:
         random_exonic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions_fixed_length.output.random_exonic_regions,
                     species=[sp for sp in config['species']+config['species_tgirt'] 
                         if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']], fixed_length=config['fixed_length']),
-        positives = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives
-        #human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno  # control for rfam family as with the positives?
+        positives = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives,
+        human_snoRNA_pseudogenes = rules.get_human_snoRNA_pseudogenes.output.pseudogenes
     output:
         tuning = 'data/references/negatives/initial/negatives_tuning_set_fixed_length_{fixed_length}nt.tsv',
         training = 'data/references/negatives/initial/negatives_training_set_fixed_length_{fixed_length}nt.tsv',

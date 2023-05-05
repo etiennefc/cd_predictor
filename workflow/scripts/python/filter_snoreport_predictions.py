@@ -18,6 +18,9 @@ with open(fa, 'r') as f:
                 id = re.sub('_1$', '', example_id)
                 positives_dict[id] = 'expressed_CD_snoRNA'
 
+# Drop snoRNA pseudogene predictions
+test_set = test_set[test_set['gene_biotype'] != 'snoRNA_pseudogene']
+
 # Create the snoreport2_prediction column
 test_set['snoreport2_prediction'] = test_set['gene_id'].map(positives_dict)
 test_set['snoreport2_prediction'] = test_set['snoreport2_prediction'].fillna('other')

@@ -30,6 +30,7 @@ shuffle_sno = pd.read_csv(snakemake.input.shuffle_sno, sep='\t')
 intronic = concat_dfs(snakemake.input.random_intronic_regions)
 intergenic = concat_dfs(snakemake.input.random_intergenic_regions)
 exonic = concat_dfs(snakemake.input.random_exonic_regions)
+pseudosno = pd.read_csv(snakemake.input.human_snoRNA_pseudogenes, sep='\t')
 
 # Filter out shuffled C/D sequences that are not present in the positives 
 # (because we limited the number of sno per RFAM family to max 10)
@@ -43,6 +44,7 @@ shuffle_sno['species'] = shuffle_sno['species_name']
 intronic['species'] = intronic['gene_id'].replace(r'_intronic_region_[0-9]*', '', regex=True)
 intergenic['species'] = intergenic['gene_id'].replace(r'_intergenic_region_[0-9]*', '', regex=True)
 exonic['species'] = exonic['gene_id'].replace(r'_exonic_region_[0-9]*', '', regex=True)
+pseudosno['species'] = pseudosno['species_name']
 
 # Format biotype column
 haca['gene_biotype'] = 'HACA_snoRNA'
@@ -62,7 +64,7 @@ for i, df in enumerate([shuffle_sno, intronic, intergenic, exonic]):
 
 # Concat all negatives
 all_dfs = []
-for neg_df in [ncRNA, haca, shuffle_sno, intronic, intergenic, exonic]:
+for neg_df in [ncRNA, haca, shuffle_sno, intronic, intergenic, exonic, pseudosno]:
     df_ = neg_df[['gene_id', 'gene_biotype', 'species', f'extended_{fixed_length}nt_sequence']]
     all_dfs.append(df_)
 
@@ -71,8 +73,9 @@ all_negatives = pd.concat(all_dfs)
 # Drop duplicate negatives (only in intergenic regions that have multiple NNNNNN)
 all_negatives = all_negatives.drop_duplicates(subset=[f'extended_{fixed_length}nt_sequence'])
 
-# Keep all shuffled snoRNA sequence (1:1 ratio compared to positives)
-final_negatives = [all_negatives[all_negatives['gene_biotype'] == 'shuffled_expressed_CD_snoRNA']]
+# Keep all shuffled snoRNA sequence (1:1 ratio compared to positives) and snoRNA_pseudogenes (~0.73:1 ratio)
+final_negatives = [all_negatives[all_negatives['gene_biotype'].isin(
+                        ['shuffled_expressed_CD_snoRNA', 'snoRNA_pseudogene'])]]
 
 # Keep a ratio of 1:1 for H/ACA, tRNA, snRNA and premiRNA compared to positives (total 4:1)
 for mncRNA in ['HACA_snoRNA', 'pre_miRNA', 'tRNA', 'snRNA']:
@@ -94,7 +97,7 @@ for region in ['random_intronic_region', 'random_intergenic_region', 'random_exo
         selected_region_df = region_df.sample(n = 6 * len(positives), random_state=rs)  # 6:1 ratio
         final_negatives.append(selected_region_df)
 
-# Concat all selected negatives
+# Concat all selected negatives (except the snoRNA pseudogenes)
 final_negatives_df = pd.concat(final_negatives)
 final_negatives_df = final_negatives_df.rename(columns={
                             'species': 'species_name'})

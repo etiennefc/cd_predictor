@@ -18,10 +18,10 @@ include: "rules/figures.smk"
 rule all:
     input:
         test = expand('data/references/positives_and_negatives/initial/initial_test_set_fixed_length_{fixed_length}nt.tsv', **config),
-        snoreport_predictions = expand('results/predictions/snoreport2/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
-        snoscan_predictions = expand('results/predictions/snoscan/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
-        infernal_tblout = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
-        pseudosno_preds = expand('results/predictions/snoRNA_pseudogenes/fixed_length_{fixed_length}nt/snoreport_snoscan_infernal_snoRNA_pseudogenes_predictions.tsv', **config)
+        #snoreport_predictions = expand('results/predictions/snoreport2/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
+        #snoscan_predictions = expand('results/predictions/snoscan/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
+        #infernal_tblout = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
+        #pseudosno_preds = expand('results/predictions/snoRNA_pseudogenes/fixed_length_{fixed_length}nt/snoreport_snoscan_infernal_snoRNA_pseudogenes_predictions.tsv', **config)
         # also do for unfixed length for HMM  # regenerate shuffle with modified shuffle id
         #normalized_test = 'data/references/positives_and_negatives/initial/initial_encoded_scaled_test_set.tsv'
 
