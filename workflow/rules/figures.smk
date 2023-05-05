@@ -63,12 +63,32 @@ rule FP_FN_initial_analyses_pie:
     output:
         pie_species = 'results/figures/pie/{error}_per_species_existing_cd_predictors_{fixed_length}.svg',
         pie_neg_type = 'results/figures/pie/{error}_per_negative_type_existing_cd_predictors_{fixed_length}.svg'
+    params:
+        species_colors = config['colors']['species'],
+        biotype_colors = config['colors']['biotypes']
     conda:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/figures/FP_FN_initial_analyses_pie.py"
 
-
+rule bar_confusion_value_per_species_test:
+    """ Create a stacked bar chart showing the proportion of test set examples 
+        predicted as FP, FN, TP, TN per species, with the total number of 
+        examples in the set for the given species above the bars."""
+    input:
+        snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
+        snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
+        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv
+    output:
+        bar_all = 'results/figures/barplot/confusion_values_per_species_{cd_predictors}_{fixed_length}.svg',
+        bar_FN_FP = 'results/figures/barplot/FN_FP_per_species_{cd_predictors}_{fixed_length}.svg'
+    params:
+        species_colors = config['colors']['species'],
+        conf_value_colors = config['colors']['confusion_value']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/bar_confusion_value_per_species_test.py" 
 
 
 

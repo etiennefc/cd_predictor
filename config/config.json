@@ -178,6 +178,43 @@
       "snoreport2": "#bebada",
       "snoscan": "#80b1d3",
       "infernal_rfam": "#b3de69"
+    },
+    "species":
+    {
+      "arabidopsis_thaliana": "#a6cee3",
+      "caenorhabditis_elegans": "#1f78b4",
+      "dictyostelium_discoideum": "#b2df8a",
+      "drosophila_melanogaster": "#33a02c",
+      "gallus_gallus": "#fb9a99",
+      "giardia_lamblia": "#e31a1c",
+      "homo_sapiens": "#fdbf6f",
+      "leishmania_major": "#ff7f00",
+      "macaca_mulatta": "#cab2d6",
+      "mus_musculus": "#6a3d9a",
+      "ornithorhynchus_anatinus": "#ffff99",
+      "oryza_sativa": "#b15928",
+      "ostreococcus_tauri": "lightgrey",
+      "saccharomyces_cerevisiae": "grey",
+      "tetrahymena_thermophila": "black"
+    },
+    "biotypes":
+    {
+      "HACA_snoRNA": "#d73027",
+      "expressed_CD_snoRNA": "orange",
+      "pre_miRNA": "pink",
+      "random_exonic_region": "lightgrey",
+      "random_intergenic_region": "grey",
+      "random_intronic_region": "black",
+      "shuffled_expressed_CD_snoRNA": "green",
+      "snRNA": "blue",
+      "tRNA": "#4575b4"
+    },
+    "confusion_value":
+    {
+      "TP": "#f1b6da",
+      "TN": "#b8e186",
+      "FP": "#4dac26",
+      "FN": "#d01c8b"
     }
   },
   "path":
