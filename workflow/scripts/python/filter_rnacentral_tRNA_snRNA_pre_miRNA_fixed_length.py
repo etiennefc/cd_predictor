@@ -128,10 +128,11 @@ for path in list(pd.unique(rnacentral_df_paths)):
 
 
     
-# Concat all dfs and drop duplicate based on sequence
+# Concat all dfs and drop duplicate based on sequence and drop those where no extended sequence could be found
 final_df = pd.concat(dfs)
 final_df = final_df.drop_duplicates(subset=['sequence'])
 final_df = final_df.drop_duplicates(subset=[f'extended_{fixed_length}nt_sequence'])
+final_df = final_df[~final_df[f'extended_{fixed_length}nt_sequence'].isna()]
 
 
 
