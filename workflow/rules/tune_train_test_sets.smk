@@ -42,7 +42,6 @@ rule get_three_sets_initial_fixed_length:
     script:
         "../scripts/python/get_three_sets_initial_fixed_length.py"
 
-# rule same as initial but with snoRNA pseudogenes as negatives
 
 # rule to use not only sequence but other specified features as 
 # input (box_score, structure stability, terminal_stem_stability)

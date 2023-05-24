@@ -40,10 +40,10 @@ for i, df in enumerate([tuning, training, test]):
     df = pd.concat([df, temp_df], axis=1)  # Add new cols horizontally
     df.to_csv(one_hot_output[i], index=False, sep='\t')  # save one-hot-encoded output
 
-    # Create target df and create three classes to predict (0: other, 1: expressed_CD_snoRNA, 2: CD_snoRNA_pseudogene)
+    # Create target df and create three classes to predict (0: other, 1: CD_snoRNA_pseudogene, 2: expressed_CD_snoRNA)
     target_df = df.copy()
-    target_df['target'] = target_df['target'].replace({'other': 0, 'expressed_CD_snoRNA': 1})
-    target_df.loc[target_df['gene_biotype'] == 'snoRNA_pseudogene', 'target'] = 2
+    target_df['target'] = target_df['target'].replace({'other': 0, 'expressed_CD_snoRNA': 2})
+    target_df.loc[target_df['gene_biotype'] == 'snoRNA_pseudogene', 'target'] = 1
     target_df = target_df[['gene_id', 'target']]
     target_df.to_csv(target_output[i], sep='\t', index=False)
 
