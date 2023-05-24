@@ -155,3 +155,21 @@ rule filter_cd_predictors_pseudosno:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/filter_cd_predictors_pseudosno.py"
+
+rule confusion_matrix_cd_predictors:
+    """ Generate a confusion matrix for each existing cd predictors based on 
+        the expressed_CD vs other (not considering the snoRNA pseudogene 
+        class here)."""
+    input:
+        snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
+        snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
+        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv
+    output:
+        matrix_snoreport = 'results/predictions/snoreport2/fixed_length_{fixed_length}nt/confusion_matrix.tsv',
+        matrix_snoscan = 'results/predictions/snoscan/fixed_length_{fixed_length}nt/confusion_matrix.tsv',
+        matrix_infernal_rfam = 'results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/confusion_matrix.tsv'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/confusion_matrix_cd_predictors.py"
+
