@@ -35,18 +35,25 @@ rule roc_curve_cd_predictors:
 
 rule metrics_lineplot_predictors:
     """ Compute the precision, recall, accuracy and f1-score 
-        on the test set and also true negative rate (i.e specificity) 
-        on the C/D pseudogenes negatives (i.e not expressed human C/D) 
-        for the models and display it as a dot plot."""
+        on the test set (relative to other vs expressed_CD_snoRNA) 
+        and also the precision/recall on the snoRNA_pseudogene class 
+        for the existing cd predictors and simple models (knn, gbm, 
+        logreg, svc and rf) and display it as a dot plot."""
     input:
         snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
         snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
         infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv,
-        pseudosno_preds = rules.filter_cd_predictors_pseudosno.output.pseudosno_preds
+        pseudosno_preds = rules.filter_cd_predictors_pseudosno.output.pseudosno_preds,
+        simple_models_preds = expand(rules.test_simple_models.output.y_preds, 
+                                    simple_models=config['simple_models'], allow_missing=True),
+        simple_models_pseudosno_preds = expand(rules.test_simple_models.output.pseudosno_preds, 
+                                    simple_models=config['simple_models'], allow_missing=True)
     output:
-        dotplot = 'results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}.svg'
+        dotplot = 'results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}.svg',
+        dotplot_simple_models = 'results/figures/lineplot/metrics_simple_models_{fixed_length}.svg'
     params:
-        colors = config['colors']['predictors']
+        predictors_colors = config['colors']['predictors'],
+        simple_models_colors = config['colors']['simple_models']
     conda:
         "../envs/python_new.yaml"
     script:

@@ -17,6 +17,44 @@
                             "ornithorhynchus_anatinus"],
   "fixed_length": [211],
   "cd_predictors": ["snoreport2", "snoscan", "infernal_rfam"],
+  "simple_models": ["logreg", "svc", "rf", "gbm", "knn"],
+  "hyperparameter_space":
+  {
+    "logreg":
+    {
+      "C": [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+      "solver": ["newton-cg", "lbfgs", "liblinear", "sag", "saga"]
+    },
+    "svc":
+    {
+      "C": [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+      "gamma": ["auto", "scale"],
+      "kernel": ["linear", "poly", "rbf", "sigmoid"],
+      "degree": [3, 4, 5]
+    },
+    "rf":
+    {
+      "n_estimators": [10, 100, 1000, 5000],
+      "max_depth": [1, 2, 3, 4, 5],
+      "min_samples_split": [2, 5, 10],
+      "min_samples_leaf": [1, 2, 3, 4]
+    },
+    "gbm":
+    {
+      "loss": ["log_loss", "exponential"],
+      "n_estimators": [10, 100, 1000, 5000],
+      "max_depth": [1, 2, 3, 4, 5],
+      "min_samples_split": [2, 5, 10],
+      "min_samples_leaf": [1, 2, 3, 4]
+    },
+    "knn":
+    {
+      "n_neighbors": [2, 5, 10, 30],
+      "weights": ["uniform", "distance"],
+      "leaf_size": [5, 10, 30],
+      "p": [1, 2]
+    }
+  },  
   "rDNA_ncbi_ids": ["KT445934.2", "HQ141459.1", "AM168071.1", "JF931128.1", "KX061890.1", "X03680.1",
                   "OP829811.1", "XR_002460811.1", "XR_005248692.1", "XR_005248693.1", "7PWO_1", "X54512.1",
                   "XR_003764684.1", "LC086814.1", "AJ311679.1", "X52320.1", "X15707.1", "NR_146144", 
@@ -178,6 +216,14 @@
       "snoreport2": "#bebada",
       "snoscan": "#80b1d3",
       "infernal_rfam": "#b3de69"
+    },
+    "simple_models":
+    {
+      "logreg": "#feb24c",
+      "svc": "#fd8d3c",
+      "rf": "#fc4e2a",
+      "gbm": "#e31a1c",
+      "knn": "#b10026"
     },
     "species":
     {
