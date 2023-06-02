@@ -3,24 +3,26 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import optuna
-from optuna import pruners
-from optuna.trial import TrialState
-import math
 import random
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score
 
-# Load tuning data and create tensor matrix (format used by pytorch)
-X = pd.read_csv(snakemake.input.X_tuning, sep='\t')
+# Load training data and create tensor matrix (format used by pytorch)
+X = pd.read_csv(snakemake.input.X_train, sep='\t')
 x_tensor = torch.tensor(X.drop(columns=['gene_id']).values)
-y = pd.read_csv(snakemake.input.y_tuning, sep='\t')
+y = pd.read_csv(snakemake.input.y_train, sep='\t')
 y_tensor = torch.tensor(y.drop(columns=['gene_id']).values)
 
-hyperparam_space = snakemake.params.hyperparams_search_space
-output = snakemake.output.best_hyperparams
+# Load best hyperparams
+best_hyperparams_df = pd.read_csv(snakemake.input.best_hyperparams, sep='\t')
+best_hyperparams_dict = {k: v[0] for k,v in 
+                        best_hyperparams_df.to_dict(orient='list').items() 
+                        if k != 'avg_f1_score_3fold_tuning'}
 
+output_model = snakemake.output.trained_model
+output_metrics = snakemake.output.training_metrics
+output_avg_metrics = snakemake.output.avg_train_metrics
 
 # Set reproducible randomness 
 rs = int(snakemake.params.random_state)
@@ -39,23 +41,12 @@ input_size = len([col for col in X.columns
             if '_norm' in col])  # number of input features (5 (ATCGN) nt * 211 of length)
 output_size = len(pd.unique(y.target))  # number of class to predicts
 total_length = len(X)  # i.e. nb of examples in input dataset
-# 1 epoch corresponds to 1 forward pass and 1 backpropagation 
-# on all examples (so there there is generally more than 1 epoch)
+
+""" Create learning curve of training and validation loss for each fold. Evaluate number 
+    of epoch before overfitting by implement early stopping"""
 num_epochs = 50  
 batch_size = 107  # nb of example per batch (this is an intermediate batch size)
 num_batches = int(total_length / batch_size)  # the number of batches
-num_trials = 300  # the number of tested hyperparameter combinations
-
-# Define hyperparams space
-def split_dict(d, key):
-    # Return first and second value of list associated to key in dict d
-    return d[key][0], d[key][1]
-
-min_layer, max_layer = split_dict(hyperparam_space, 'n_layers')
-min_node, max_node = split_dict(hyperparam_space, 'n_nodes')
-min_dropout, max_dropout = split_dict(hyperparam_space, 'dropout_rate')
-min_l_rate, max_l_rate = split_dict(hyperparam_space, 'learning_rate')
-
 
 
 
@@ -108,6 +99,82 @@ class GRU_nn(nn.Module):
         # Return the output of the last layer (forward pass) only
         out = self.last_layer(hiddens[-1])  # no dropout in that last layer
         return out
+
+# Iterate over fold in stratified 10-fold CV
+skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=rs)
+f1_scores = []
+for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(), y_tensor.numpy())):
+    fold_i = str(fold_index + 1)
+    print(f'FOLD {fold_i}')
+
+    # Get best hyperparams separated
+    hidden_sizes = [best_hyperparams_dict[k] for k in 
+                    sorted(best_hyperparams_dict.keys()) if 'hidden_size_' in k]
+    num_layers = best_hyperparams_dict['num_layers']
+    dropout_rate = best_hyperparams_dict['dropout_rate']
+    learning_rate = best_hyperparams_dict['learning_rate']
+    optimizer_name = best_hyperparams_dict['optimizer']
+
+    # Initialize GRU and loss function
+    model = GRU_nn(input_size, hidden_sizes, num_layers, output_size, dropout_rate)
+    loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/3, 1/3, 1/3]))
+
+    # Initialize optimizer
+    if optimizer_name == "Adam":
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    else:
+        optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+    
+    # Load dataset
+    x_train, x_test = x_tensor[train_index], x_tensor[test_index]
+    y_train, y_test = y_tensor[train_index], y_tensor[test_index]
+
+    # Iterate over epoch
+    for epoch in range(num_epochs):
+        train_dataset = CustomDataset(x_train, y_train)
+        train_dataset = torch.utils.data.DataLoader(train_dataset, 
+                            batch_size=batch_size, shuffle=True)  # shuffle train_dataset between epochs
+        #########Might need to drop the last mini-batch which won't be of same length (drop_last=True)
+        
+        #Iterate over batches comprised in 1 epoch
+        for i, (input_batch, label_batch) in enumerate(train_dataset):
+            # where input_batch: input samples with features in that batch
+            # where label_batch: target labels of that batch to predict
+            print(f'BATCH {i + 1}')
+            label_batch = label_batch.reshape(batch_size)  # reshape to 1d tensor
+
+            # Enable training mode (activate dropout and gradient computation (for backprop))
+            model.train()
+            optimizer.zero_grad()  # set gradient values to 0 (gradient are 
+                                # computed in the backprop to update the model's params)
+            output = model(input_batch.float())  # output is computed through forward pass
+            loss = loss_fn(output, label_batch)  # loss is computed (comparison between predictions and true labels)
+            loss.backward()  # backpropagation computation to update the model's params
+            optimizer.step()  # update the model's params using the computed gradients (via optimizer)
+        
+        # Compute f1_score on held-out fold
+        # save that f1_score for each epoch and fold 
+        # Create graph for each fold to see what is the number of epoch before doing early stopping
+         # Save model for each fold
+         # Average f1-score across the 10 folds
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -221,5 +288,7 @@ params_df = pd.DataFrame(best_hyperparams_dict, index=[0])
 params_df.to_csv(output, sep='\t', index=False)
 
 
+
+"""Plot learning curve for training after choosing the set of hyperparameters"""
 
 

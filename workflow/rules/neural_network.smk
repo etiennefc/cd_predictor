@@ -21,14 +21,19 @@ rule hypertuning_gru:
 
 rule training_gru:
     """ Train the GRU with the best hyperparams. Use a 10-fold CV 
-        approach to evaluate the average performance of the model."""
+        approach to evaluate the average performance of the model. 
+        Save the model trained on each fold and its performance 
+        metrics. Save also the average metrics across the 10 folds."""
     input:
         X_train = rules.onehot_encode_normalize_initial_fixed_length.output.normalized_training,
         y_train = rules.onehot_encode_normalize_initial_fixed_length.output.target_training,
         best_hyperparams = rules.hypertuning_gru.output.best_hyperparams
     output:
-        pickled_trained_model = 'results/predictions/gru/{fixed_length}nt/gru_trained_{fixed_length}nt.sav',
-        training_accuracy = 'results/predictions/gru/{fixed_length}nt/gru_training_accuracy_{fixed_length}nt.tsv'
+        trained_model = expand('results/predictions/gru/{fixed_length}nt/gru_trained_{fixed_length}nt_fold_{fold_num}.pt', 
+                                        fold_num=[str(i) for i in range(1,11)], allow_missing=True),
+        training_metrics = expand('results/predictions/gru/{fixed_length}nt/gru_training_metrics_{fixed_length}nt_fold_{fold_num}.tsv',
+                                        fold_num=[str(i) for i in range(1,11)], allow_missing=True),
+        avg_train_metrics = 'results/predictions/gru/{fixed_length}nt/gru_avg_training_metrics_{fixed_length}nt_across_folds.tsv'
     params:
         random_state = 42
     conda:
