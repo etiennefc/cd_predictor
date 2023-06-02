@@ -1,5 +1,8 @@
 """ Common functions used across the workflow"""
 
+wildcard_constraints:
+    simple_models = "({})".format("|".join(config["simple_models"]))
+
 def get_species_genome(wildcards):
     # Get the fasta of the genome of a given species
     # The wildcard here is sno_fasta
