@@ -58,7 +58,7 @@ def lineplot(df, x_col, y_col, hue_col, xlabel, ylabel, title, color_dict, path,
     ax.set_xlabel(xlabel, fontdict={'fontsize': 25})
     ax.set_ylabel(ylabel, fontdict={'fontsize': 25})
     ax.set_ylim(0, 1.05)
-    fig.suptitle(title, fontsize=65, weight='bold', x=0.36, y=1)
+    fig.suptitle(title, fontsize=30, x=0.5, y=1)
     plt.savefig(path, dpi=600, bbox_inches='tight')
 
 def pie_multiple(y, x, count_list, labels, colors, ax_title, title, legend_title, path, **kwargs):

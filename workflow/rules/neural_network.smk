@@ -31,12 +31,18 @@ rule training_gru:
     output:
         trained_model = expand('results/predictions/gru/{fixed_length}nt/gru_trained_{fixed_length}nt_fold_{fold_num}.pt', 
                                         fold_num=[str(i) for i in range(1,11)], allow_missing=True),
-        training_metrics = expand('results/predictions/gru/{fixed_length}nt/gru_training_metrics_{fixed_length}nt_fold_{fold_num}.tsv',
-                                        fold_num=[str(i) for i in range(1,11)], allow_missing=True),
-        avg_train_metrics = 'results/predictions/gru/{fixed_length}nt/gru_avg_training_metrics_{fixed_length}nt_across_folds.tsv'
+        training_metrics_per_fold = 'results/predictions/gru/{fixed_length}nt/gru_training_metrics_{fixed_length}nt_last_epoch_per_fold_w_avg.tsv',
+        learning_curves = expand('results/figures/lineplot/gru/{fixed_length}nt/gru_training_f1_score_{fixed_length}nt_fold_{fold_num}.svg',
+                                        fold_num=[str(i) for i in range(1,11)], allow_missing=True)                                        
     params:
         random_state = 42
     conda:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/training_gru.py"
+
+#rule test_gru:
+#    """ Test the performance of the trained GRU on the actual test 
+#        set. Don't forget to use the best hyperparams (and specify
+#        the model architecture before loading the weights/parameters
+#        learned during training)."""

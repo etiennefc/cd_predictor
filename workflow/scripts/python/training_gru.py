@@ -6,7 +6,10 @@ import torch.optim as optim
 import random
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score, precision_recall_fscore_support
+from figures import functions as ft
+import matplotlib.pyplot as plt 
+import seaborn as sns
 
 # Load training data and create tensor matrix (format used by pytorch)
 X = pd.read_csv(snakemake.input.X_train, sep='\t')
@@ -20,9 +23,10 @@ best_hyperparams_dict = {k: v[0] for k,v in
                         best_hyperparams_df.to_dict(orient='list').items() 
                         if k != 'avg_f1_score_3fold_tuning'}
 
+# Outputs
 output_model = snakemake.output.trained_model
-output_metrics = snakemake.output.training_metrics
-output_avg_metrics = snakemake.output.avg_train_metrics
+output_metrics = snakemake.output.training_metrics_per_fold
+output_figure = snakemake.output.learning_curves
 
 # Set reproducible randomness 
 rs = int(snakemake.params.random_state)
@@ -41,13 +45,14 @@ input_size = len([col for col in X.columns
             if '_norm' in col])  # number of input features (5 (ATCGN) nt * 211 of length)
 output_size = len(pd.unique(y.target))  # number of class to predicts
 total_length = len(X)  # i.e. nb of examples in input dataset
+print(total_length)
 
 """ Create learning curve of training and validation loss for each fold. Evaluate number 
     of epoch before overfitting by implement early stopping"""
-num_epochs = 50  
+num_epochs = 50 
 batch_size = 107  # nb of example per batch (this is an intermediate batch size)
 num_batches = int(total_length / batch_size)  # the number of batches
-
+print(num_batches)
 
 
 # Define a class to be able to separate dataset in batch
@@ -100,9 +105,11 @@ class GRU_nn(nn.Module):
         out = self.last_layer(hiddens[-1])  # no dropout in that last layer
         return out
 
+"""CHANGE number of fold to 10 and num_epochs to 50"""
+
 # Iterate over fold in stratified 10-fold CV
 skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=rs)
-f1_scores = []
+fold_f1_scores, last_epoch_metrics_df = [], []
 for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(), y_tensor.numpy())):
     fold_i = str(fold_index + 1)
     print(f'FOLD {fold_i}')
@@ -130,18 +137,23 @@ for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(
     y_train, y_test = y_tensor[train_index], y_tensor[test_index]
 
     # Iterate over epoch
+    epoch_f_scores = []
     for epoch in range(num_epochs):
+        print(f'Epoch {epoch}')
         train_dataset = CustomDataset(x_train, y_train)
         train_dataset = torch.utils.data.DataLoader(train_dataset, 
                             batch_size=batch_size, shuffle=True)  # shuffle train_dataset between epochs
-        #########Might need to drop the last mini-batch which won't be of same length (drop_last=True)
         
         #Iterate over batches comprised in 1 epoch
         for i, (input_batch, label_batch) in enumerate(train_dataset):
             # where input_batch: input samples with features in that batch
             # where label_batch: target labels of that batch to predict
             print(f'BATCH {i + 1}')
-            label_batch = label_batch.reshape(batch_size)  # reshape to 1d tensor
+            print(label_batch.size())
+            if len(label_batch) != batch_size:  # to account for the last batch which will be <107
+                label_batch = label_batch.reshape(len(label_batch))  # reshape to 1d tensor
+            else:
+                label_batch = label_batch.reshape(batch_size)  # reshape to 1d tensor
 
             # Enable training mode (activate dropout and gradient computation (for backprop))
             model.train()
@@ -153,94 +165,7 @@ for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(
             optimizer.step()  # update the model's params using the computed gradients (via optimizer)
         
         # Compute f1_score on held-out fold
-        # save that f1_score for each epoch and fold 
-        # Create graph for each fold to see what is the number of epoch before doing early stopping
-         # Save model for each fold
-         # Average f1-score across the 10 folds
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def objective(trial):
-    """ Objective function we want to mazimize in the case of """
-    # Number of layers
-    num_layers = trial.suggest_int("num_layers", min_layer, max_layer, step=1)
-    # Number of nodes per layer (variable across layers)
-    hidden_sizes = [trial.suggest_int(f"hidden_size_{i+1}", min_node, max_node) for i in range(num_layers)]
-    # Dropout rate (constant across layers): probability of ignoring a neuron in a forward pass
-    # This helps to prevent overfitting (the higher, the less chance of overfitting, but the more underfitting)
-    dropout_rate = trial.suggest_float("dropout_rate", min_dropout, max_dropout)
-    # Learning rate (used by the optimizer)
-    learning_rate = trial.suggest_float("learning_rate", min_l_rate, max_l_rate, log=True)
-    # Optimizer
-    optimizer_name = trial.suggest_categorical("optimizer", hyperparam_space["optimizer"])
-    
-    # Instantiate model and loss function (compute this loss function equally with regards to the 3 classes)
-    model = GRU_nn(input_size, hidden_sizes, num_layers, output_size, dropout_rate).to(device)
-    loss_fn = nn.CrossEntropyLoss(weight=torch.tensor([1/3, 1/3, 1/3])) 
-
-    # Instantiate the optimizer
-    if optimizer_name == "Adam":
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    else:
-        optimizer = optim.SGD(model.parameters(), lr=learning_rate)
-
-
-    # Iterate over fold in stratified 3-fold CV
-    skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rs)
-    f1_scores = []
-    for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(), y_tensor.numpy())):
-        x_train, x_test = x_tensor[train_index], x_tensor[test_index]
-        y_train, y_test = y_tensor[train_index], y_tensor[test_index]
-        print(f'FOLD {fold_index + 1}')
-
-        # Iterate over epochs 
-        for epoch in range(num_epochs):  
-            print(f'EPOCH {epoch + 1}')
-            train_dataset = CustomDataset(x_train, y_train)
-            train_dataset = torch.utils.data.DataLoader(train_dataset, 
-                                batch_size=batch_size, shuffle=True)  # shuffle train_dataset between epochs
-            #Iterate over batches comprised in 1 epoch
-            for i, (input_batch, label_batch) in enumerate(train_dataset):
-                # where input_batch: input samples with features in that batch
-                # where label_batch: target labels of that batch to predict
-                print(f'BATCH {i + 1}')
-                label_batch = label_batch.reshape(batch_size)  # reshape to 1d tensor
-
-                # Enable training mode (activate dropout and gradient computation (for backprop))
-                model.train()
-                optimizer.zero_grad()  # set gradient values to 0 (gradient are 
-                                    # computed in the backprop to update the model's params)
-                output = model(input_batch.float())  # output is computed through forward pass
-                loss = loss_fn(output, label_batch)  # loss is computed (comparison between predictions and true labels)
-                loss.backward()  # backpropagation computation to update the model's params
-                optimizer.step()  # update the model's params using the computed gradients (via optimizer)
-
-                # Prune/stop trial if early stopping condition is met
-                # i.e. if the trial's best intermediate result is worse 
-                # than median of intermediate results of previous trials at the same step
-                if trial.should_prune():
-                    raise optuna.exceptions.TrialPruned()
-
-        # Go into evaluation mode
-        eval_dataset = x_test.reshape(int(len(x_test)/batch_size), batch_size, input_size)
+        eval_dataset = x_test.reshape(1, len(x_test), input_size)
         eval_labels = y_test.reshape(len(y_test))  # reshape to 1d 
         model.eval()  # no more dropout 
         with torch.no_grad():  # nor gradient computation
@@ -257,38 +182,77 @@ def objective(trial):
             # Optimize for F1 score (so equally for both precision and recall)
             # The 'macro' makes it that each class (0, 1 or 2) are taken into account equally (which is what we want)
             fscore = f1_score(eval_labels.numpy(), pred_labels.numpy(), average='macro')
-            f1_scores.append(fscore)
+
+            # Save that f1_score for each epoch
+            epoch_f_scores.append(fscore)
+
+            # Save the metrics of the last epoch
+            if epoch == (num_epochs - 1):
+                df = pd.DataFrame({'y_true': eval_labels, 'y_pred': pred_labels})
+                sno_df = df[(df.y_true == 2) | (df.y_pred == 2)]
+                pseudosno_df = df[(df.y_true == 1) | (df.y_pred == 1)]
+                accuracy = accuracy_score(eval_labels.numpy(), pred_labels.numpy())  # all 3 classes combined
+                # For class expressed_CD_snoRNA (2)
+                TP_sno = len(sno_df[(sno_df.y_true == 2) & (sno_df.y_pred == 2)]) 
+                FP_sno = len(sno_df[(sno_df.y_true != 2) & (sno_df.y_pred == 2)])
+                FN_sno = len(sno_df[(sno_df.y_true == 2) & (sno_df.y_pred != 2)])
+                if TP_sno + FP_sno == 0:
+                    precision_sno = 0
+                else:
+                    precision_sno = TP_sno/(TP_sno + FP_sno)
+                if TP_sno + FN_sno == 0:
+                    recall_sno = 0
+                else:
+                    recall_sno = TP_sno/(TP_sno + FN_sno)
+                # For class snoRNA_pseudogene (1)
+                TP_pseudosno = len(pseudosno_df[(pseudosno_df.y_true == 1) & (pseudosno_df.y_pred == 1)]) 
+                FP_pseudosno = len(pseudosno_df[(pseudosno_df.y_true != 1) & (pseudosno_df.y_pred == 1)])
+                FN_pseudosno = len(pseudosno_df[(pseudosno_df.y_true == 1) & (pseudosno_df.y_pred != 1)])
+                if TP_pseudosno + FP_pseudosno == 0:
+                    precision_pseudosno = 0
+                else:
+                    precision_pseudosno = TP_pseudosno/(TP_pseudosno + FP_pseudosno)
+                if TP_pseudosno + FN_pseudosno == 0:
+                    recall_pseudosno = 0
+                else:
+                    recall_pseudosno = TP_pseudosno/(TP_pseudosno + FN_pseudosno) 
+                print([fold_i, accuracy, fscore, precision_sno, 
+                                        recall_sno, precision_pseudosno, recall_pseudosno])
+                metrics_df = pd.DataFrame([[fold_i, accuracy, fscore, precision_sno, 
+                                        recall_sno, precision_pseudosno, recall_pseudosno]], 
+                                        columns=['fold', 'accuracy_3_classes', 'f1_score_3_classes',
+                                        'precision_sno', 'recall_sno', 'precision_pseudosno', 'recall_pseudosno'])
+                last_epoch_metrics_df.append(metrics_df)
+
+
+    # Save those epoch f1_scores for each fold
+    fold_f1_scores.append(epoch_f_scores)
+
+    # Plot the f1 score as a function of the number of epoch and save that graph for each fold
+    output_path = [path for path in output_figure if f'_fold_{fold_i}.svg' in path][0]
+    temp_df = pd.DataFrame({'epoch': [i for i in range(1, num_epochs+1)], 
+                            'f1_score': epoch_f_scores})
+    ft.lineplot(temp_df, 'epoch', 'f1_score', None, 'Number of epoch', 'F1 score', 
+                f'F1 score across epochs in fold #{fold_i}', 'grey', output_path)
     
-    # Compute the average f_score across the 3-fold CV
-    avg_fscore = sum(f1_scores) / len(f1_scores)
-
-    return avg_fscore
 
 
+    
+    # Save model for that given fold (only save weights and parameters as it is lighter than saving the whole model)
+    torch.save(model.state_dict(), [p for p in output_model if f'fold_{fold_i}.pt' in p][0])
+    
 
 
-
-# Initialize study (to maximize f1_score using the TPE (Tree-structured Parzen Estimator: a 
-# sequential-based optimization (SMBO) algorithm that uses bayesian optimization and 
-# tree-structured search spaces) algorithm to sample hyperparameters)
-study = optuna.create_study(direction="maximize", pruner=pruners.MedianPruner(), 
-                            sampler=optuna.samplers.TPESampler(seed=rs)) 
-study.optimize(objective, n_trials=num_trials)
-
-
-# Return best trial only (best combination of hyperparams which maximizes f1_score)
-best_trial = study.best_trial
-print(f"Best trial: {best_trial.params}")
-print(f"Best f1_score: {best_trial.value}")
-
-# Create df out of the best hyperparams with the highest f1_score
-best_hyperparams_dict = best_trial.params
-best_hyperparams_dict['avg_f1_score_3fold_tuning'] = best_trial.value
-params_df = pd.DataFrame(best_hyperparams_dict, index=[0])
-params_df.to_csv(output, sep='\t', index=False)
-
-
-
-"""Plot learning curve for training after choosing the set of hyperparameters"""
+# Save metrics df (metrics for the last epoch of each fold)
+final_metrics_df = pd.concat(last_epoch_metrics_df)
+avg = ['average_fold']
+avg = avg + list(final_metrics_df[['accuracy_3_classes', 'f1_score_3_classes',
+                            'precision_sno', 'recall_sno', 'precision_pseudosno', 
+                            'recall_pseudosno']].mean())
+final_metrics_df = pd.concat([final_metrics_df, pd.DataFrame([avg], 
+                    columns=['fold', 'accuracy_3_classes', 'f1_score_3_classes',
+                            'precision_sno', 'recall_sno', 'precision_pseudosno', 
+                            'recall_pseudosno'])])    
+final_metrics_df.to_csv(output_metrics, sep='\t', index=False)
 
 
