@@ -20,6 +20,31 @@ def density(df, xlabel, ylabel, title, path, **kwargs):
     fig.suptitle(title, fontsize=65, weight='bold', x=0.36, y=1)
     plt.savefig(path, dpi=600, bbox_inches='tight')
 
+def density_x(df_list, xlabel, ylabel, xscale, title, colors, crit_list, path, **kwargs):
+    """
+    Creates a density plot with a number x of dfs to represent on the same ax.
+    """
+    plt.rcParams['svg.fonttype'] = 'none'
+    fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+    for i, df in enumerate(df_list):
+        sns.kdeplot(df, fill=True, ax=ax, color=colors[i], **kwargs)
+    ax.set_xlabel(xlabel, fontdict={'fontsize': 35})
+    ax.set_ylabel(ylabel, fontdict={'fontsize': 35})
+    ax.set_xscale(xscale)
+    plt.xticks(fontsize=25)
+    plt.yticks(fontsize=25)
+    ax.spines['right'].set_linewidth(0)
+    ax.spines['top'].set_linewidth(0)
+
+    legend_list = []
+    for i, crit in enumerate(crit_list):
+        legend_element = mpatches.Patch(color=colors[i], label=crit)
+        legend_list.append(legend_element)
+    plt.legend(handles=legend_list, loc='upper right', bbox_to_anchor=(0,1.1),
+                fontsize=20)
+
+    fig.suptitle(title, fontsize=20)
+    plt.savefig(path, bbox_inches='tight', dpi=500)
 
 def density_percentile(df, xlabel, ylabel, title, path, percentile_list, percent_colors, percent_label, **kwargs):
     """

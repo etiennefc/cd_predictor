@@ -105,7 +105,7 @@ class GRU_nn(nn.Module):
         out = self.last_layer(hiddens[-1])  # no dropout in that last layer
         return out
 
-"""CHANGE number of fold to 10 and num_epochs to 50"""
+
 
 # Iterate over fold in stratified 10-fold CV
 skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=rs)

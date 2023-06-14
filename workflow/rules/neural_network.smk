@@ -41,8 +41,13 @@ rule training_gru:
     script:
         "../scripts/python/training_gru.py"
 
-#rule test_gru:
-#    """ Test the performance of the trained GRU on the actual test 
-#        set. Don't forget to use the best hyperparams (and specify
-#        the model architecture before loading the weights/parameters
-#        learned during training)."""
+rule test_gru:
+    """ Test the performance of the trained GRU on the actual test 
+        set. Don't forget to use the best hyperparams (and specify
+        the model architecture before loading the weights/parameters
+        learned during training)."""
+    input:
+        X_test = rules.onehot_encode_normalize_initial_fixed_length.output.normalized_training,
+        y_test = rules.onehot_encode_normalize_initial_fixed_length.output.target_training,
+        best_hyperparams = rules.hypertuning_gru.output.best_hyperparams,
+

@@ -14,6 +14,7 @@ include: "rules/one_hot_encoding_and_normalization.smk"
 include: "rules/existing_cd_predictors.smk"
 include: "rules/simple_models.smk"
 include: "rules/neural_network.smk"
+include: "rules/flanking_nt.smk"
 include: "rules/figures.smk"
 
 
@@ -22,7 +23,9 @@ rule all:
         test = expand('data/references/positives_and_negatives/initial/initial_encoded_scaled_test_set_{fixed_length}nt.tsv', **config),
         confusion_matrix = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/confusion_matrix.tsv', **config),
         test_simple_models = expand('results/predictions/{simple_models}/{fixed_length}nt/{simple_models}_test_accuracy_{fixed_length}nt.tsv', **config),
-        gru_training = expand('results/predictions/gru/{fixed_length}nt/gru_trained_{fixed_length}nt_fold_10.pt', **config)
+        gru_training = expand('results/predictions/gru/{fixed_length}nt/gru_trained_{fixed_length}nt_fold_10.pt', **config),
+        #other_test = "test.txt",
+        c_logo = 'results/figures/logo/fifteen_nt_upstream_of_C.svg'
         #snoreport_predictions = expand('results/predictions/snoreport2/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
         #snoscan_predictions = expand('results/predictions/snoscan/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
         #infernal_tblout = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),

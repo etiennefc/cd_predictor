@@ -45,3 +45,11 @@ rule get_three_sets_initial_fixed_length:
 
 # rule to use not only sequence but other specified features as 
 # input (box_score, structure stability, terminal_stem_stability)
+rule test:
+    output:
+        "test.txt"
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/box_score.py"
+    
