@@ -233,6 +233,12 @@
       "gbm": "#e31a1c",
       "knn": "#b10026"
     },
+    "target":
+    {
+      "Positives": "#a8ddb5",
+      "C/D pseudogenes": "#88419d",
+      "Negatives": "#9ebcda"
+    },
     "species":
     {
       "arabidopsis_thaliana": "#a6cee3",

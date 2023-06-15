@@ -9,6 +9,7 @@ include: "rules/sno_tgirt_seq_processing.smk"
 include: "rules/sno_families.smk"
 include: "rules/negative_examples.smk"
 include: "rules/negative_examples_fixed_length.smk"
+include: "rules/intrinsic_features.smk"
 include: "rules/tune_train_test_sets.smk"
 include: "rules/one_hot_encoding_and_normalization.smk"
 include: "rules/existing_cd_predictors.smk"
@@ -24,8 +25,7 @@ rule all:
         confusion_matrix = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/confusion_matrix.tsv', **config),
         test_simple_models = expand('results/predictions/{simple_models}/{fixed_length}nt/{simple_models}_test_accuracy_{fixed_length}nt.tsv', **config),
         gru_training = expand('results/predictions/gru/{fixed_length}nt/gru_trained_{fixed_length}nt_fold_10.pt', **config),
-        #other_test = "test.txt",
-        c_logo = 'results/figures/logo/fifteen_nt_upstream_of_C.svg'
+        box_score = expand('data/references/box_score/all_positives_box_score_{fixed_length}nt.tsv', **config)
         #snoreport_predictions = expand('results/predictions/snoreport2/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
         #snoscan_predictions = expand('results/predictions/snoscan/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
         #infernal_tblout = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
@@ -51,7 +51,8 @@ rule all_figures:
         density = 'results/figures/density/length_selection_positives.svg',
         dotplot = expand('results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}.svg', **config),
         pie_fp = expand('results/figures/pie/{error}_per_negative_type_existing_cd_predictors_{fixed_length}.svg', error=['FP', 'FN'], **config),
-        bar_all = expand('results/figures/barplot/confusion_values_per_species_{cd_predictors}_{fixed_length}.svg', **config)
+        bar_all = expand('results/figures/barplot/confusion_values_per_species_{cd_predictors}_{fixed_length}.svg', **config),
+        box_score_density = expand('results/figures/density/box_score_positives_negatives_{fixed_length}nt.svg', **config)
 
 
 

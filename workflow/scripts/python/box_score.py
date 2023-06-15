@@ -7,14 +7,28 @@ import seaborn as sns
 from functools import reduce
 from math import ceil, floor
 from figures import functions as ft
+import subprocess as sp
 
 """ Find the most probable C, D, C' and D' boxes in a sequence (if they exist). 
-    Return box score (0:perfect box score, higher:more degenerate mtoifs)."""
-expressed_cd = "test.fa"
-rest = "test_neg.fa"
+    Return box score (0:perfect box score, higher:more degenerate motifs)."""
+expressed_cd_df = pd.read_csv(snakemake.input.positives_fa, sep='\t')
+negatives_df = pd.concat(([pd.read_csv(path, sep='\t') for path in snakemake.input.negatives_fa]))
+output_pos, output_neg = snakemake.output.positives, snakemake.output.negatives
+fixed_length = int(snakemake.wildcards.fixed_length)
+first_, last_ = floor(fixed_length/2), ceil(fixed_length/2)  # to get index of 1st and 2nd half of sequence
 
-fixed_length = 211
-first_, last_ = floor(fixed_length), ceil(fixed_length)
+# Create temporary fastas
+expressed_cd = "expressed_cd.fa"
+rest = "negatives.fa"
+with open(expressed_cd, 'w') as f:
+    for id, seq in dict(zip(expressed_cd_df.gene_id, expressed_cd_df[f'extended_{fixed_length}nt_sequence'])).items():
+        f.write(f'>{id}\n{seq}\n')
+
+with open(rest, 'w') as f:
+    for id, seq in dict(zip(negatives_df.gene_id, negatives_df[f'extended_{fixed_length}nt_sequence'])).items():
+        f.write(f'>{id}\n{seq}\n')
+
+
 
 def cut_sequence(seq):
     # Get the 105 first (without the first 15 nt which are external terminal stems) 
@@ -37,8 +51,8 @@ def find_c_box(seq):
         for possible_c in re.finditer('(A|G)TGATGA', first_range):
             if i <= 1:  # select first matched group only (closest RUGAUGA to 5' end of snoRNA)
                 c_motif = possible_c.group(0)
-                c_start = possible_c.start() + 1
-                c_end = possible_c.end()
+                c_start = possible_c.start() + 1 + 15
+                c_end = c_start + len_c_box - 1
                 i += 1
                 return c_motif, c_start, c_end  # this exits the global if statement
     else:  # find not exact C box (up to max 3 substitution allowed)
@@ -46,8 +60,8 @@ def find_c_box(seq):
             c_motif = regex.findall("((A|G)TGATGA){s<="+str(sub)+"}", first_range, overlapped=True)
             if len(c_motif) >= 1:  # if we have a match, break and keep that match (1 sub privileged over 2 subs)
                 c_motif = c_motif[0][0]  # if multiple C boxes found, keep the the C box closest to 5' end
-                c_start = first_range.find(c_motif) + 1
-                c_end = c_start + len(c_motif) - 1
+                c_start = first_range.find(c_motif) + 1 + 15
+                c_end = c_start + len_c_box - 1
                 return c_motif, c_start, c_end  # this exits the global else statement
         # If no C box is found, return NNNNNNN and 0, 0 as C box sequence, start and end
         c_motif, c_start, c_end = 'NNNNNNN', 0, 0
@@ -64,12 +78,12 @@ def find_d_box(seq, c_end):
     d_motif = ''
     # First, find exact D box (CUGA) within range to the snoRNA 3' end
     if re.search('CTGA', last_range) is not None:  # find exact D box
-        all_perfect_d = [d for d in re.finditer('CTGA', last_range) if d.start() + len(first_range) > c_end + 30]  # >30nt from the C box (smallest distance between C and D boxes in known snoRNAs)
+        all_perfect_d = [d for d in re.finditer('CTGA', last_range) if d.start() + len(first_range) + 15 > c_end + 30]  # >30nt from the C box (smallest distance between C and D boxes in known snoRNAs)
         if len(all_perfect_d) > 0:
             last_d = all_perfect_d[-1]
             d_motif = last_d.group(0)  # if multiple exact D boxes found, keep the D box closest to 3' end
-            d_start = (length_seq - len(last_range)) + last_d.start() + 1
-            d_end = (length_seq - len(last_range)) + last_d.end()
+            d_start = (length_seq - len(last_range) -15) + last_d.start() + 1
+            d_end = d_start + len_d_box - 1
             return d_motif, d_start, d_end
     if d_motif == '':  # find not exact D box (up to max 50% of substitution allowed (i.e. 2 nt))
         for sub in range(1, int(len_d_box/2 + 1)):  # iterate over 1 to 2 substitutions allowed
@@ -77,8 +91,8 @@ def find_d_box(seq, c_end):
             all_possible_d = [d for d in d_motifs if (length_seq - len(last_range) + last_range.rindex(d) + 1) > c_end + 30]  # >30nt from the C box
             if len(all_possible_d) > 0:  # if we have a match, break and keep that match (1 sub privileged over 2 subs)
                 d_motif = all_possible_d[-1]  # if multiple D boxes found, keep the the D box closest to 3' end
-                d_start = (length_seq - len(last_range)) + last_range.rindex(d_motif) + 1
-                d_end = d_start + len(d_motif) - 1
+                d_start = (length_seq - len(last_range) - 15) + last_range.rindex(d_motif) + 1
+                d_end = d_start + len_d_box - 1
                 return d_motif, d_start, d_end  # this exits the global else statement
         # If no D box is found, return NNNN and 0, 0 as D box sequence, start and end
         d_motif, d_start, d_end = 'NNNN', 0, 0
@@ -101,8 +115,8 @@ def find_c_prime_d_prime_hamming(seq, c_end, d_start):
                 if motif[0] != temp_motif:  # to avoid repeated motif between 0 and 1 substitution allowed
                     all_c_primes.append(motif[0])
                     hamming_c_prime.append(sub)
-                    c_prime_start = middle_seq.index(motif[0]) + c_end + 1
-                    c_prime_end = c_prime_start + len(motif[0]) - 1
+                    c_prime_start = middle_seq.index(motif[0]) + c_end + 1 + 2  # +2 because of the 2 nt space created in middle_seq
+                    c_prime_end = c_prime_start + len_c_prime_box - 1
                     all_c_primes_start.append(c_prime_start)
                     all_c_primes_end.append(c_prime_end)                    
                     temp_motif = motif[0]              
@@ -119,8 +133,8 @@ def find_c_prime_d_prime_hamming(seq, c_end, d_start):
                 if motif != temp_motif:  # to avoid repeated motif between 0 and 1 substitution allowed
                     all_d_primes.append(motif)
                     hamming_d_prime.append(sub)
-                    d_prime_start = middle_seq.index(motif) + c_end + 1
-                    d_prime_end = d_prime_start + len(motif) - 1
+                    d_prime_start = middle_seq.index(motif) + c_end + 1 + 2
+                    d_prime_end = d_prime_start + len_d_prime_box - 1
                     all_d_primes_start.append(d_prime_start)
                     all_d_primes_end.append(d_prime_end)
                     temp_motif = motif                
@@ -251,7 +265,7 @@ def hamming(found_motif, consensus_motif):
 
 
 
-
+# Find box score for expressed C/D
 df = find_all_boxes(expressed_cd)
 dictio = df.set_index('gene_id').filter(regex='_sequence$').to_dict('index')
 consensus_dict = {'D_sequence': 'CTGA', 'C_sequence': 'RTGATGA', 
@@ -266,15 +280,10 @@ for gene_id, seq_dict in dictio.items():
 
 df['box_score'] = df['gene_id'].map(score_dict)
 
+
+# Find box score for the rest of examples (negatives and pseudosno)
 ddf = find_all_boxes(rest)
 ddictio = ddf.set_index('gene_id').filter(regex='_sequence$').to_dict('index')
-tun = pd.read_csv('data/references/negatives/initial/negatives_tuning_set_fixed_length_211nt.tsv', sep='\t')
-train = pd.read_csv('data/references/negatives/initial/negatives_training_set_fixed_length_211nt.tsv', sep='\t')
-test = pd.read_csv('data/references/negatives/initial/negatives_test_set_fixed_length_211nt.tsv', sep='\t')
-negs = pd.concat([tun, train, test])
-pseudo = negs[negs['gene_biotype'] == 'snoRNA_pseudogene'].gene_id
-
-
 
 score_dict = {}
 for gene_id, seq_dict in ddictio.items():
@@ -285,39 +294,11 @@ for gene_id, seq_dict in ddictio.items():
 
 ddf['box_score'] = ddf['gene_id'].map(score_dict)
 
-real_neg = negs[negs['gene_biotype'] != 'snoRNA_pseudogene'].gene_id
-ddf[ddf['gene_id'].isin(pseudo)].to_csv('pseudo.tsv', sep='\t', index=False)
-real_neg_df = ddf[ddf['gene_id'].isin(real_neg)].merge(negs[negs['gene_biotype'] != 'snoRNA_pseudogene'][['gene_biotype', 'gene_id']], how='left', on='gene_id')
-real_neg_df.to_csv('negatives.tsv', sep='\t', index=False)
-df.to_csv('positives.tsv', sep='\t', index=False)
+
+# Save both dfs
+df.to_csv(output_pos, sep='\t', index=False)
+ddf.to_csv(output_neg, sep='\t', index=False)
 
 
-neg_list = ['random_intergenic_region', 'snRNA', 'random_intronic_region',
- 'random_exonic_region', 'shuffled_expressed_CD_snoRNA', 'HACA_snoRNA',
- 'pre_miRNA', 'tRNA']
-tempo = []
-neg_colors = ["grey", "blue", "black", "lightgrey", "green", "#d73027", "pink", "#4575b4"]
-
-for n in neg_list:
-    tempo.append(real_neg_df[real_neg_df['gene_biotype'] == n].box_score)
-ft.density_x(tempo, 'Box score', 'Density', 'linear', 'Box score across all negative types', neg_colors, 
-            neg_list, 'results/figures/density/box_score_across_negatives.svg')
-
-import collections as coll 
-for i, group in real_neg_df.groupby(['box_score']):
-    print(i+1)
-    print(coll.Counter(group.gene_biotype))
-    
-
-
-
-# Create density plot
-fig, ax = plt.subplots(1, 1, figsize=(12, 10))
-colors = ['blue', 'red', 'green']
-df_list = [df.box_score, ddf[ddf['gene_id'].isin(pseudo)].box_score, ddf[ddf['gene_id'].isin(real_neg)].box_score]
-ft.density_x(df_list, 'Box score', 'Density', 'linear', 'Box score across all examples of the 3 classes', colors, 
-            ['Positives', 'C/D pseudogenes', 'Negatives'], 'results/figures/density/box_score_positives_negatives.svg')
-
-
-
+sp.call('rm expressed_cd.fa negatives.fa', shell=True)
 

@@ -98,7 +98,24 @@ rule bar_confusion_value_per_species_test:
         "../scripts/python/figures/bar_confusion_value_per_species_test.py" 
 
 
-
+rule density_box_score:
+    """ Create a density plot of the box score distribution of positives, 
+        pseudosno and negatives. Create also another density plot of 
+        negatives only with a hue of gene_biotype."""
+    input:
+        positives = rules.box_score.output.positives,
+        negatives = rules.box_score.output.negatives,
+        biotype_df = rules.get_all_initial_negatives_fixed_length.output
+    output:
+        density_all = 'results/figures/density/box_score_positives_negatives_{fixed_length}nt.svg',
+        density_negatives = 'results/figures/density/box_score_negatives_gene_biotype_{fixed_length}nt.svg'
+    params:
+        biotype_colors = config['colors']['biotypes'],
+        target_colors = config['colors']['target']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/density_box_score.py"
 
 
 
