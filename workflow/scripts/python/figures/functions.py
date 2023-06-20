@@ -20,7 +20,7 @@ def density(df, xlabel, ylabel, title, path, **kwargs):
     fig.suptitle(title, fontsize=65, weight='bold', x=0.36, y=1)
     plt.savefig(path, dpi=600, bbox_inches='tight')
 
-def density_x(df_list, xlabel, ylabel, xscale, title, colors, crit_list, path, **kwargs):
+def density_x(df_list, xlabel, ylabel, xscale, title, colors, crit_list, path, xvline=0, yminvline=0, ymaxvline=0, **kwargs):
     """
     Creates a density plot with a number x of dfs to represent on the same ax.
     """
@@ -35,6 +35,8 @@ def density_x(df_list, xlabel, ylabel, xscale, title, colors, crit_list, path, *
     plt.yticks(fontsize=25)
     ax.spines['right'].set_linewidth(0)
     ax.spines['top'].set_linewidth(0)
+    ax.vlines(x=xvline, ymin=yminvline, ymax=ymaxvline, 
+            linestyles='dashed', colors='black')
 
     legend_list = []
     for i, crit in enumerate(crit_list):

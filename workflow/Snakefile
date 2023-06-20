@@ -52,7 +52,8 @@ rule all_figures:
         dotplot = expand('results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}.svg', **config),
         pie_fp = expand('results/figures/pie/{error}_per_negative_type_existing_cd_predictors_{fixed_length}.svg', error=['FP', 'FN'], **config),
         bar_all = expand('results/figures/barplot/confusion_values_per_species_{cd_predictors}_{fixed_length}.svg', **config),
-        box_score_density = expand('results/figures/density/box_score_positives_negatives_{fixed_length}nt.svg', **config)
+        box_score_density = expand('results/figures/density/box_score_positives_negatives_{fixed_length}nt.svg', **config),
+        density_stem_length = expand('results/figures/density/terminal_stem_length_distributions_positives_{fixed_length}nt.svg', **config)
 
 
 

@@ -117,6 +117,21 @@ rule density_box_score:
     script:
         "../scripts/python/figures/density_box_score.py"
 
+rule density_stem_length:
+    """ Predict the C and D box positions in expressed C/D 
+        and find the number of nt up/downstream until the 
+        end of the annotated snoRNA. Return the distribution
+        of length for both positions. This will serve to define 
+        the terminal stem length threshold when computing the 
+        terminal stem stability of a given window."""
+    input:
+        positives_df = rules.get_sno_sequences_fixed_length.output.df
+    output:
+        density = 'results/figures/density/terminal_stem_length_distributions_positives_{fixed_length}nt.svg'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/density_stem_length.py"
 
 
 
