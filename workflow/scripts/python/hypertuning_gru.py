@@ -36,7 +36,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 # Define constants
 input_size = len([col for col in X.columns 
-            if '_norm' in col])  # number of input features (5 (ATCGN) nt * 211 of length)
+            if '_norm' in col])  # number of input features (5 (ATCGN) nt * 211 of length + 4 intrinsic features)
 output_size = len(pd.unique(y.target))  # number of class to predicts
 total_length = len(X)  # i.e. nb of examples in input dataset
 # 1 epoch corresponds to 1 forward pass and 1 backpropagation 

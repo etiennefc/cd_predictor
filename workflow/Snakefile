@@ -25,9 +25,7 @@ rule all:
         confusion_matrix = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/confusion_matrix.tsv', **config),
         test_simple_models = expand('results/predictions/{simple_models}/{fixed_length}nt/{simple_models}_test_accuracy_{fixed_length}nt.tsv', **config),
         gru_training = expand('results/predictions/gru/{fixed_length}nt/gru_trained_{fixed_length}nt_fold_10.pt', **config),
-        box_score = expand('data/references/box_score/all_positives_box_score_{fixed_length}nt.tsv', **config),
-        length = expand('data/references/predicted_length/all_positives_length_{fixed_length}nt.tsv', **config),
-        terminal_stem = expand('data/references/terminal_stem/all_positives_terminal_stem_stability_{fixed_length}nt.tsv', **config)
+        gru_training_added_features = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_trained_{fixed_length}nt_fold_10.pt', **config)
         #snoreport_predictions = expand('results/predictions/snoreport2/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
         #snoscan_predictions = expand('results/predictions/snoscan/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
         #infernal_tblout = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),

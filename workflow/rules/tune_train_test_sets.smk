@@ -47,12 +47,16 @@ rule get_three_sets_added_features_fixed_length:
         the latest split based on sequence, box_score, structure and 
         terminal_stem stabilities. It is a stratified split 
         (same proportion of pos/pseudosno/neg examples 
-        across the 3 sets, i.e. ~ 20:1 (negatives:positives))."""
+        across the 3 sets, i.e. ~ 20:1 (negatives:positives)). 
+        We actually do the split based on the sequence features only, 
+        then merge the intrinsinc features to the resulting dfs."""
     input:
         positives = rules.tuning_train_test_split_rfam_fixed_length.output,
         negatives = rules.get_all_initial_negatives_fixed_length.output,
-        box_score = "",
-        sno_stabilities = ""
+        box_score = rules.box_score.output,
+        structure_stability = rules.structure_stability.output,
+        terminal_stem_stability = rules.terminal_stem_stability.output,
+        length = rules.predicted_length.output
     output:
         tuning = 'data/references/positives_and_negatives/added_features/added_features_tuning_set_fixed_length_{fixed_length}nt.tsv',
         training = 'data/references/positives_and_negatives/added_features/added_features_training_set_fixed_length_{fixed_length}nt.tsv',
