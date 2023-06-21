@@ -11,7 +11,7 @@ with open(snakemake.input.positives_fa, 'r') as f:
     for line in f:
         if line.startswith('>'):
             id_ = line.replace('>', '').replace('\n', '')
-        elif re.match(r"^A|T|C|G|U", line):
+        elif re.match(r"^A|T|C|G|U|N", line):
             len_ = len(line.replace('\n', ''))
             pos_len[id_] = len_
 
@@ -19,7 +19,7 @@ with open(snakemake.input.negatives_fa, 'r') as f:
     for line in f:
         if line.startswith('>'):
             id_ = line.replace('>', '').replace('\n', '')
-        elif re.match(r"^A|T|C|G|U", line):
+        elif re.match(r"^A|T|C|G|U|N", line):
             len_ = len(line.replace('\n', ''))
             neg_len[id_] = len_
 

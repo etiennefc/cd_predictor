@@ -24,7 +24,7 @@ with open(positives_len, 'r') as f, open('terminal_temp_pos.fa', 'w') as f2:
     for line in f:
         if line.startswith('>'):
             id_ = line.replace('>', '').replace('\n', '')
-        elif re.match(r"^A|T|C|G|U", line):
+        elif re.match(r"^A|T|C|G|U|N", line):
             line = line.replace('\n', '')
             whole_window = pos_dict[id_].replace('T', 'U')  # convert to RNA
             sno_start = re.search(line, whole_window).start()
@@ -60,7 +60,7 @@ with open(negatives_len, 'r') as f, open('terminal_temp_neg.fa', 'w') as f2:
     for line in f:
         if line.startswith('>'):
             id_ = line.replace('>', '').replace('\n', '')
-        elif re.match(r"^A|T|C|G|U", line):
+        elif re.match(r"^A|T|C|G|U|N", line):
             line = line.replace('\n', '')
             whole_window = neg_dict[id_].replace('T', 'U')  # convert to RNA
             sno_start = re.search(line, whole_window).start()
