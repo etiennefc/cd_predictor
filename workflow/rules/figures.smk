@@ -133,9 +133,51 @@ rule density_stem_length:
     script:
         "../scripts/python/figures/density_stem_length.py"
 
+rule density_structure_stability_length:
+    """ Create a density plot of the structure stability distribution 
+        of positives, pseudosno and negatives. Create also another 
+        density plot of negatives only with a hue of gene_biotype. 
+        Do also this for normalized MFE (by length) and for the
+        snoRNA length only """
+    input:
+        positives = rules.structure_stability.output.positives_tsv,
+        negatives = rules.structure_stability.output.negatives_tsv,
+        positives_fa = rules.structure_stability.output.positives_fa,
+        negatives_fa = rules.structure_stability.output.negatives_fa,
+        biotype_df = rules.get_all_initial_negatives_fixed_length.output
+    output:
+        density_all = 'results/figures/density/structure_stability_positives_negatives_{fixed_length}nt.svg',
+        density_negatives = 'results/figures/density/structure_stability_negatives_gene_biotype_{fixed_length}nt.svg',
+        density_all_normalized = 'results/figures/density/normalized_structure_stability_positives_negatives_{fixed_length}nt.svg',
+        density_negatives_normalized = 'results/figures/density/normalized_structure_stability_negatives_gene_biotype_{fixed_length}nt.svg',
+        density_all_length = 'results/figures/density/length_positives_negatives_{fixed_length}nt.svg',
+        density_negatives_length = 'results/figures/density/length_negatives_gene_biotype_{fixed_length}nt.svg'
+    params:
+        biotype_colors = config['colors']['biotypes'],
+        target_colors = config['colors']['target']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/density_structure_stability_length.py"
 
-
-
+rule density_terminal_stem_stability:
+    """ Create a density plot of the terminal stem stability distribution 
+        of positives, pseudosno and negatives. Create also another 
+        density plot of negatives only with a hue of gene_biotype."""
+    input:
+        positives = rules.terminal_stem_stability.output.positives_tsv,
+        negatives = rules.terminal_stem_stability.output.negatives_tsv,
+        biotype_df = rules.get_all_initial_negatives_fixed_length.output
+    output:
+        density_all = 'results/figures/density/terminal_stem_stability_positives_negatives_{fixed_length}nt.svg',
+        density_negatives = 'results/figures/density/terminal_stem_stability_negatives_gene_biotype_{fixed_length}nt.svg'
+    params:
+        biotype_colors = config['colors']['biotypes'],
+        target_colors = config['colors']['target']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/density_terminal_stem_stability.py"
 
 
 
