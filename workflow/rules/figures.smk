@@ -179,7 +179,29 @@ rule density_terminal_stem_stability:
     script:
         "../scripts/python/figures/density_terminal_stem_stability.py"
 
+rule learning_curve_avg_f1_score_training_added_features:
+    """ Create average learning curve (of avg f1-score across 3 classes) across 10 folds on training set. 
+        Input features = sequence + 4 added features."""
+    input:
+        f1_score_tsv = rules.training_gru_added_features_simplified2.output.all_fold_epochs_df
+    output:
+        learning_curve = 'results/figures/lineplot/gru/{fixed_length}nt/added_features/gru_training_f1_score_simplified2_{fixed_length}nt_avg_across_fold.svg'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/learning_curve_avg_f1_score_training_added_features.py"
 
+rule learning_curve_avg_f1_score_training_added_features_half_normalized:
+    """ Create average learning curve (of avg f1-score across 3 classes) across 10 folds on training set.
+        Input features = sequence + 4 added features."""
+    input:
+        f1_score_tsv = rules.training_gru_added_features_half_normalized_simplified.output.all_fold_epochs_df
+    output:
+        learning_curve = 'results/figures/lineplot/gru/{fixed_length}nt/added_features_half_normalized/gru_training_f1_score_simplified_{fixed_length}nt_avg_across_fold.svg'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/learning_curve_avg_f1_score_training_added_features.py"
 
 
 

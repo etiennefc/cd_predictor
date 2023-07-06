@@ -55,6 +55,22 @@
       "p": [1, 2]
     }
   },
+  "hyperparameter_space_LSTM":
+  {
+    "n_layers": [1, 2],
+    "n_nodes": [2, 200],
+    "optimizer": ["Adam", "SGD", "AdamW"],
+    "learning_rate": [0.0001, 0.1],
+    "dropout_rate": [0.2, 0.8]
+  },
+  "hyperparameter_space_LSTM_complex":
+  {
+    "n_layers": [2, 3],
+    "n_nodes": [200, 300],
+    "optimizer": ["Adam", "SGD", "AdamW"],
+    "learning_rate": [0.0001, 0.1],
+    "dropout_rate": [0.3, 0.8]
+  },
   "hyperparameter_space_GRU":
   {
     "n_layers": [1, 3],
@@ -62,6 +78,22 @@
     "optimizer": ["Adam", "SGD"],
     "learning_rate": [0.00001, 0.1],
     "dropout_rate": [0.2, 0.8]
+  },
+  "hyperparameter_space_GRU_simplified":
+  {
+    "n_layers": [1, 2],
+    "n_nodes": [2, 100],
+    "optimizer": ["Adam", "SGD"],
+    "learning_rate": [0.001, 0.1],
+    "dropout_rate": [0.2, 0.8]
+  }, 
+  "hyperparameter_space_GRU_simplified2":
+  {
+    "n_layers": [1, 2],
+    "n_nodes": [2, 100],
+    "optimizer": ["Adam", "SGD"],
+    "learning_rate": [0.001, 0.1],
+    "dropout_rate": [0.5, 0.8]
   },  
   "rDNA_ncbi_ids": ["KT445934.2", "HQ141459.1", "AM168071.1", "JF931128.1", "KX061890.1", "X03680.1",
                   "OP829811.1", "XR_002460811.1", "XR_005248692.1", "XR_005248693.1", "7PWO_1", "X54512.1",

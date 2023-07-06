@@ -13,6 +13,7 @@ import seaborn as sns
 
 # Load training data and create tensor matrix (format used by pytorch)
 X = pd.read_csv(snakemake.input.X_train, sep='\t')
+X = X[['gene_id', 'box_score_norm', 'structure_mfe_norm', 'terminal_stem_mfe_norm', 'length_norm']]  # drop sequence features
 x_tensor = torch.tensor(X.drop(columns=['gene_id']).values)
 y = pd.read_csv(snakemake.input.y_train, sep='\t')
 y_tensor = torch.tensor(y.drop(columns=['gene_id']).values)
@@ -42,12 +43,14 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 # Define constants
 input_size = len([col for col in X.columns 
-            if 'gene_id' not in col])  # number of input features (5 (ATCGN) nt * 211 of length + 4 intrinsic features)
+            if '_norm' in col])  # number of input features (5 (ATCGN) nt * 211 of length + 4 intrinsic features)
 output_size = len(pd.unique(y.target))  # number of class to predicts
 total_length = len(X)  # i.e. nb of examples in input dataset
 print(total_length)
 
-num_epochs = 10 
+""" Create learning curve of training and validation loss for each fold. Evaluate number 
+    of epoch before overfitting by implement early stopping"""
+num_epochs = 50 
 batch_size = 107  # nb of example per batch (this is an intermediate batch size)
 num_batches = int(total_length / batch_size)  # the number of batches
 print(num_batches)
@@ -73,7 +76,7 @@ class GRU_nn(nn.Module):
     # Define a bidirectional GRU (processes the input sequence in both direction, which gives better context)
     # The activation function is tanh (hyperbolic tangent function, which returns value between -1 and 1)
     def __init__(self, input_size, hidden_sizes, num_layers, output_size, dropout_rate, 
-                bidirectional=False, activation=torch.tanh):
+                bidirectional=True, activation=torch.tanh):
         super(GRU_nn, self).__init__()
         self.hidden_sizes = hidden_sizes # number of units/nodes in hidden layers
         self.num_layers = num_layers  # number of layers
@@ -107,7 +110,7 @@ class GRU_nn(nn.Module):
 
 # Iterate over fold in stratified 10-fold CV
 skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=rs)
-fold_f1_scores, last_epoch_metrics_df, all_epochs_df = [], [], []
+fold_f1_scores, last_epoch_metrics_df = [], []
 for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(), y_tensor.numpy())):
     fold_i = str(fold_index + 1)
     print(f'FOLD {fold_i}')
@@ -115,10 +118,7 @@ for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(
     # Get best hyperparams separated
     hidden_sizes = [best_hyperparams_dict[k] for k in 
                     sorted(best_hyperparams_dict.keys()) if 'hidden_size_' in k]
-    if 'num_layers' not in best_hyperparams_dict.keys():
-        num_layers = len(hidden_sizes)
-    else:
-        num_layers = best_hyperparams_dict['num_layers']
+    num_layers = best_hyperparams_dict['num_layers']
     dropout_rate = best_hyperparams_dict['dropout_rate']
     learning_rate = best_hyperparams_dict['learning_rate']
     optimizer_name = best_hyperparams_dict['optimizer']
@@ -136,11 +136,6 @@ for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(
     # Load dataset
     x_train, x_test = x_tensor[train_index], x_tensor[test_index]
     y_train, y_test = y_tensor[train_index], y_tensor[test_index]
-
-    # Initialize early stopping
-
-    ##implement EarlyStopping class!!!!!!!!!!!
-    #early_stopping = EarlyStopping(patience=3, min_delta=0.01)  # early stops after 3 epochs where less than 0.01 f1 score improvement
 
     # Iterate over epoch
     epoch_f_scores = []
@@ -229,26 +224,15 @@ for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(
                                         columns=['fold', 'accuracy_3_classes', 'f1_score_3_classes',
                                         'precision_sno', 'recall_sno', 'precision_pseudosno', 'recall_pseudosno'])
                 last_epoch_metrics_df.append(metrics_df)
-        
-        # Implement early stopping
-        #if early_stopping(fscore):  # if f1 score improved
-            # Update the best model
-         #   early_stopping.best_model_state = model.state_dict()
-        #else:
-        #    if early_stopping.early_stop:
-        #        print("EARLY STOPPING!!")
-        #        break
-
 
 
     # Save those epoch f1_scores for each fold
     fold_f1_scores.append(epoch_f_scores)
 
     # Plot the f1 score as a function of the number of epoch and save that graph for each fold
-    output_path = [path for path in output_figure if f'_fold_{fold_i}.svg' in path][0]
+    output_path = [path for path in output_figure if f'_fold_{fold_i}_wo_seq.svg' in path][0]
     temp_df = pd.DataFrame({'epoch': [i for i in range(1, num_epochs+1)], 
                             'f1_score': epoch_f_scores})
-    all_epochs_df.append(temp_df)
     ft.lineplot(temp_df, 'epoch', 'f1_score', None, 'Number of epoch', 'F1 score', 
                 f'F1 score across epochs in fold #{fold_i}', 'grey', output_path)
     
@@ -256,11 +240,9 @@ for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(
 
     
     # Save model for that given fold (only save weights and parameters as it is lighter than saving the whole model)
-    torch.save(model.state_dict(), [p for p in output_model if f'fold_{fold_i}.pt' in p][0])
+    torch.save(model.state_dict(), [p for p in output_model if f'fold_{fold_i}_wo_seq.pt' in p][0])
     
-# Concat f1_score across folds for all epochs
-all_fold_epochs_df = pd.concat(all_epochs_df)
-all_fold_epochs_df.to_csv(snakemake.output.all_fold_epochs_df, index=False, sep='\t')
+
 
 # Save metrics df (metrics for the last epoch of each fold)
 final_metrics_df = pd.concat(last_epoch_metrics_df)

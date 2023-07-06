@@ -14,6 +14,7 @@ from sklearn.metrics import f1_score
 
 # Load tuning data and create tensor matrix (format used by pytorch)
 X = pd.read_csv(snakemake.input.X_tuning, sep='\t')
+X = X[['gene_id', 'box_score_norm', 'structure_mfe_norm', 'terminal_stem_mfe_norm', 'length_norm']]  # drop sequence features
 x_tensor = torch.tensor(X.drop(columns=['gene_id']).values)
 y = pd.read_csv(snakemake.input.y_tuning, sep='\t')
 y_tensor = torch.tensor(y.drop(columns=['gene_id']).values)
@@ -36,12 +37,12 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 # Define constants
 input_size = len([col for col in X.columns 
-            if 'gene_id' not in col])  # number of input features (5 (ATCGN) nt * 211 of length + 4 intrinsic features)
+            if '_norm' in col])  # number of input features (5 (ATCGN) nt * 211 of length + 4 intrinsic features)
 output_size = len(pd.unique(y.target))  # number of class to predicts
 total_length = len(X)  # i.e. nb of examples in input dataset
 # 1 epoch corresponds to 1 forward pass and 1 backpropagation 
 # on all examples (so there there is generally more than 1 epoch)
-num_epochs = 50 
+num_epochs = 50  
 batch_size = 107  # nb of example per batch (this is an intermediate batch size)
 num_batches = int(total_length / batch_size)  # the number of batches
 num_trials = 300  # the number of tested hyperparameter combinations
@@ -49,10 +50,7 @@ num_trials = 300  # the number of tested hyperparameter combinations
 # Define hyperparams space
 def split_dict(d, key):
     # Return first and second value of list associated to key in dict d
-    if len(d[key]) == 1:
-        return d[key][0], d[key][0]
-    else:
-        return d[key][0], d[key][1]
+    return d[key][0], d[key][1]
 
 min_layer, max_layer = split_dict(hyperparam_space, 'n_layers')
 min_node, max_node = split_dict(hyperparam_space, 'n_nodes')
@@ -82,7 +80,7 @@ class GRU_nn(nn.Module):
     # Define a bidirectional GRU (processes the input sequence in both direction, which gives better context)
     # The activation function is tanh (hyperbolic tangent function, which returns value between -1 and 1)
     def __init__(self, input_size, hidden_sizes, num_layers, output_size, dropout_rate, 
-                bidirectional=False, activation=torch.tanh):
+                bidirectional=True, activation=torch.tanh):
         super(GRU_nn, self).__init__()
         self.hidden_sizes = hidden_sizes # number of units/nodes in hidden layers
         self.num_layers = num_layers  # number of layers
@@ -117,10 +115,7 @@ class GRU_nn(nn.Module):
 def objective(trial):
     """ Objective function we want to mazimize in the case of """
     # Number of layers
-    if max_layer == 1:
-        num_layers = 1
-    else:
-        num_layers = trial.suggest_int("num_layers", min_layer, max_layer, step=1)
+    num_layers = trial.suggest_int("num_layers", min_layer, max_layer, step=1)
     # Number of nodes per layer (variable across layers)
     hidden_sizes = [trial.suggest_int(f"hidden_size_{i+1}", min_node, max_node) for i in range(num_layers)]
     # Dropout rate (constant across layers): probability of ignoring a neuron in a forward pass

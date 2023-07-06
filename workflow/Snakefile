@@ -15,6 +15,7 @@ include: "rules/one_hot_encoding_and_normalization.smk"
 include: "rules/existing_cd_predictors.smk"
 include: "rules/simple_models.smk"
 include: "rules/neural_network.smk"
+include: "rules/LSTM.smk"
 include: "rules/flanking_nt.smk"
 include: "rules/figures.smk"
 
@@ -25,7 +26,16 @@ rule all:
         confusion_matrix = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/confusion_matrix.tsv', **config),
         test_simple_models = expand('results/predictions/{simple_models}/{fixed_length}nt/{simple_models}_test_accuracy_{fixed_length}nt.tsv', **config),
         gru_training = expand('results/predictions/gru/{fixed_length}nt/gru_trained_{fixed_length}nt_fold_10.pt', **config),
-        gru_training_added_features = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_trained_{fixed_length}nt_fold_10.pt', **config)
+        gru_training_added_features = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_trained_{fixed_length}nt_fold_10.pt', **config),
+        gru_training_added_features_wo_seq = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_trained_{fixed_length}nt_fold_10_wo_seq.pt', **config),
+        gru_training_added_features_simplified = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_simplified_trained_{fixed_length}nt_fold_10.pt', **config),
+        gru_training_added_features_simplified2 = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_simplified2_trained_{fixed_length}nt_fold_10.pt', **config),
+        #df_metrics_on_test = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_test_metrics_simplifed2_{fixed_length}nt.tsv', **config),
+        gru_training_added_features_half_norm_simplified = expand('results/predictions/gru/{fixed_length}nt/added_features_half_normalized/gru_simplified_trained_{fixed_length}nt_fold_10.pt', **config),
+        all_fold_epochs_df_lstm = expand('results/predictions/lstm/{fixed_length}nt/lstm_training_f1_score_{fixed_length}nt_per_epoch_per_fold.tsv', **config),
+        df_metrics_on_test = expand('results/predictions/lstm/{fixed_length}nt/lstm_test_metrics_{fixed_length}nt.tsv', **config),
+        #lr_boundaries = expand('results/predictions/lstm/{fixed_length}nt/lstm_learning_rate_boundaries_{fixed_length}nt.tsv', **config),
+        #all_fold_epochs_df_lstm_cyclic = expand('results/predictions/lstm/{fixed_length}nt/lstm_cyclic_lr_training_f1_score_{fixed_length}nt_per_epoch_per_fold.tsv', **config),
         #snoreport_predictions = expand('results/predictions/snoreport2/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
         #snoscan_predictions = expand('results/predictions/snoscan/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
         #infernal_tblout = expand('results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/test_predictions.tsv', **config),
@@ -55,7 +65,12 @@ rule all_figures:
         box_score_density = expand('results/figures/density/box_score_positives_negatives_{fixed_length}nt.svg', **config),
         density_stem_length = expand('results/figures/density/terminal_stem_length_distributions_positives_{fixed_length}nt.svg', **config),
         density_structure_stability = expand('results/figures/density/structure_stability_positives_negatives_{fixed_length}nt.svg', **config),
-        density_terminal_stem_stability = expand('results/figures/density/terminal_stem_stability_positives_negatives_{fixed_length}nt.svg', **config)
+        density_terminal_stem_stability = expand('results/figures/density/terminal_stem_stability_positives_negatives_{fixed_length}nt.svg', **config),
+        #learning_curve = expand('results/figures/lineplot/gru/{fixed_length}nt/added_features/gru_training_f1_score_simplified2_{fixed_length}nt_avg_across_fold.svg', **config),
+        learning_curve_half_norm = expand('results/figures/lineplot/gru/{fixed_length}nt/added_features_half_normalized/gru_training_f1_score_simplified_{fixed_length}nt_avg_across_fold.svg', **config)
 
+rule test:
+    input:
+        df_metrics_on_test = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_test_metrics_simplifed2_{fixed_length}nt.tsv', **config)
 
 

@@ -88,6 +88,27 @@ def lineplot(df, x_col, y_col, hue_col, xlabel, ylabel, title, color_dict, path,
     fig.suptitle(title, fontsize=30, x=0.5, y=1)
     plt.savefig(path, dpi=600, bbox_inches='tight')
 
+def lineplot_errorbars(df, x_col, y_col, std_col, hue_col, xlabel, ylabel, title, color_dict, path, **kwargs):
+    """ 
+    Create a vertical connected dot plot or lineplot with errorbars.
+    """
+    plt.rcParams['svg.fonttype'] = 'none'
+    rc = {'ytick.labelsize': 20, 'xtick.labelsize': 20}
+    plt.rcParams.update(**rc)    
+    fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+    sns.lineplot(df, x=x_col, y=y_col, hue=hue_col, palette=color_dict, 
+                    marker='o', markeredgecolor='grey', **kwargs)
+    lower = df[y_col] - df[std_col]
+    upper = df[y_col] + df[std_col]                
+    ax.plot(df[x_col], lower, color='tab:blue', alpha=0.1)
+    ax.plot(df[x_col], upper, color='tab:blue', alpha=0.1)
+    ax.fill_between(df[x_col], lower, upper, color='lightblue', alpha=0.2)
+    ax.set_xlabel(xlabel, fontdict={'fontsize': 25})
+    ax.set_ylabel(ylabel, fontdict={'fontsize': 25})
+    ax.set_ylim(0, 1.05)
+    fig.suptitle(title, fontsize=30, x=0.5, y=1)
+    plt.savefig(path, dpi=600, bbox_inches='tight')
+
 def pie_multiple(y, x, count_list, labels, colors, ax_title, title, legend_title, path, **kwargs):
     """
     Creates 8 pie charts from a list of list (count_list) where each global
