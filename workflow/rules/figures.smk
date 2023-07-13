@@ -78,6 +78,25 @@ rule FP_FN_initial_analyses_pie:
     script:
         "../scripts/python/figures/FP_FN_initial_analyses_pie.py"
 
+rule donut_positives_negatives:
+    """ Create donut charts showing the proportion of species
+        for the positive examples and the proportion of 
+        negative types for the negatives."""
+    input:
+        negatives = rules.get_all_initial_negatives_fixed_length.output,
+        positives = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives
+    output:
+        pie_species = 'results/figures/pie/positives_per_species_{fixed_length}.svg',
+        pie_neg_type = 'results/figures/pie/negatives_per_biotype_{fixed_length}.svg'
+    params:
+        species_colors = config['colors']['species'],
+        biotype_colors = config['colors']['biotypes'],
+        species_name = config['species_short_name']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/donut_positives_negatives.py"
+
 rule bar_confusion_value_per_species_test:
     """ Create a stacked bar chart showing the proportion of test set examples 
         predicted as FP, FN, TP, TN per species, with the total number of 

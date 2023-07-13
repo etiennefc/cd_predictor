@@ -77,13 +77,13 @@ def lineplot(df, x_col, y_col, hue_col, xlabel, ylabel, title, color_dict, path,
     Create a vertical connected dot plot or lineplot.
     """
     plt.rcParams['svg.fonttype'] = 'none'
-    rc = {'ytick.labelsize': 20, 'xtick.labelsize': 20}
+    rc = {'ytick.labelsize': 25, 'xtick.labelsize': 25}
     plt.rcParams.update(**rc)    
     fig, ax = plt.subplots(1, 1, figsize=(12, 10))
     sns.lineplot(df, x=x_col, y=y_col, hue=hue_col, palette=color_dict, 
                     marker='o', markeredgecolor='grey', **kwargs)
-    ax.set_xlabel(xlabel, fontdict={'fontsize': 25})
-    ax.set_ylabel(ylabel, fontdict={'fontsize': 25})
+    ax.set_xlabel(xlabel, fontdict={'fontsize': 30})
+    ax.set_ylabel(ylabel, fontdict={'fontsize': 30})
     ax.set_ylim(0, 1.05)
     fig.suptitle(title, fontsize=30, x=0.5, y=1)
     plt.savefig(path, dpi=600, bbox_inches='tight')
@@ -127,6 +127,25 @@ def pie_multiple(y, x, count_list, labels, colors, ax_title, title, legend_title
         ax[i].axis('equal')
         white_circle = plt.Circle((0, 0), 0.4, color='white') #to create a donut chart
         ax[i].add_artist(white_circle) #to create a donut chart
+
+    fig.suptitle(title, x=0.5, y=0.9, fontsize=25)
+    fig.legend(labels=labels, loc='upper right', bbox_to_anchor=(1.1, 0.5),
+                prop={'size': 20}, title=legend_title)
+    plt.savefig(path, dpi=600)
+
+def donut(count_list, labels, colors, ax_title, title, legend_title, path, **kwargs):
+    """
+    Creates a donut chart from a list.
+    """
+    plt.rcParams['svg.fonttype'] = 'none'
+    fig, ax = plt.subplots(1, 1, figsize=(25, 14))
+    plt.subplots_adjust(hspace=0.5)
+    ax.set_title(ax_title, fontdict={'fontsize': 25}, x=0.5, y=0.8)
+    ax.pie(count_list, colors=colors, textprops={'fontsize': 19},
+                **kwargs)
+    ax.axis('equal')
+    white_circle = plt.Circle((0, 0), 0.4, color='white') #to create a donut chart
+    ax.add_artist(white_circle) #to create a donut chart
 
     fig.suptitle(title, x=0.5, y=0.9, fontsize=25)
     fig.legend(labels=labels, loc='upper right', bbox_to_anchor=(1.1, 0.5),
