@@ -76,7 +76,7 @@ best_hyperparams_dict = {k: best_hyperparams[k].values[0] for k in best_hyperpar
 hidden_sizes = [v for k,v in best_hyperparams_dict.items() if 'hidden_size' in k]
 num_layers = [v for k,v in best_hyperparams_dict.items() if 'num_layers' in k][0]
 dropout_rate = [v for k,v in best_hyperparams_dict.items() if 'dropout_rate' in k][0]
-model_path = [p for p in snakemake.input.all_models if 'fold_7.pt' in p][0]
+model_path = [p for p in snakemake.input.all_models if 'fold_10.pt' in p][0]
 model_lstm = LSTM_nn(input_size=input_size, hidden_sizes=hidden_sizes, num_layers=num_layers, 
                 output_size=output_size, dropout_rate=dropout_rate)
 

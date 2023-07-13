@@ -47,7 +47,7 @@ output_size = len(pd.unique(y.target))  # number of class to predicts
 total_length = len(X)  # i.e. nb of examples in input dataset
 print(total_length)
 
-num_epochs = 10 
+num_epochs = 50 
 batch_size = 107  # nb of example per batch (this is an intermediate batch size)
 num_batches = int(total_length / batch_size)  # the number of batches
 print(num_batches)

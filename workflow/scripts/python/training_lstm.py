@@ -47,7 +47,7 @@ output_size = len(pd.unique(y.target))  # number of class to predicts
 total_length = len(X)  # i.e. nb of examples in input dataset
 print(total_length)
 
-num_epochs = 15 
+num_epochs = 50 
 batch_size = 107  # nb of example per batch (this is an intermediate batch size)
 num_batches = int(total_length / batch_size)  # the number of batches
 print(num_batches)
@@ -203,8 +203,12 @@ for fold_index, (train_index, test_index) in enumerate(skf.split(x_tensor.numpy(
             # where logits are the model's prediction without applying any 
             # activation function (positive: more probable; negative: less probable)
             output = model(eval_dataset.float())
+            print(output)
+            print(output.shape)
             # Convert logits to probabilities via the softmax activation function (in 2nd dimension of output)
             probabilities = torch.softmax(output, dim=2)
+            print(probabilities)
+            print(probabilities.shape)
             # Get the predicted labels from these probabilities of each class  
             pred_labels = torch.argmax(probabilities, dim=2)  # get the index (0, 1 or 2) of the highest probability
             pred_labels = pred_labels.reshape(len(eval_labels))  # reshape to a 1d tensor of same length as eval_labels

@@ -45,6 +45,7 @@ rule training_lstm:
         X_train = rules.onehot_encode_normalize_added_features_half_normalized_fixed_length.output.encoded_training,
         y_train = rules.onehot_encode_normalize_added_features_half_normalized_fixed_length.output.target_training,
         best_hyperparams = rules.hypertuning_lstm.output.best_hyperparams  # 2 layers (135, 191 nodes), dropout=0.508, lr=0.00279, Adam
+        #best_hyperparams = "lstm_best_params_211nt_MODIFIED.tsv"
     output:
         trained_model = expand('results/predictions/lstm/{fixed_length}nt/lstm_trained_{fixed_length}nt_fold_{fold_num}.pt', 
                                         fold_num=[str(i) for i in range(1,11)], allow_missing=True),
@@ -95,6 +96,7 @@ rule test_lstm:
         X_test = rules.onehot_encode_normalize_added_features_half_normalized_fixed_length.output.encoded_test,
         y_test = rules.onehot_encode_normalize_added_features_half_normalized_fixed_length.output.target_test,
         best_hyperparams = rules.hypertuning_lstm.output.best_hyperparams,
+        #best_hyperparams = "lstm_best_params_211nt_MODIFIED.tsv",
         training_metrics = rules.training_lstm.output.training_metrics_per_fold,
         all_models = expand(rules.training_lstm.output.trained_model, 
                             fold_num=[str(i) for i in range(1,11)], allow_missing=True)

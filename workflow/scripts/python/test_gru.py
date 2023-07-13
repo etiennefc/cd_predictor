@@ -101,9 +101,13 @@ with torch.no_grad():  # nor gradient computation
     fscore = f1_score(eval_labels.numpy(), pred_labels.numpy(), average='macro')
     print(fscore)
     df = pd.DataFrame({'y_true': eval_labels, 'y_pred': pred_labels})
+    t_df = df[df.y_true != 1]
     sno_df = df[(df.y_true == 2) | (df.y_pred == 2)]
+    print(sno_df)
+    sno_df = sno_df[sno_df['y_pred'] != 1]
     pseudosno_df = df[(df.y_true == 1) | (df.y_pred == 1)]
-    accuracy = accuracy_score(eval_labels.numpy(), pred_labels.numpy())  # all 3 classes combined
+    #accuracy = accuracy_score(eval_labels.numpy(), pred_labels.numpy())  # all 3 classes combined
+    accuracy = accuracy_score(t_df.y_true, t_df.y_pred)  # just sno and negatives
     # For class expressed_CD_snoRNA (2)
     TP_sno = len(sno_df[(sno_df.y_true == 2) & (sno_df.y_pred == 2)]) 
     FP_sno = len(sno_df[(sno_df.y_true != 2) & (sno_df.y_pred == 2)])
@@ -116,6 +120,8 @@ with torch.no_grad():  # nor gradient computation
         recall_sno = 0
     else:
         recall_sno = TP_sno/(TP_sno + FN_sno)
+    fscore = 2*precision_sno*recall_sno /(precision_sno + recall_sno) 
+    print(fscore)
     # For class snoRNA_pseudogene (1)
     TP_pseudosno = len(pseudosno_df[(pseudosno_df.y_true == 1) & (pseudosno_df.y_pred == 1)]) 
     FP_pseudosno = len(pseudosno_df[(pseudosno_df.y_true != 1) & (pseudosno_df.y_pred == 1)])
