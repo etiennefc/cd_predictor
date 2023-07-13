@@ -14,6 +14,15 @@ simple_models_preds = pd.concat([pd.read_csv(snakemake.input.simple_models_preds
                                 [pd.read_csv(path, sep='\t').drop(columns=['target', 'gene_id']) for path in 
                                 snakemake.input.simple_models_preds], axis=1).replace(dictio)
 
+# Best GRU yet 0.707792, 0.767606    0.656627
+metrics_gru = [['accuracy', 0.973684, 'CD_predictor'], 
+                ['precision', 0.767606, 'CD_predictor'], 
+                ['recall', 0.656627, 'CD_predictor'],
+                ['f1_score', 0.707792, 'CD_predictor'], 
+                ['specificity on\nsnoRNA_pseudogenes', None, 'CD_predictor']]
+gru = pd.DataFrame(metrics_gru, columns=['score_name', 'score_value', 'predictor'])
+
+
 # These pseudosno predictions df have different lengths because they have a different number of FP
 logreg = pd.read_csv([path for path in snakemake.input.simple_models_pseudosno_preds 
                     if 'logreg' in path][0], sep='\t').replace(dictio)
@@ -69,7 +78,10 @@ for model in color_dict.keys():
     print('specificity on\nsnoRNA pseudogenes: ', specificity, '\n')
     dfs.append(temp_df)
 
-final_df = pd.concat(dfs)
+final_df = pd.concat(dfs + [gru]).reset_index(drop=True)
+print(final_df)
+color_dict = {'snoreport2': '#fda47a', 'snoscan': '#80b1d3', 'infernal_rfam': '#d73027', 'CD_predictor': '#66a61e'}
+
 # Create graph
 ft.lineplot(final_df, 'score_name', 'score_value', 'predictor', 
             'Metrics', 'Metrics value', '', color_dict, output)
