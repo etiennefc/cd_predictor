@@ -30,7 +30,7 @@ rule all:
         gru_training_added_features_wo_seq = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_trained_{fixed_length}nt_fold_10_wo_seq.pt', **config),
         gru_training_added_features_simplified = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_simplified_trained_{fixed_length}nt_fold_10.pt', **config),
         gru_training_added_features_simplified2 = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_simplified2_trained_{fixed_length}nt_fold_10.pt', **config),
-        df_metrics_on_test = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_test_metrics_simplifed2_{fixed_length}nt.tsv', **config),
+        df_metrics_on_test = expand('results/predictions/gru/{fixed_length}nt/added_features_half_normalized/gru_test_metrics_simplifed2_{fixed_length}nt.tsv', **config),
         gru_training_added_features_half_norm_simplified = expand('results/predictions/gru/{fixed_length}nt/added_features_half_normalized/gru_simplified_trained_{fixed_length}nt_fold_10.pt', **config),
         #all_fold_epochs_df_lstm = expand('results/predictions/lstm/{fixed_length}nt/lstm_training_f1_score_{fixed_length}nt_per_epoch_per_fold.tsv', **config),
         #df_metrics_on_test = expand('results/predictions/lstm/{fixed_length}nt/lstm_test_metrics_{fixed_length}nt.tsv', **config),
@@ -68,7 +68,9 @@ rule all_figures:
         density_terminal_stem_stability = expand('results/figures/density/terminal_stem_stability_positives_negatives_{fixed_length}nt.svg', **config),
         #learning_curve = expand('results/figures/lineplot/gru/{fixed_length}nt/added_features/gru_training_f1_score_simplified2_{fixed_length}nt_avg_across_fold.svg', **config),
         #learning_curve_half_norm = expand('results/figures/lineplot/gru/{fixed_length}nt/added_features_half_normalized/gru_training_f1_score_simplified_{fixed_length}nt_avg_across_fold.svg', **config)
-        pie_species = expand('results/figures/pie/positives_per_species_{fixed_length}.svg', **config)
+        pie_species = expand('results/figures/pie/positives_per_species_{fixed_length}.svg', **config),
+        density_conf_val = expand('results/figures/density/{intrinsic_feature}_confusion_value_all_models_{fixed_length}.svg', **config),
+        upset_TP = expand('results/figures/upset/upset_TP_all_models_{fixed_length}nt_species.svg', **config)
 
 rule test:
     input:

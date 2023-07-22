@@ -19,4 +19,5 @@ dependencies:
   - optuna = 3.1.1
   - regex = 2023.6.3
   - viennarna = 2.5.1
+  - upsetplot = 0.8.0
 

@@ -27,7 +27,7 @@ def density_x(df_list, xlabel, ylabel, xscale, title, colors, crit_list, path, x
     plt.rcParams['svg.fonttype'] = 'none'
     fig, ax = plt.subplots(1, 1, figsize=(10, 8))
     for i, df in enumerate(df_list):
-        sns.kdeplot(df, fill=True, ax=ax, color=colors[i], **kwargs)
+        sns.kdeplot(data=df, fill=True, ax=ax, color=colors[i], **kwargs)
     ax.set_xlabel(xlabel, fontdict={'fontsize': 35})
     ax.set_ylabel(ylabel, fontdict={'fontsize': 35})
     ax.set_xscale(xscale)
@@ -46,6 +46,34 @@ def density_x(df_list, xlabel, ylabel, xscale, title, colors, crit_list, path, x
                 fontsize=20)
 
     fig.suptitle(title, fontsize=20)
+    plt.savefig(path, bbox_inches='tight', dpi=500)
+
+def density_x_mod(df_list, xlabel, ylabel, xscale, title, colors, crit_list, path, xvline=0, yminvline=0, ymaxvline=0, **kwargs):
+    """
+    Creates a density plot with a number x of dfs to represent on the same ax.
+    """
+    plt.rcParams['svg.fonttype'] = 'none'
+    #fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+    for i, df in enumerate(df_list):
+        sns.kdeplot(df, fill=True, color=colors[i], **kwargs)
+    #plt.xlabel(xlabel, fontdict={'fontsize': 35})
+    #plt.ylabel(ylabel, fontdict={'fontsize': 35})
+    #ax.set_xscale(xscale)
+    plt.xticks(fontsize=25)
+    plt.yticks(fontsize=25)
+    #plt.spines['right'].set_linewidth(0)
+    #plt.spines['top'].set_linewidth(0)
+    #ax.vlines(x=xvline, ymin=yminvline, ymax=ymaxvline, 
+    #        linestyles='dashed', colors='black')
+
+    legend_list = []
+    for i, crit in enumerate(crit_list):
+        legend_element = mpatches.Patch(color=colors[i], label=crit)
+        legend_list.append(legend_element)
+    plt.legend(handles=legend_list, loc='upper right', bbox_to_anchor=(0,1.1),
+                fontsize=20)
+
+    plt.title(title, fontsize=20)
     plt.savefig(path, bbox_inches='tight', dpi=500)
 
 def density_percentile(df, xlabel, ylabel, title, path, percentile_list, percent_colors, percent_label, **kwargs):

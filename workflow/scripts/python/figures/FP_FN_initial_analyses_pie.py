@@ -8,6 +8,17 @@ import functions as ft
 snoreport = pd.read_csv(snakemake.input.snoreport, sep='\t')
 snoscan = pd.read_csv(snakemake.input.snoscan, sep='\t')
 infernal_rfam = pd.read_csv(snakemake.input.infernal_rfam, sep='\t')
+
+# Merge biotype and species info to GRU_nn predictions df
+# Also exclude snoRNA_pseudogene from this analysis
+gru_nn = pd.read_csv(snakemake.input.gru_nn, sep='\t')
+gru_nn = gru_nn.merge(snoreport[['gene_id', 'gene_biotype', 'species_name']], 
+            how='left', on='gene_id').rename(columns={'y_true': 'target', 'y_pred':'GRU_NN_prediction'})
+gru_nn = gru_nn[gru_nn.target != 1]
+
+# Convert numerical predictions to string values
+gru_nn[['target', 'GRU_NN_prediction']] = gru_nn[['target', 'GRU_NN_prediction']].replace({
+                                                0: 'other', 2: 'expressed_CD_snoRNA'})
 pie_species = snakemake.output.pie_species
 pie_neg_type = snakemake.output.pie_neg_type
 error = snakemake.wildcards.error
@@ -15,14 +26,14 @@ sp_colors = snakemake.params.species_colors
 ty_colors = snakemake.params.biotype_colors
 
 # Count the FP that are part of a given species/gene_biotype
-mods = ['snoreport2', 'snoscan', 'infernal_rfam']
+mods = ['snoreport2', 'snoscan', 'infernal_rfam', 'GRU_NN']
 species = sorted(list(pd.unique(snoreport.species_name)))
 biotype = sorted(list(pd.unique(snoreport.gene_biotype)))
 species_colors = [sp_colors[sp] for sp in species]
 biotype_colors = [ty_colors[biot] for biot in biotype]
 ax_titles = []
 species_count, neg_type_count = [], []
-for i, df in enumerate([snoreport, snoscan, infernal_rfam]):
+for i, df in enumerate([snoreport, snoscan, infernal_rfam, gru_nn]):
     df = df[df['gene_biotype'] != 'snoRNA_pseudogene']  # don't count these in the predictions
     if error == 'FP':
         fp = df[(df['target'] == 'other') & (df[f'{mods[i]}_prediction'] == 'expressed_CD_snoRNA')]

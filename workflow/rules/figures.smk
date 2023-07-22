@@ -62,11 +62,13 @@ rule metrics_lineplot_predictors:
 rule FP_FN_initial_analyses_pie:
     """ Create pie charts showing the proportion of species
         or type of negatives predicted as false positives/negatives 
-        (FP/FN) by existing CD_predictors. """
+        (FP/FN) by existing CD_predictors and by the chosen trained GRU NN. """
     input:
         snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
         snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
-        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv
+        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv,
+        gru_nn = rules.test_gru.output.test_predictions,
+        features = rules.get_three_sets_added_features_fixed_length.output
     output:
         pie_species = 'results/figures/pie/{error}_per_species_existing_cd_predictors_{fixed_length}.svg',
         pie_neg_type = 'results/figures/pie/{error}_per_negative_type_existing_cd_predictors_{fixed_length}.svg'
@@ -115,6 +117,51 @@ rule bar_confusion_value_per_species_test:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/figures/bar_confusion_value_per_species_test.py" 
+
+
+rule density_confusion_value_per_predictor:
+    """ Create a density plot of the 4 intrinsic features 
+        per confusion value (TP, TN, FP and FN) for each predictor 
+        (existing tools and GRU_nn)."""
+    input:
+        snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
+        snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
+        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv,
+        gru_nn = rules.test_gru.output.test_predictions,
+        features = rules.get_three_sets_added_features_fixed_length.output.test
+    output:
+        density = 'results/figures/density/{intrinsic_feature}_confusion_value_all_models_{fixed_length}.svg'
+    params:
+        conf_value_colors = config['colors']['confusion_value']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/density_confusion_value_per_predictor.py" 
+
+
+rule upset_confusion_value_models:
+    """ Create a upset plot for each confusion value to see if the existing predictors 
+        and GRU NN display the same prediction errors on the test set."""
+    input:
+        snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
+        snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
+        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv,
+        gru_nn = rules.test_gru.output.test_predictions
+    output:
+        upset_TP = 'results/figures/upset/upset_TP_all_models_{fixed_length}nt_species.svg',
+        upset_FP = 'results/figures/upset/upset_FP_all_models_{fixed_length}nt_species.svg',
+        upset_FN = 'results/figures/upset/upset_FN_all_models_{fixed_length}nt_species.svg',
+        upset_TN = 'results/figures/upset/upset_TN_all_models_{fixed_length}nt_species.svg',
+        upset_TN_biotype = 'results/figures/upset/upset_TN_all_models_{fixed_length}nt_biotype.svg',
+        upset_FP_biotype = 'results/figures/upset/upset_FP_all_models_{fixed_length}nt_biotype.svg'
+    params:
+        species_colors = config['colors']['species'],
+        biotype_colors = config['colors']['biotypes']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/upset_confusion_value_models.py"
+
 
 
 rule density_box_score:

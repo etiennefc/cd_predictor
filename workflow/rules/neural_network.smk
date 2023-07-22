@@ -297,7 +297,8 @@ rule test_gru:
         all_models = expand(rules.training_gru_added_features_half_normalized_simplified.output.trained_model, 
                             fold_num=[str(i) for i in range(1,11)], allow_missing=True)
     output:
-        df_metrics_on_test = 'results/predictions/gru/{fixed_length}nt/added_features/gru_test_metrics_simplifed2_{fixed_length}nt.tsv'
+        df_metrics_on_test = 'results/predictions/gru/{fixed_length}nt/added_features_half_normalized/gru_test_metrics_simplifed2_{fixed_length}nt.tsv',
+        test_predictions = 'results/predictions/gru/{fixed_length}nt/added_features_half_normalized/gru_test_predictions_simplifed2_{fixed_length}nt.tsv'
     conda:
         "../envs/python_new.yaml"
     script:
