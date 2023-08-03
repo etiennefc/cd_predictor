@@ -16,6 +16,8 @@ include: "rules/existing_cd_predictors.smk"
 include: "rules/simple_models.smk"
 include: "rules/neural_network.smk"
 include: "rules/LSTM.smk"
+include: "rules/hmm.smk"
+include: "rules/transformer.smk"
 include: "rules/flanking_nt.smk"
 include: "rules/figures.smk"
 
@@ -32,6 +34,8 @@ rule all:
         gru_training_added_features_simplified2 = expand('results/predictions/gru/{fixed_length}nt/added_features/gru_simplified2_trained_{fixed_length}nt_fold_10.pt', **config),
         df_metrics_on_test = expand('results/predictions/gru/{fixed_length}nt/added_features_half_normalized/gru_test_metrics_simplifed2_{fixed_length}nt.tsv', **config),
         gru_training_added_features_half_norm_simplified = expand('results/predictions/gru/{fixed_length}nt/added_features_half_normalized/gru_simplified_trained_{fixed_length}nt_fold_10.pt', **config),
+        model = expand('results/predictions/transformer/transformer_trained_fold_{fold_num}.pt', 
+                                        fold_num=[str(i) for i in range(1,11)]),
         #all_fold_epochs_df_lstm = expand('results/predictions/lstm/{fixed_length}nt/lstm_training_f1_score_{fixed_length}nt_per_epoch_per_fold.tsv', **config),
         #df_metrics_on_test = expand('results/predictions/lstm/{fixed_length}nt/lstm_test_metrics_{fixed_length}nt.tsv', **config),
         #lr_boundaries = expand('results/predictions/lstm/{fixed_length}nt/lstm_learning_rate_boundaries_{fixed_length}nt.tsv', **config),
