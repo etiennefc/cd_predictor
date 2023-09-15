@@ -2,7 +2,7 @@ __default__:
     job-name: "SM.{rule}"
     nodes: 1
     cpus-per-task: 1
-    mem: 4G
+    mem-per-cpu: 4G
     time: 0-2:30:00
     mail-user: "etienne.fafard-couture@usherbrooke.ca"
     mail-type: FAIL
@@ -12,3 +12,38 @@ trimming:
     mem: 16G
     time: 0-4:00:00
 
+training_transformer:
+    gpus-per-node: 1
+    cpus-per-task: 6
+    mem-per-cpu: 16000
+    time: 0-1:30:00
+
+training_transformer_w_features:
+    gpus-per-node: 1
+    cpus-per-task: 6
+    mem-per-cpu: 16000
+    time: 0-3:30:00
+
+hypertuning_transformer_2_classes:
+    gpus-per-node: 1
+    cpus-per-task: 6
+    mem-per-cpu: 16000
+    time: 0-5:00:00
+
+training_transformer_2_classes:
+    gpus-per-node: 1
+    cpus-per-task: 6
+    mem-per-cpu: 16000
+    time: 0-1:00:00
+
+test_transformer_2_classes:
+    gpus-per-node: 1
+    cpus-per-task: 2
+    mem-per-cpu: 16000
+    time: 0-0:20:00
+
+training_transformer_w_features_2_classes:
+    gpus-per-node: 1
+    cpus-per-task: 6
+    mem-per-cpu: 16000
+    time: 0-25:00:00
