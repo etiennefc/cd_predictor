@@ -1,25 +1,73 @@
-rule training_transformer:
-    """ Train the Transformer with the best hyperparams."""
+rule training_transformer_w_features:
+    """ Train the Transformer with the sequence and added features. Must be connected to internet to load the pretrained model for the first time"""
     input:
-        #positives = 'data/references/positives/cd_rfam_filtered_all_fixed_length_211nt.tsv',
-        #pseudo = 'data/references/negatives/snoRNA_pseudogenes/homo_sapiens_pseudogene_snoRNAs_211nt.tsv',
-        #negatives = expand(rules.get_all_initial_negatives.output, **config),
-        X_train = expand(rules.get_three_sets_added_features_fixed_length.output.training, **config),
-        y_train = expand(rules.onehot_encode_normalize_added_features_half_normalized_fixed_length.output.target_training, **config),
-        X_test = expand(rules.get_three_sets_added_features_fixed_length.output.test, **config),
-        y_test = expand(rules.onehot_encode_normalize_added_features_half_normalized_fixed_length.output.target_test, **config)
+        X_train = 'data/references/positives_and_negatives/added_features/added_features_training_set_fixed_length_{fixed_length}nt.tsv',
+        y_train = 'data/references/positives_and_negatives/added_features/added_features_training_target_{fixed_length}nt.tsv'
     output:
-        model = expand('results/predictions/transformer/transformer_trained_fold_{fold_num}.pt', 
-                                        fold_num=[str(i) for i in range(1,11)]),
-        #f1_score_df = 'results/predictions/transformer/transformer_f1_score_across_fold_epoch.tsv',
-        #loss_df = 'results/predictions/transformer/transformer_loss_across_fold_epoch.tsv'
-        #training_metrics_per_fold = 'results/predictions/gru/{fixed_length}nt/gru_training_metrics_{fixed_length}nt_last_epoch_per_fold_w_avg.tsv',
-        #learning_curves = expand('results/figures/lineplot/gru/{fixed_length}nt/gru_training_f1_score_{fixed_length}nt_fold_{fold_num}.svg',
-        #                                fold_num=[str(i) for i in range(1,11)], allow_missing=True)                                        
+        model = 'results/predictions/transformer/{fixed_length}/transformer_trained_w_features_fold_{fold_num}.pt',
+        fold_loss = 'results/predictions/transformer/{fixed_length}/transformer_trained_fold_w_features_{fold_num}_loss_per_epoch.tsv',
+        fold_f1_score = 'results/predictions/transformer/{fixed_length}/transformer_trained_fold_w_features_{fold_num}_f1_score_per_epoch.tsv'
     params:
         random_state = 42,
         pretrained_model = "zhihan1996/DNA_bert_6"
     conda:
         "../envs/python_new.yaml"
     script:
-        "../scripts/python/training_transformer.py"
+        "../scripts/python/figures/training_transformer_w_features.py"
+
+rule learning_curve_avg_f1_score_training_transformer:
+    """ Create average learning curve (of avg f1-score across 3 classes) 
+        across 10 folds on training set."""
+    input:
+        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/transformer/211/transformer_trained_fold_*f1_score_per_epoch.tsv')
+    output:
+        learning_curve = 'results/figures/lineplot/transformer/211nt/transformer_training_f1_score_avg_across_fold.svg'
+    params:
+        num_epoch = 42
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/learning_curve_avg_f1_score_training_transformer.py"
+
+rule learning_curve_avg_f1_score_training_transformer_w_features:
+    """ Create average learning curve (of avg f1-score across 3 classes) 
+        across 10 folds on training set for transformer trained also with 
+        4 numerical features."""
+    input:
+        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/transformer/211/transformer_trained_w_features_*f1_score_per_epoch.tsv')
+    output:
+        learning_curve = 'results/figures/lineplot/transformer/211nt/transformer_training_f1_score_avg_across_fold_w_features.svg'
+    params:
+        num_epoch = 25
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/learning_curve_avg_f1_score_training_transformer.py"
+
+rule learning_curve_avg_f1_score_training_transformer_2_classes:
+    """ Create average learning curve (of avg f1-score across 2 classes (other vs sno (sno|pseudosno))) 
+        across 10 folds on training set for transformer trained w sequence only."""
+    input:
+        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/transformer/211/transformer_2_classes_25_epochs_4e-5_16/transformer_2_classes_t*f1_score_per_epoch.tsv')
+    output:
+        learning_curve = 'results/figures/lineplot/transformer/211nt/transformer_2_classes_training_f1_score_avg_across_fold.svg'
+    params:
+        num_epoch = 25
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/learning_curve_avg_f1_score_training_transformer.py"
+
+rule learning_curve_avg_f1_score_training_transformer_w_features_2_classes:
+    """ Create average learning curve (of avg f1-score across 2 classes (other vs sno (sno|pseudosno))) 
+        across 10 folds on training set for transformer trained w sequence and 4 intrinsic features."""
+    input:
+        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/transformer/211/transformer_trained_w_features_2_classes_fold_*f1_score_per_epoch.tsv')
+    output:
+        learning_curve = 'results/figures/lineplot/transformer/211nt/transformer_w_features_2_classes_training_f1_score_avg_across_fold.svg'
+    params:
+        num_epoch = 200
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/learning_curve_avg_f1_score_training_transformer.py"
