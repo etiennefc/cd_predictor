@@ -19,6 +19,7 @@
   "cd_predictors": ["snoreport2", "snoscan", "infernal_rfam"],
   "simple_models": ["logreg", "svc", "rf", "gbm", "knn"],
   "intrinsic_feature": ["box_score", "terminal_stem_mfe", "structure_mfe", "length"],
+  "fold_num": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   "hyperparameter_space":
   {
     "logreg":
@@ -95,7 +96,12 @@
     "optimizer": ["Adam", "SGD"],
     "learning_rate": [0.001, 0.1],
     "dropout_rate": [0.5, 0.8]
-  },  
+  },
+  "hyperparameter_space_transformer_2_classes":
+  {
+    "batch_size": [16, 32, 100],
+    "learning_rate": [0.00002, 0.00003, 0.00004, 0.00005]
+  },
   "rDNA_ncbi_ids": ["KT445934.2", "HQ141459.1", "AM168071.1", "JF931128.1", "KX061890.1", "X03680.1",
                   "OP829811.1", "XR_002460811.1", "XR_005248692.1", "XR_005248693.1", "7PWO_1", "X54512.1",
                   "XR_003764684.1", "LC086814.1", "AJ311679.1", "X52320.1", "X15707.1", "NR_146144", 
