@@ -14,13 +14,13 @@ simple_models_preds = pd.concat([pd.read_csv(snakemake.input.simple_models_preds
                                 [pd.read_csv(path, sep='\t').drop(columns=['target', 'gene_id']) for path in 
                                 snakemake.input.simple_models_preds], axis=1).replace(dictio)
 
-# Best GRU yet 0.707792, 0.767606    0.656627
-metrics_gru = [['accuracy', 0.973684, 'CD_predictor'], 
-                ['precision', 0.767606, 'CD_predictor'], 
-                ['recall', 0.656627, 'CD_predictor'],
-                ['f1_score', 0.707792, 'CD_predictor'], 
-                ['specificity on\nsnoRNA_pseudogenes', None, 'CD_predictor']]
-gru = pd.DataFrame(metrics_gru, columns=['score_name', 'score_value', 'predictor'])
+# Best transformer yet 0.707792, 0.767606    0.656627
+metrics_transformer = [['accuracy', 0.9877916440586001, 'CD_predictor'], 
+                ['precision', 0.8975903614457831, 'CD_predictor'], 
+                ['recall', 0.8418079096045198, 'CD_predictor'],
+                ['f1_score', 0.8688049672300, 'CD_predictor']] 
+                #['specificity on\nsnoRNA_pseudogenes', None, 'CD_predictor']]
+transformer = pd.DataFrame(metrics_transformer, columns=['score_name', 'score_value', 'predictor'])
 
 
 # These pseudosno predictions df have different lengths because they have a different number of FP
@@ -67,8 +67,8 @@ for model in color_dict.keys():
     temp_df = pd.DataFrame([['accuracy', accuracy, model], 
                             ['precision', precision, model], 
                             ['recall', recall, model], 
-                            ['f1_score', f1_score, model],
-                            ['specificity on\nsnoRNA_pseudogenes', specificity, model]], 
+                            ['f1_score', f1_score, model]],
+                            #['specificity on\nsnoRNA_pseudogenes', specificity, model]], 
                             columns=['score_name', 'score_value', 'predictor'])
     print(model, ' on expressed_CD_snoRNA/other in test set')
     print('accuracy: ', accuracy)
@@ -78,7 +78,7 @@ for model in color_dict.keys():
     print('specificity on\nsnoRNA pseudogenes: ', specificity, '\n')
     dfs.append(temp_df)
 
-final_df = pd.concat(dfs + [gru]).reset_index(drop=True)
+final_df = pd.concat(dfs + [transformer]).reset_index(drop=True)
 print(final_df)
 color_dict = {'snoreport2': '#fda47a', 'snoscan': '#80b1d3', 'infernal_rfam': '#d73027', 'CD_predictor': '#66a61e'}
 
