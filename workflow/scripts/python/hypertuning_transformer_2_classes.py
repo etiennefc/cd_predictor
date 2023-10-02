@@ -55,7 +55,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 search_space = {"batch_size": [16, 32, 100], "learning_rate": [0.00002, 0.00003, 0.00004, 0.00005]}
 
 # Set number of epochs
-num_epochs = 20
+num_epochs = 30
 
 
 # Transform sequence of examples in training set into kmers (6-mers)

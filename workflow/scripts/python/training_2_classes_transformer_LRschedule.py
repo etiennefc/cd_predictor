@@ -10,6 +10,7 @@ import sklearn
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score, accuracy_score, precision_recall_fscore_support
 from torch.utils.data import TensorDataset, DataLoader
+import torch.optim.lr_scheduler as lr_scheduler
 import transformers
 from transformers import AutoTokenizer, BertForSequenceClassification, logging
 #logging.set_verbosity_error()
@@ -71,12 +72,12 @@ model.to(device)
 model.classifier.to(device)
 
 # Set number of batches (per epoch) and epochs
-num_epochs = 30
+num_epochs = 50
 batch_size = 16  # nb of example per batch
-
+peak_lr = 4e-5
 
 # Define optimizer and loss function
-optimizer = torch.optim.AdamW(model.parameters(), lr=4e-5)
+optimizer = torch.optim.AdamW(model.parameters(), lr=peak_lr)
 loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1/20, 1]).to(device))
 
 
@@ -103,6 +104,15 @@ labels = torch.tensor(Y_train).to(device)
 dataset = TensorDataset(inputs.input_ids, inputs.attention_mask, labels)
 train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
+
+# Decrease linearly from peak value 4e-5 to 4e-6 over num_epochs
+total_steps = len(train_dataloader) * num_epochs
+scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.1, total_iters=num_epochs)
+
+
+
+
+
 # Iterate over epochs and batches per epoch
 epoch_f_scores, epoch_loss = [], []
 for epoch in range(num_epochs):
@@ -124,6 +134,10 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+    before_lr = optimizer.param_groups[0]["lr"]
+    scheduler.step()  # update learning rate
+    after_lr = optimizer.param_groups[0]["lr"]
+    sp.call(f"echo Before LR update {before_lr} After LR update {after_lr}", shell=True)
 
     avg_loss = total_loss / len(train_dataloader)  # across batches
     epoch_loss.append(avg_loss)

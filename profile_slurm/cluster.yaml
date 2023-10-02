@@ -28,15 +28,33 @@ hypertuning_transformer_2_classes:
     gpus-per-node: 1
     cpus-per-task: 6
     mem-per-cpu: 16000
-    time: 0-5:00:00
+    time: 0-7:00:00
 
 training_transformer_2_classes:
     gpus-per-node: 1
     cpus-per-task: 6
     mem-per-cpu: 16000
-    time: 0-1:00:00
+    time: 0-2:00:00
+
+training_transformer_2_classes_LR_schedule:
+    gpus-per-node: 1
+    cpus-per-task: 6
+    mem-per-cpu: 16000
+    time: 0-4:00:00
 
 test_transformer_2_classes:
+    gpus-per-node: 1
+    cpus-per-task: 2
+    mem-per-cpu: 16000
+    time: 0-0:20:00
+
+test_transformer_2_classes_LR_schedule:
+    gpus-per-node: 1
+    cpus-per-task: 2
+    mem-per-cpu: 16000
+    time: 0-0:20:00
+
+test_before_training_transformer_2_classes:
     gpus-per-node: 1
     cpus-per-task: 2
     mem-per-cpu: 16000
