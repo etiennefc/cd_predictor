@@ -72,9 +72,10 @@ model.to(device)
 model.classifier.to(device)
 
 # Set number of batches (per epoch) and epochs
-num_epochs = 50
+num_epochs = 25
 batch_size = 16  # nb of example per batch
 peak_lr = 4e-5
+fraction = 0.25  # end factor of LR (i.e. 4e-5*0.25=1e-5)
 
 # Define optimizer and loss function
 optimizer = torch.optim.AdamW(model.parameters(), lr=peak_lr)
@@ -105,9 +106,9 @@ dataset = TensorDataset(inputs.input_ids, inputs.attention_mask, labels)
 train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 
-# Decrease linearly from peak value 4e-5 to 4e-6 over num_epochs
+# Decrease linearly from peak value 4e-5 to 1e-5 over num_epochs
 total_steps = len(train_dataloader) * num_epochs
-scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.1, total_iters=num_epochs)
+scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=fraction, total_iters=num_epochs)
 
 
 
