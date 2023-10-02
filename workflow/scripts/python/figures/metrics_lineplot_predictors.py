@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 import seaborn as sns 
 import functions as ft 
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, recall_score
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, recall_score, matthews_corrcoef
 
 dictio = {0: "other", 1: "snoRNA_pseudogene", 2: "expressed_CD_snoRNA"}
 snoreport = pd.read_csv(snakemake.input.snoreport, sep='\t')
@@ -14,11 +14,11 @@ simple_models_preds = pd.concat([pd.read_csv(snakemake.input.simple_models_preds
                                 [pd.read_csv(path, sep='\t').drop(columns=['target', 'gene_id']) for path in 
                                 snakemake.input.simple_models_preds], axis=1).replace(dictio)
 
-# Best transformer yet 0.707792, 0.767606    0.656627
-metrics_transformer = [['accuracy', 0.9877916440586001, 'CD_predictor'], 
-                ['precision', 0.8975903614457831, 'CD_predictor'], 
-                ['recall', 0.8418079096045198, 'CD_predictor'],
-                ['f1_score', 0.8688049672300, 'CD_predictor']] 
+# Best transformer yet 
+metrics_transformer = [['accuracy', 0.9894194248507867, 'CD_predictor'], 
+                ['precision', 0.9156626506024096, 'CD_predictor'], 
+                ['recall', 0.8587570621468926, 'CD_predictor'],
+                ['f1_score', 0.8862973760932944, 'CD_predictor']] 
                 #['specificity on\nsnoRNA_pseudogenes', None, 'CD_predictor']]
 transformer = pd.DataFrame(metrics_transformer, columns=['score_name', 'score_value', 'predictor'])
 
@@ -60,6 +60,7 @@ for model in color_dict.keys():
     precision, recall, f1_score, _ = precision_recall_fscore_support(
                                     df['target'], df[f'{model}_prediction'], 
                                     pos_label='expressed_CD_snoRNA', average='binary')
+    mcc = matthews_corrcoef(df['target'], df[f'{model}_prediction'])
     # Specificity or true negative rate is the same as the recall but computed based on the negative label
     # Since the existing predictors were not designed to predict snoRNA pseudogenes, we compute only their specificity 
     # (i.e. whether they're able to not predict it as an expressed snoRNA)
