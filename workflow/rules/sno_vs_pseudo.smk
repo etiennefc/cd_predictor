@@ -66,8 +66,8 @@ rule test_sno_pseudo_simple_models:
     output:
         df_metrics_on_test_all = 'results/predictions/sno_pseudo/simple_models/{fixed_length}/{simple_models}_test_metrics_{fixed_length}_fold_{fold_num}_all.tsv',
         all_test_predictions = 'results/predictions/sno_pseudo/simple_models/{fixed_length}/{simple_models}_test_predictions_{fixed_length}_fold_{fold_num}_all.tsv',
-        #filtered_test_predictions = 'results/predictions/sno_pseudo/simple_models/{fixed_length}/{simple_models}_test_predictions_{fixed_length}_fold_{fold_num}_filtered_w_transformer_pred.tsv',
-        #df_metrics_on_test_filtered = 'results/predictions/sno_pseudo/simple_models/{fixed_length}/{simple_models}_test_metrics_{fixed_length}_fold_{fold_num}_filtered_w_transformer_pred.tsv'
+        filtered_test_predictions = 'results/predictions/sno_pseudo/simple_models/{fixed_length}/{simple_models}_test_predictions_{fixed_length}_fold_{fold_num}_filtered_w_transformer_pred.tsv',
+        df_metrics_on_test_filtered = 'results/predictions/sno_pseudo/simple_models/{fixed_length}/{simple_models}_test_metrics_{fixed_length}_fold_{fold_num}_filtered_w_transformer_pred.tsv'
     conda:
         "../envs/python_new.yaml"
     script:
