@@ -3,6 +3,7 @@ from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)  # ignore all future warnings
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 from sklearn.neighbors import KNeighborsClassifier
@@ -37,15 +38,27 @@ hyperparams = df_to_params(hyperparams_df)
 
 
 # Get training set and filter to keep only expressed C/D and C/D pseudogenes
-X_train = pd.read_csv(snakemake.input.X_train_scaled, sep='\t', index_col='gene_id')  # already filtered during training
+X_train = pd.read_csv(snakemake.input.X_train_scaled, sep='\t').drop(columns=['gene_id']).reset_index(drop=True)  # already filtered during training
 y_train = pd.read_csv(snakemake.input.y_train, sep='\t').drop(columns=['gene_id'])
-y_train = y_train[y_train['target'] != 'other']
+y_train = y_train[y_train['target'] != 0].reset_index(drop=True)
+
 
 # Train over given fold (fold_num) in stratified 10-fold CV
 skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=rs)
 fold_dict = {str(fold_index+1): [train_index, test_index]
             for fold_index, (train_index, test_index) in
-            enumerate(skf.split(kmer_seqs, y_simple))}
+            enumerate(skf.split(X_train, y_train))}
+
+# Get train and test (CV) sets for given fold
+print(X_train)
+print(y_train)
+train_index = fold_dict[fold_num][0]
+test_index = fold_dict[fold_num][1]
+X_fold_train = X_train.loc[train_index]
+y_fold_train = y_train.loc[train_index]
+X_fold_test = X_train.loc[test_index]
+y_fold_test = y_train.loc[test_index]
+
 
 # Instantiate the model defined by the 'simple_models' wildcard using the best hyperparameters
 # specific to each model (logreg, svc, rf, gbm, knn)
@@ -73,14 +86,21 @@ else:
                 n_estimators=hyperparams['n_estimators'], random_state=rs)
 
 # Train model and save training accuracy to df
-model.fit(X_train, y_train.values.ravel())
-print(snakemake.wildcards.simple_models)
-print(model.score(X_train, y_train.values.ravel()))
+model.fit(X_fold_train, y_fold_train.values.ravel())
+
+# Test model on test set (heldout tenth of all training example)
+y_pred = model.predict(X_fold_test)
+print(y_pred)
 
 acc = {}
-acc[snakemake.wildcards.simple_models+'_training_accuracy'] = model.score(X_train, y_train.values.ravel())
+acc['model'] = snakemake.wildcards.simple_models
+acc['training_accuracy'] = accuracy_score(y_fold_test.target, y_pred)
+acc['precision'] = precision_score(y_fold_test.target, y_pred, average='macro')
+acc['recall'] = recall_score(y_fold_test.target, y_pred, average='macro')
+acc['training_f1_score'] = f1_score(y_fold_test.target, y_pred, average='macro')
 acc_df = pd.DataFrame(acc, index=[0])
-acc_df.to_csv(snakemake.output.training_accuracy, sep='\t', index=False)
+print(acc_df)
+acc_df.to_csv(snakemake.output.train_metrics, sep='\t', index=False)
 
 # Pickle the model as a .sav file ('wb' for write in binary)
-pickle.dump(model, open(snakemake.output.pickled_trained_model, 'wb'))
+pickle.dump(model, open(snakemake.output.model, 'wb'))

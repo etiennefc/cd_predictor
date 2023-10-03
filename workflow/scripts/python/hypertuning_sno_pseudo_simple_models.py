@@ -13,7 +13,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
     cross-validation (X_cv) set. Train only on expressed C/D vs C/D pseudogene."""
 
 rs = snakemake.params.random_state
-output = snakemake.output.best_hyperparameters
+output = snakemake.output.best_hyperparams
 
 # Select only C/D pseudogenes (1) and expressed C/D (2) for the training
 X_cv = pd.read_csv(snakemake.input.X_tuning_scaled, sep='\t', index_col='gene_id')  # already filtered sno during scaling
@@ -39,7 +39,7 @@ else:
 cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=rs)
 
 # Define search space (i.e. in which range of params the GridSearch happens) per model
-space = snakemake.params.hyperparameter_space
+space = snakemake.params.hyperparams_space
 
 # Execute the gridsearch per model on the CV set
 search = GridSearchCV(estimator=model, param_grid=space,

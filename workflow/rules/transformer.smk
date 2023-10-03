@@ -231,7 +231,8 @@ rule learning_curve_avg_f1_score_training_transformer_2_classes:
     """ Create average learning curve (of avg f1-score across 2 classes (other vs sno (sno|pseudosno))) 
         across 10 folds on training set for transformer trained w sequence only."""
     input:
-        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/transformer/211/transformer_2_classes_25_epochs_4e-5_16/transformer_2_classes_t*f1_score_per_epoch.tsv')
+        f1_before_train = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/transformer/211/transformer_2_classes_Before_t*f1_score_per_epoch.tsv'),
+        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/transformer/211/transformer_2_classes_LR_schedule_4e-5_1e-5_16_25_epochs/transformer_2_classes_LR_schedule_t*f1_score_per_epoch.tsv')
     output:
         learning_curve = 'results/figures/lineplot/transformer/211nt/transformer_2_classes_training_f1_score_avg_across_fold.svg'
     params:
