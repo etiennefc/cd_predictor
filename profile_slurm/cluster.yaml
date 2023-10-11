@@ -3,7 +3,7 @@ __default__:
     nodes: 1
     cpus-per-task: 1
     mem-per-cpu: 4G
-    time: 0-2:30:00
+    time: 0-3:00:00
     mail-user: "etienne.fafard-couture@usherbrooke.ca"
     mail-type: FAIL
 
@@ -30,6 +30,12 @@ hypertuning_transformer_2_classes:
     mem-per-cpu: 16000
     time: 0-7:00:00
 
+hypertuning_transformer_sno_pseudo:
+    gpus-per-node: 1
+    cpus-per-task: 6
+    mem-per-cpu: 16000
+    time: 0-4:00:00
+
 training_transformer_2_classes:
     gpus-per-node: 1
     cpus-per-task: 6
@@ -41,6 +47,12 @@ training_transformer_2_classes_LR_schedule:
     cpus-per-task: 6
     mem-per-cpu: 16000
     time: 0-4:00:00
+
+training_transformer_sno_pseudo:
+    gpus-per-node: 1
+    cpus-per-task: 6
+    mem-per-cpu: 16000
+    time: 0-3:00:00
 
 test_transformer_2_classes:
     gpus-per-node: 1
@@ -55,6 +67,12 @@ test_transformer_2_classes_LR_schedule:
     time: 0-0:20:00
 
 test_before_training_transformer_2_classes:
+    gpus-per-node: 1
+    cpus-per-task: 2
+    mem-per-cpu: 16000
+    time: 0-0:20:00
+
+test_transformer_sno_pseudo:
     gpus-per-node: 1
     cpus-per-task: 2
     mem-per-cpu: 16000
