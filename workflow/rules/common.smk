@@ -9,6 +9,8 @@ def get_species_genome(wildcards):
     species_name = str(wildcards).split('_cd_')[0]
     species_name = species_name.split(' ')[0]
     protists = ["leishmania_major", "dictyostelium_discoideum", "giardia_lamblia"]
+    fungi = ['saccharomyces_cerevisiae', 'schizosaccharomyces_pombe', 
+            'aspergillus_fumigatus', 'neurospora_crassa', 'candida_albicans']
     if species_name == 'tetrahymena_thermophila':
         path = rules.download_tetrahymena_genome.output.genome
     elif species_name == 'ostreococcus_tauri':
@@ -17,8 +19,8 @@ def get_species_genome(wildcards):
         path = expand(rules.download_other_protist_genome.output.genome, species=species_name)
     elif species_name in ['homo_sapiens', 'mus_musculus']:
         path = rules.download_mammal_genome.output.genome
-    elif species_name in ['saccharomyces_cerevisiae', 'schizosaccharomyces_pombe']:
-        path = rules.download_yeast_genome.output.genome
+    elif species_name in fungi:
+        path = expand(rules.download_yeast_genome.output.genome, species=species_name)
     else:
         path = expand(rules.download_genome.output.genome, species=species_name)
     return path

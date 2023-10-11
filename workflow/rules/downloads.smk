@@ -29,7 +29,7 @@ rule download_genome:
     wildcard_constraints:
         species=join_list(config['species'], ["leishmania_major", 
               "dictyostelium_discoideum", "giardia_lamblia", "arabidopsis_thaliana", 
-              "oryza_sativa"], remove=True)
+              "oryza_sativa", "aspergillus_fumigatus", "neurospora_crassa", "candida_albicans"], remove=True)
     params:
         link = "ftp://ftp.ensembl.org/pub/release-108/fasta/{species}/dna/*dna.toplevel.fa.gz",
     shell:
@@ -53,13 +53,13 @@ rule download_mammal_genome:
         "mv temp {output.genome}"
 
 rule download_yeast_genome:
-    """ Download the reference genome (fasta file) of S. pombe and 
-        S. cerevisiae from ENSEMBL ftp servers."""
+    """ Download the reference genome (fasta file) of S. pombe, 
+        S. cerevisiae, N. crassa, C. albicans and A. fumigatus from ENSEMBL ftp servers."""
     output:
         genome = 'data/references/genome_fa/{species}_genome.fa'
     wildcard_constraints:
-        species=join_list(config['species_tgirt'], ["saccharomyces_cerevisiae",
-              "schizosaccharomyces_pombe"])
+        species=join_list(config['species'], ["saccharomyces_cerevisiae",
+              "schizosaccharomyces_pombe", "aspergillus_fumigatus", "neurospora_crassa", "candida_albicans"])
     params:
         link = "ftp://ftp.ensemblgenomes.org/pub/fungi/release-55/fasta/{species}/dna/*dna.toplevel.fa.gz"
     shell:
@@ -125,12 +125,15 @@ rule download_mouse_gtf:
         "mv temp {output.gtf}"
 
 rule download_yeast_gtf:
-    """ Download the reference genome (fasta file) of S. cerevisiae 
+    """ Download the reference genome (fasta file) of S. cerevisiae, S 
         from ENSEMBL ftp servers."""
     output:
-        gtf = 'data/references/gtf/saccharomyces_cerevisiae.gtf'
+        gtf = 'data/references/gtf/{species}.gtf'
+    wildcard_constraints:
+        species=join_list(config['species'], ["saccharomyces_cerevisiae", 
+                "schizosaccharomyces_pombe", "aspergillus_fumigatus", "neurospora_crassa", "candida_albicans"])
     params:
-        link = "ftp://ftp.ensemblgenomes.org/pub/fungi/release-55/gtf/saccharomyces_cerevisiae/*5.gtf.gz"
+        link = "ftp://ftp.ensemblgenomes.org/pub/fungi/release-55/gtf/{species}/*5.gtf.gz"
     shell:
         "wget -O temp.gz {params.link} && "
         "gunzip temp.gz && "
@@ -212,7 +215,7 @@ rule download_rnacentral_ncRNA:
     params:
         link = config['download']['rnacentral'] 
     shell:
-        "wget -O temp_rnacentral_{wildcards.species}.gz {params.link}{wildcards.species}*.bed.gz && "
+        "wget -O temp_rnacentral_{wildcards.species}.gz {params.link}{wildcards.species}.*.bed.gz && "
         "gunzip temp_rnacentral_{wildcards.species}.gz && "
         "mv temp_rnacentral_{wildcards.species} {output.bed}"
 

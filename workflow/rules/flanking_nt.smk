@@ -16,8 +16,11 @@ rule cd_sno_location_seq:
         box_location = rules.c_d_box_location.output.c_d_box_location,
         sno_sequences = 'data/references/all_expressed_cd_sequences.fa',
         sno_df = 'data/references/all_expressed_cd_sequences_location.tsv',
-        chr_size = [get_chr_size(sp) for sp in [s for s in config['species'] 
-                        + config['species_tgirt'] if s != "schizosaccharomyces_pombe"]],
+        chr_size = [sp for sp in expand(rules.get_chr_size_literature.output.chr_size, sno_fasta=config['sno_fasta']) + 
+                    expand(rules.get_chr_size_tgirt.output.chr_size, species=["homo_sapiens", "mus_musculus", 
+                    "saccharomyces_cerevisiae"]) if "schizosaccharomyces_pombe" not in sp],
+        #chr_size = [get_chr_size(sp) for sp in [s for s in config['species'] 
+         #               + config['species_tgirt'] if s != "schizosaccharomyces_pombe"]],
         genome = get_all_genomes('data/references/genome_fa/*.fa')
     output:
         fifteen_upstream_c_fa = "data/references/fifteen_nt_upstream_C_box.fa",
