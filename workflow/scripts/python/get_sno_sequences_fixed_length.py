@@ -29,8 +29,8 @@ for path in snakemake.input.sno_tgirt:
 all_cd_df = pd.concat(sno_dfs)
 
 # Extend to fixed_length nt total around each snoRNA 
-# (fixed_length nt (i.e. 211 nt) = length of the longest 
-# expressed CD below the 95th percentile (181 nt) + 15 nt up/down stream)
+# (fixed_length nt (i.e. 198 nt) = length of the longest 
+# expressed CD below the 95th percentile (168 nt) + 15 nt up/down stream)
 ext_seq_dict = {}
 for species in pd.unique(all_cd_df.species_name):
     genome_path = [path for path in genomes if species in path][0]

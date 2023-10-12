@@ -5,7 +5,7 @@ from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 
 seed = snakemake.params.random_seed
-fixed_length = snakemake.wildcards.fixed_length
+fixed_length = snakemake.wildcards.fixed_length  # fixed window length with 15 nt up/down stream of snoRNA
 
 # Load dfs
 extended_fixed_length_seq = pd.read_csv(snakemake.input.extended_sno_seq, sep='\t')
@@ -29,7 +29,7 @@ sno_rfam = pd.read_csv(snakemake.input.sno_rfam, sep='\t')
 sno_rfam = sno_rfam.drop(columns=['species_name'])
 sno_rfam = sno_rfam.merge(sno_species_df, how='left', on='gene_id')
 
-# Create extended_211nt_sequence column
+# Create extended_{fixed_length}nt_sequence column
 sno_rfam[f'extended_{fixed_length}nt_sequence'] = sno_rfam['gene_id'].map(ext_dict)
 
 # Keep only 1 copy per snoRNA duplicates with exactly the same extended sequences
@@ -42,10 +42,10 @@ sno_rfam = sno_rfam.drop_duplicates(subset=[f'extended_{fixed_length}nt_sequence
 #sno_to_remove = ['RF00012', 'RF01846', 'RF01848', 'RF01296']
 #sno_rfam = sno_rfam[~sno_rfam['rfam_family_id'].isin(sno_to_remove)]
 
-# Exclude all snoRNAs over 181 nt (95th percentile) because they 
+# Exclude all snoRNAs over 95th percentile because they 
 # are too long and would affect the model's accuracy
 sno_rfam['length'] = sno_rfam['end'] - sno_rfam['start'] + 1
-sno_rfam = sno_rfam[sno_rfam.length <= 181]
+sno_rfam = sno_rfam[sno_rfam.length <= int(fixed_length) - 30]  # -15 nt flanking on both sides of the snoRNA
 sno_rfam = sno_rfam.drop(columns=['length'])
 
 # For the snoRNAs with a Rfam id, separate between those with 1 vs 2 to 10 members vs >10 members per family
@@ -119,12 +119,12 @@ sno_fam = pd.concat([df for id, df in remaining_sno_dict.items()])
 sno_fam = sno_fam.merge(rfam_clans, how='left', on='rfam_family_id')
 
 # First dispatch snoRNAs with the same Rfam clan id in the same set (selected only clans with more than one sno)
-sno_w_clan = shuffle(sno_fam[~sno_fam['rfam_clan_id'].isna()], random_state=seed)  # length = 251
+sno_w_clan = shuffle(sno_fam[~sno_fam['rfam_clan_id'].isna()], random_state=seed)  # length = 284
 big_clans_tuning, big_clans_test = [], []
 used_clan_id = []
-tuning_occurences_per_clan, test_occurences_per_clan = [2, 2, 3, 4, 6, 8], [2, 3, 3, 7, 10, 12, 13]
-# The sum of occurences (25 and 50 for tuning and test) was chosen 
-# pseudo-randomly to make sure that we have ~ 10% (25/251) and 20% (50/251) of sno in clans 
+tuning_occurences_per_clan, test_occurences_per_clan = [2, 3, 3, 4, 7, 9], [2, 2, 3, 3, 4, 8, 10, 12, 13]
+# The sum of occurences (28 and 57 for tuning and test) was chosen 
+# pseudo-randomly to make sure that we have ~ 10% (28/284) and 20% (57/284) of sno in clans 
 # with more than 1 sno (i.e. those within 
 # these clans) that are distributed proportionally to the % we want in the tuning, train, test sets (10, 70 and 20%)
 tun_nb, test_nb = 0, 0
@@ -174,9 +174,9 @@ print(remaining_sno_nb)
 print(selected_sno_nb)
 # Count the remaining number of sno needed in each set
 tuning_nb, train_nb, test_nb = round(selected_sno_nb * 0.1), round(selected_sno_nb * 0.7), round(selected_sno_nb * 0.2)
-tuning_nb_remaining = tuning_nb - len(sno_no_or_1_rfam_tuning)  # 27 C/D
-train_nb_remaining = train_nb - len(sno_no_or_1_rfam_train)  # 189 C/D
-test_nb_remaining = test_nb - len(sno_no_or_1_rfam_test)  # 54 C/D
+tuning_nb_remaining = tuning_nb - len(sno_no_or_1_rfam_tuning)  # 28 C/D
+train_nb_remaining = train_nb - len(sno_no_or_1_rfam_train)  # 200 C/D
+test_nb_remaining = test_nb - len(sno_no_or_1_rfam_test)  # 57 C/D
 
 print(tuning_nb_remaining)
 print(train_nb_remaining)
@@ -188,9 +188,9 @@ print(fam_len_dict)
 tuning, train, test = [], [], []
 
 
-# To get to the 27 remaining C/D to add in the tuning set,
-# randomly choose a family of 10, 6, 4, 3, 2, 2 snoRNAs (27 snoRNAs)
-# This combination of 10, 6, 4, 3, 2, 2 was manually picked to ensure a total of 27
+# To get to the 28 remaining C/D to add in the tuning set,
+# randomly choose a family of 10, 6, 5, 3, 2, 2 snoRNAs (28 snoRNAs)
+# This combination of 10, 6, 5, 3, 2, 2 was manually picked to ensure a total of 28
 def sample_cd(dictio, nb_per_family, given_list, big_df, n_samples, rs):
     """ Select from dictio all families of n (nb_per_family) snoRNAs, retrieve all 
         snoRNAs  of that family from big_df and pick randomly n_samples (i.e n different 
@@ -204,7 +204,7 @@ def sample_cd(dictio, nb_per_family, given_list, big_df, n_samples, rs):
 tuning_occurences = [1, 1, 1, 1, 2]
 tuning_ids = []
 d = {k:v for k,v in remaining_sno_dict.items() if k not in rfam_ids_chosen_clans}
-for i, number in enumerate([10, 6, 4, 3, 2]):
+for i, number in enumerate([10, 6, 5, 3, 2]):
     ids = sample_cd(d, number, tuning_ids, sno_rfam, tuning_occurences[i], seed)
     tuning += ids
     for id in ids:
@@ -213,22 +213,22 @@ for i, number in enumerate([10, 6, 4, 3, 2]):
 filtered_sno = [df.gene_id.tolist() for id, df in d.items()]
 filtered_sno = [item for sublist in filtered_sno for item in sublist]
 filtered_df = sno_rfam[sno_rfam['gene_id'].isin(filtered_sno)]
-tuning_df = filtered_df[filtered_df['rfam_family_id'].isin(tuning)]  # 27 C/D
+tuning_df = filtered_df[filtered_df['rfam_family_id'].isin(tuning)]  # 28 C/D
 
-# For test set, randomly choose a family of 10, 10, 8, 7, 5, 4, 3, 3, 2, 2 snoRNAs (54 snoRNAs)
-# This combination of 10, 10, 8, 7, ... 2 was manually picked to ensure a total of 54
-test_occurences = [2, 1, 1, 1, 1, 2, 2]
+# For test set, randomly choose a family of 10, 10, 8, 7, 5, 4, 3, 3, 3, 2, 2 snoRNAs (57 snoRNAs)
+# This combination of 10, 10, 8, 7, ... 2 was manually picked to ensure a total of 57
+test_occurences = [2, 1, 1, 1, 1, 3, 2]
 for i, number in enumerate([10, 8, 7, 5, 4, 3, 2]):
     ids = sample_cd(d, number, tuning_ids, sno_rfam, test_occurences[i], seed)
     test += ids
     for id in ids:
         tuning_ids.append(id)
 
-test_df = filtered_df[filtered_df['rfam_family_id'].isin(test)]  # 54 C/D
+test_df = filtered_df[filtered_df['rfam_family_id'].isin(test)]  # 57 C/D
 
 # For training set, select the remaining snoRNAs not in the test nor tuning sets
 train_df = filtered_df[~filtered_df['rfam_family_id'].isin(
-                        test+tuning+rfam_ids_chosen_clans+list(sno_no_or_1_rfam_tuning.rfam_family_id))]  # 189 C/D
+                        test+tuning+rfam_ids_chosen_clans+list(sno_no_or_1_rfam_tuning.rfam_family_id))]  # 200 C/D
 
 # Concat the sets composed of families of 2-10 members to their respective set 
 # composed of families with 0 or 1 rfam id
@@ -242,6 +242,10 @@ final_test = shuffle(pd.concat([test_clan_df, sno_no_or_1_rfam_test, test_df]),
 final_tuning.to_csv(snakemake.output.tuning, sep='\t', index=False)
 final_train.to_csv(snakemake.output.training, sep='\t', index=False)
 final_test.to_csv(snakemake.output.test, sep='\t', index=False)
+print(final_tuning)
+print(final_train)
+print(final_test)
+
 
 # Concat all in a df
 final_tuning['dataset'] = 'Tuning'
@@ -253,7 +257,6 @@ final_all.to_csv(snakemake.output.all_positives, sep='\t', index=False)
 print(coll.Counter(final_tuning.species_name))
 print(coll.Counter(final_train.species_name))
 print(coll.Counter(final_test.species_name))
-
 
 
 
