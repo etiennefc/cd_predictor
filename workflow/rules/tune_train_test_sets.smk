@@ -32,7 +32,10 @@ rule get_three_sets_initial_fixed_length:
     output:
         tuning = 'data/references/positives_and_negatives/initial/initial_tuning_set_fixed_length_{fixed_length}nt.tsv',
         training = 'data/references/positives_and_negatives/initial/initial_training_set_fixed_length_{fixed_length}nt.tsv',
-        test = 'data/references/positives_and_negatives/initial/initial_test_set_fixed_length_{fixed_length}nt.tsv'
+        test = 'data/references/positives_and_negatives/initial/initial_test_set_fixed_length_{fixed_length}nt.tsv',
+        tuning_target = 'data/references/positives_and_negatives/initial/initial_tuning_target_fixed_length_{fixed_length}nt.tsv',
+        training_target = 'data/references/positives_and_negatives/initial/initial_training_target_fixed_length_{fixed_length}nt.tsv',
+        test_target = 'data/references/positives_and_negatives/initial/initial_test_target_fixed_length_{fixed_length}nt.tsv'
     params:
         random_state = 42,
         short_name_dict = config['species_short_name']

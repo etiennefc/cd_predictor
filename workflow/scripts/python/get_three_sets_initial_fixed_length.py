@@ -1,12 +1,16 @@
 #!/usr/bin/python3
 import pandas as pd
 from sklearn.utils import shuffle
+import collections as coll
 
 positives_paths = snakemake.input.positives
 negatives_paths = snakemake.input.negatives
 rs = snakemake.params.random_state
 fixed_length = snakemake.wildcards.fixed_length
-outputs = snakemake.output
+outputs = [snakemake.output.tuning, snakemake.output.training, 
+            snakemake.output.test]
+target_outputs = [snakemake.output.tuning_target, snakemake.output.training_target, 
+                snakemake.output.test_target]
 short_name_dict = snakemake.params.short_name_dict
 
 # Load dfs
@@ -24,7 +28,6 @@ test_neg = pd.read_csv([p for p in negatives_paths
                         if 'test' in p][0], sep='\t')
 neg = [tuning_neg, training_neg, test_neg] 
 for df in neg:
-    import collections as coll
     print(coll.Counter(df.gene_biotype))
     print(coll.Counter(df.species_name))
 
@@ -46,6 +49,13 @@ for i, df in enumerate(pos):
                             'target'] = 'expressed_CD_snoRNA'
     concat_df = shuffle(shuffle(concat_df, random_state=rs), 
                         random_state=rs)
+    concat_df.loc[concat_df['gene_biotype'] == 'snoRNA_pseudogene', 'target'] = 'snoRNA_pseudogene'
     concat_df.to_csv(outputs[i], sep='\t', index=False)
-    import collections as coll 
     print(coll.Counter(concat_df.species_name))
+
+    # Create and save target df
+    target_df = concat_df[['gene_id', 'target']]
+    target_df['target'] = target_df['target'].replace('other', 0)
+    target_df['target'] = target_df['target'].replace('snoRNA_pseudogene', 1)
+    target_df['target'] = target_df['target'].replace('expressed_CD_snoRNA', 2)
+    target_df.to_csv(target_outputs[i], sep='\t', index=False)
