@@ -93,10 +93,11 @@ select_regions(exonic_regions, 'exonic', output_exonic)
 
 # Select intronic regions for species with a high number of large introns
 if species not in ['giardia_lamblia', 'leishmania_major', 
-                    'saccharomyces_cerevisiae', 
-                    'dictyostelium_discoideum']:
+                    'saccharomyces_cerevisiae', 'dictyostelium_discoideum', 
+                    'candida_albicans', 'aspergillus_fumigatus']:
     select_regions(intronic_regions, 'intronic', output_intronic)
-# There is a limited number of intronic regions in G. lamblia, L. major, S.cerevisiae and D. discoideum
+# There is a limited number of intronic regions in G. lamblia, L. major, S.cerevisiae, D. discoideum, 
+# C.albicans and A. fumigatus
 # (not enough to have equal number compared to expressed CD)
 else:
     df = pd.DataFrame(columns=['Not enough large introns to select introns'])

@@ -42,7 +42,9 @@ def get_species_gtf(species):
     animals = ['macaca_mulatta', 'ornithorhynchus_anatinus', 'gallus_gallus', 
                 'caenorhabditis_elegans', 'drosophila_melanogaster']
     plants = ['arabidopsis_thaliana', 'oryza_sativa']
-    if 'saccharomyces' in species:
+    fungi = ['saccharomyces_cerevisiae', 'schizosaccharomyces_pombe', 
+            'aspergillus_fumigatus', 'neurospora_crassa', 'candida_albicans']
+    if species in fungi:
         path = rules.download_yeast_gtf.output.gtf
     elif species == 'homo_sapiens':
         path = rules.download_human_gtf.output.gtf

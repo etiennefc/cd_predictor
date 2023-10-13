@@ -125,7 +125,8 @@ rule download_mouse_gtf:
         "mv temp {output.gtf}"
 
 rule download_yeast_gtf:
-    """ Download the reference genome (fasta file) of S. cerevisiae, S 
+    """ Download the reference genome (fasta file) of S. cerevisiae, 
+        S. pombe, A. fumigatus, N. crassa and C. albicans
         from ENSEMBL ftp servers."""
     output:
         gtf = 'data/references/gtf/{species}.gtf'

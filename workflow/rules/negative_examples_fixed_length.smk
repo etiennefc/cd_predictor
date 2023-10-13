@@ -28,7 +28,8 @@ rule filter_rnacentral_tRNA_snRNA_pre_miRNA_fixed_length:
     input:
         beds = expand(rules.download_rnacentral_ncRNA.output.bed, 
                 species=[sp for sp in config['species'] + config['species_tgirt'] 
-                            if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 'tetrahymena_thermophila']]),
+                            if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
+                            'tetrahymena_thermophila', 'candida_albicans']]),
         genomes = get_all_genomes('data/references/genome_fa/*.fa'),
         chr_sizes = get_all_genomes('data/references/chr_size/*.tsv'),
         gallus_gallus_gff = rules.download_gallus_gallus_gff.output.gff
