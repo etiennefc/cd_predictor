@@ -8,9 +8,10 @@ fold_num=$2
 random_state=$3
 x_train=$4
 y_train=$5
-output_model=$6
-output_loss=$7
-output_f1=$8
+best_hyperparams=$6
+output_model=$7
+output_loss=$8
+output_f1=$9
 
 # Load modules
 module load StdEnv/2020
@@ -34,6 +35,7 @@ $fold_num \
 $random_state \
 $x_train \
 $y_train \
+$best_hyperparams \
 $output_model \
 $output_loss \
 $output_f1

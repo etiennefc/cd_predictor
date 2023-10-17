@@ -15,9 +15,11 @@ from transformers import AutoTokenizer, BertForSequenceClassification, logging
 
 # Load inputs and params
 pretrained_model = str(sys.argv[1])  # pretrained DNABert6 model
-batch_size = 16
+best_hyperparams = pd.read_csv(sys.argv[4], sep='\t')
+batch_size = int(best_hyperparams.batch_size.values[0])  # nb of example per batch
 num_labels = 2
-model_path = str(sys.argv[4])
+model_path = str(sys.argv[5])
+fixed_length = sys.argv[2].split('nt.ts')[0].split('_')[-1]
 
 # Load test data and create tensor matrix (format used by pytorch)
 ### Remove pseudosno from test set for now
@@ -32,8 +34,8 @@ y_simple['target'] = y_simple['target'].replace(2, 1)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load outputs
-df_metrics = sys.argv[5]
-df_preds = sys.argv[6]
+df_metrics = sys.argv[6]
+df_preds = sys.argv[7]
 
 
 # Transform sequence of examples in test set into kmers (6-mers)
@@ -45,7 +47,7 @@ def seq2kmer(seq, k):
     kmers = " ".join(kmer)
     return kmers
 
-test_seqs = list(X_test['extended_211nt_sequence'])
+test_seqs = list(X_test[f'extended_{fixed_length}nt_sequence'])
 kmer_seqs = [seq2kmer(s, 6) for s in test_seqs]
 
 # Tokenize test data in right format and create dataloader

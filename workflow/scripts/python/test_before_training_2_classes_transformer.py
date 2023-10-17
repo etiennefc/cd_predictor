@@ -18,6 +18,9 @@ from transformers import AutoTokenizer, BertForSequenceClassification, logging
 pretrained_model = sys.argv[1]  # pretrained DNABert6 model
 fold_num = str(sys.argv[2])  # training fold number
 rs = int(sys.argv[3])  # random_state
+fixed_length = sys.argv[4].split('nt.ts')[0].split('_')[-1]
+best_hyperparams = pd.read_csv(sys.argv[6], sep='\t')
+batch_size = int(best_hyperparams.batch_size.values[0])  # nb of example per batch
 
 # Load inputs
 X_train = pd.read_csv(sys.argv[4], sep='\t')
@@ -29,8 +32,8 @@ y_simple = y_train.drop(columns=['gene_id'])
 y_simple = y_simple.replace(2, 1)
 
 # Get path of outputs
-output_loss = sys.argv[6]
-output_f1 = sys.argv[7]
+output_loss = sys.argv[7]
+output_f1 = sys.argv[8]
 
 # Show packages versions
 sp.call(f'echo PANDAS VERSION: {pd.__version__}', shell=True)
@@ -59,7 +62,7 @@ def seq2kmer(seq, k):
     kmers = " ".join(kmer)
     return kmers
 
-train_seqs = list(X_train['extended_211nt_sequence'])
+train_seqs = list(X_train[f'extended_{fixed_length}nt_sequence'])
 kmer_seqs = [seq2kmer(s, 6) for s in train_seqs]
 
 # Load pre-trained DNABERT model
@@ -68,9 +71,6 @@ model = BertForSequenceClassification.from_pretrained(pretrained_model, num_labe
 print(model)
 model.to(device)
 model.classifier.to(device)
-
-# Set number of batches (per epoch)
-batch_size = 16  # nb of example per batch
 
 # Define loss function
 loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1/20, 1]).to(device))

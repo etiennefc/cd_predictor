@@ -23,15 +23,17 @@ rs = int(sys.argv[3])  # random_state
 X_train = pd.read_csv(sys.argv[4], sep='\t')
 y_train = pd.read_csv(sys.argv[5], sep='\t')
 y_simple = y_train.drop(columns=['gene_id'])
+best_hyperparams = pd.read_csv(sys.argv[6], sep='\t')
+fixed_length = sys.argv[4].split('nt.ts')[0].split('_')[-1]
 
 # Convert sno labels so that expressed and pseudogene 
 # snoRNAs are considered the same label (i.e. 1)
 y_simple = y_simple.replace(2, 1)
 
 # Get path of outputs
-output_model = sys.argv[6]
-output_loss = sys.argv[7]
-output_f1 = sys.argv[8]
+output_model = sys.argv[7]
+output_loss = sys.argv[8]
+output_f1 = sys.argv[9]
 
 # Show packages versions
 sp.call(f'echo PANDAS VERSION: {pd.__version__}', shell=True)
@@ -60,7 +62,7 @@ def seq2kmer(seq, k):
     kmers = " ".join(kmer)
     return kmers
 
-train_seqs = list(X_train['extended_211nt_sequence'])
+train_seqs = list(X_train[f'extended_{fixed_length}nt_sequence'])
 kmer_seqs = [seq2kmer(s, 6) for s in train_seqs]
 
 # Load pre-trained DNABERT model
@@ -72,11 +74,11 @@ model.classifier.to(device)
 
 # Set number of batches (per epoch) and epochs
 num_epochs = 30
-batch_size = 16  # nb of example per batch
-
+batch_size = int(best_hyperparams.batch_size.values[0])  # nb of example per batch
+learning_rate = best_hyperparams.learning_rate.values[0]
 
 # Define optimizer and loss function
-optimizer = torch.optim.AdamW(model.parameters(), lr=4e-5)
+optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1/20, 1]).to(device))
 
 
@@ -184,4 +186,4 @@ l_df.to_csv(output_loss, sep='\t', index=False)
 # Save model for that given fold (only save weights and parameters as it is lighter than saving the whole model)
 model.to('cpu')
 torch.save(model.state_dict(), output_model)
-
+sp.call('echo ALL OUtPUTS GENERATED', shell=True)

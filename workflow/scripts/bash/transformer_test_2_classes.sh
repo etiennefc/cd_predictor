@@ -6,10 +6,11 @@ echo START bash
 pretrained_model=$1
 x_test=$2
 y_test=$3
-model=$4
-output_metrics=$5
-output_preds=$6
-python_script=$7
+best_hyperparams=$4
+model=$5
+output_metrics=$6
+output_preds=$7
+python_script=$8
 
 # Load modules
 module load StdEnv/2020
@@ -31,6 +32,7 @@ python3 $python_script \
 $pretrained_model \
 $x_test \
 $y_test \
+$best_hyperparams \
 $model \
 $output_metrics \
 $output_preds

@@ -23,8 +23,8 @@ rule training_transformer:
 rule hypertuning_transformer_2_classes:
     """ Get the best hyperparameters of the transformer with 2 classes using Grid Search. With 20 epochs, we get lr=4e-5 and batch_size=16"""
     input:
-        X_tuning = 'data/references/positives_and_negatives/added_features/added_features_tuning_set_fixed_length_{fixed_length}nt.tsv',
-        y_tuning = 'data/references/positives_and_negatives/added_features/added_features_tuning_target_{fixed_length}nt.tsv'
+        X_tuning = rules.get_three_sets_initial_fixed_length.output.tuning,
+        y_tuning = rules.get_three_sets_initial_fixed_length.output.tuning_target
     output:
         best_hyperparams = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_best_hyperparams.tsv'
     params:
@@ -43,13 +43,15 @@ rule hypertuning_transformer_2_classes:
 rule training_transformer_2_classes:
     """ Train the Transformer with the best hyperparams. ONLY 2 classes to predict: sno/pseudosno (1) or other (0). Must be connected to internet to load the pretrained model for the first time. ORGIINAL hyperparams: lr=2e-5, batch_size=100"""
     input:
-        X_train = 'data/references/positives_and_negatives/added_features/added_features_training_set_fixed_length_{fixed_length}nt.tsv',
-        y_train = 'data/references/positives_and_negatives/added_features/added_features_training_target_{fixed_length}nt.tsv'
+        X_train = rules.get_three_sets_initial_fixed_length.output.training,
+        y_train = rules.get_three_sets_initial_fixed_length.output.training_target,
+        best_hyperparams = rules.hypertuning_transformer_2_classes.output.best_hyperparams
     output:
         model = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_trained_fold_{fold_num}.pt',
         fold_loss = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_trained_fold_{fold_num}_loss_per_epoch.tsv',
         fold_f1_score = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_trained_fold_{fold_num}_f1_score_per_epoch.tsv'
     params:
+        python_script = "scripts/python/training_2_classes_transformer.py",
         random_state = 42,
         pretrained_model = "zhihan1996/DNA_bert_6"
     log:
@@ -58,14 +60,14 @@ rule training_transformer_2_classes:
         "bash scripts/bash/transformer_2_classes_training.sh "
         "{params.pretrained_model} {wildcards.fold_num} "
         "{params.random_state} "
-        "{input.X_train} {input.y_train} "
+        "{input.X_train} {input.y_train} {input.best_hyperparams} "
         "{output.model} {output.fold_loss} {output.fold_f1_score} &> {log}"
 
 rule training_transformer_2_classes_LR_schedule:
     """ Train the Transformer with the best hyperparams. ONLY 2 classes to predict: sno/pseudosno (1) or other (0). Must be connected to internet to load the pretrained model for the first time. The learning rate is firt linearly warmed-up from 0 to 4e-5 in the first epoch, and then linearly decayed to 0 at the last epoch of training (as was done in Ji et al., 2021, Bioinformatics)"""
     input:
-        X_train = 'data/references/positives_and_negatives/added_features/added_features_training_set_fixed_length_{fixed_length}nt.tsv',
-        y_train = 'data/references/positives_and_negatives/added_features/added_features_training_target_{fixed_length}nt.tsv'
+        X_train = rules.get_three_sets_initial_fixed_length.output.training,        y_train = rules.get_three_sets_initial_fixed_length.output.training_target,
+        best_hyperparams = rules.hypertuning_transformer_2_classes.output.best_hyperparams
     output:
         model = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_LR_schedule_trained_fold_{fold_num}.pt',
         fold_loss = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_LR_schedule_trained_fold_{fold_num}_loss_per_epoch.tsv',
@@ -79,14 +81,14 @@ rule training_transformer_2_classes_LR_schedule:
         "bash scripts/bash/transformer_2_classes_training_LR_schedule.sh "
         "{params.pretrained_model} {wildcards.fold_num} "
         "{params.random_state} "
-        "{input.X_train} {input.y_train} "
+        "{input.X_train} {input.y_train} {input.best_hyperparams} "
         "{output.model} {output.fold_loss} {output.fold_f1_score} &> {log}"
 
 rule test_before_training_transformer_2_classes:
     """ Get the Transformer predictions before training (baseline!) with the best hyperparams. ONLY 2 classes to predict: sno/pseudosno (1) or other (0). Must be connected to internet to load the pretrained model for the first time."""
     input:
-        X_train = 'data/references/positives_and_negatives/added_features/added_features_training_set_fixed_length_{fixed_length}nt.tsv',
-        y_train = 'data/references/positives_and_negatives/added_features/added_features_training_target_{fixed_length}nt.tsv'
+        X_train = rules.get_three_sets_initial_fixed_length.output.training,        y_train = rules.get_three_sets_initial_fixed_length.output.training_target,
+        best_hyperparams = rules.hypertuning_transformer_2_classes.output.best_hyperparams
     output:
         fold_loss = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_Before_trained_fold_{fold_num}_loss_per_epoch.tsv',
         fold_f1_score = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_Before_trained_fold_{fold_num}_f1_score_per_epoch.tsv'
@@ -99,7 +101,7 @@ rule test_before_training_transformer_2_classes:
         "bash scripts/bash/test_before_training_transformer_2_classes.sh "
         "{params.pretrained_model} {wildcards.fold_num} "
         "{params.random_state} "
-        "{input.X_train} {input.y_train} "
+        "{input.X_train} {input.y_train} {input.best_hyperparams} "
         "{output.fold_loss} {output.fold_f1_score} &> {log}"
 
 rule training_transformer_w_features:
@@ -152,9 +154,9 @@ rule test_transformer_2_classes:
         the model architecture before loading the weights/parameters
         learned during training). This transformer predicts only 2 classes (other vs sno (sno|pseudosno))."""
     input:
-        X_test = 'data/references/positives_and_negatives/added_features/added_features_test_set_fixed_length_211nt.tsv',
-        y_test = 'data/references/positives_and_negatives/added_features/added_features_test_target_211nt.tsv',
-        #best_hyperparams = rules.hypertuning_gru_added_features_half_normalized_simplified.output.best_hyperparams,
+        X_test = rules.get_three_sets_initial_fixed_length.output.test,
+        y_test = rules.get_three_sets_initial_fixed_length.output.test_target,
+        best_hyperparams = rules.hypertuning_transformer_2_classes.output.best_hyperparams,
         model = rules.training_transformer_2_classes.output.model 
     output:
         df_metrics_on_test = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_test_metrics_{fixed_length}nt_fold_{fold_num}.tsv',
@@ -167,7 +169,7 @@ rule test_transformer_2_classes:
     shell:
         "bash scripts/bash/transformer_test_2_classes.sh "
         "{params.pretrained_model} "
-        "{input.X_test} {input.y_test} "
+        "{input.X_test} {input.y_test} {input.best_hyperparams} "
         "{input.model} {output.df_metrics_on_test} {output.test_predictions} "
         "{params.python_script} &> {log}"
 
@@ -178,9 +180,9 @@ rule test_transformer_2_classes_LR_schedule:
         the model architecture before loading the weights/parameters
         learned during training). This transformer predicts only 2 classes (other vs sno (sno|pseudosno))."""
     input:
-        X_test = 'data/references/positives_and_negatives/added_features/added_features_test_set_fixed_length_211nt.tsv',
-        y_test = 'data/references/positives_and_negatives/added_features/added_features_test_target_211nt.tsv',
-        #best_hyperparams = rules.hypertuning_gru_added_features_half_normalized_simplified.output.best_hyperparams,
+        X_test = rules.get_three_sets_initial_fixed_length.output.test,
+        y_test = rules.get_three_sets_initial_fixed_length.output.test_target,
+        best_hyperparams = rules.hypertuning_transformer_2_classes.output.best_hyperparams,
         model = rules.training_transformer_2_classes_LR_schedule.output.model
     output:
         df_metrics_on_test = 'results/predictions/transformer/{fixed_length}/transformer_2_classes_LR_schedule_test_metrics_{fixed_length}nt_fold_{fold_num}.tsv',
@@ -193,7 +195,7 @@ rule test_transformer_2_classes_LR_schedule:
     shell:
         "bash scripts/bash/transformer_test_2_classes.sh "
         "{params.pretrained_model} "
-        "{input.X_test} {input.y_test} "
+        "{input.X_test} {input.y_test} {input.best_hyperparams} "
         "{input.model} {output.df_metrics_on_test} {output.test_predictions} "
         "{params.python_script} &> {log}"
 

@@ -25,6 +25,7 @@ pretrained_model = sys.argv[2]  # pretrained DNABert6 model
 X_tuning = pd.read_csv(sys.argv[3], sep='\t')
 y_tuning = pd.read_csv(sys.argv[4], sep='\t')
 y_simple = y_tuning.drop(columns=['gene_id'])
+fixed_length = sys.argv[3].split('nt.ts')[0].split('_')[-1]
 
 # Convert sno labels so that expressed and pseudogene 
 # snoRNAs are considered the same label (i.e. 1)
@@ -67,7 +68,7 @@ def seq2kmer(seq, k):
     kmers = " ".join(kmer)
     return kmers
 
-tuning_seqs = list(X_tuning['extended_211nt_sequence'])
+tuning_seqs = list(X_tuning[f'extended_{fixed_length}nt_sequence'])
 kmer_seqs = [seq2kmer(s, 6) for s in tuning_seqs]
 
 # Load tokenizer
