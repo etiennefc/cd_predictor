@@ -64,3 +64,18 @@ rule test_transformer_sno_pseudo:
         "{input.X_test} {input.y_test} {input.best_hyperparams} "
         "{input.model} {output.df_metrics_on_test} {output.test_predictions} "
         "{params.python_script} &> {log}"
+
+rule learning_curve_avg_f1_score_training_transformer_sno_pseudo:
+    """ Create average learning curve (of avg f1-score across 2 classes (other vs sno (sno|pseudosno))) 
+        across 10 folds on training set for transformer trained w sequence only."""
+    input:
+        f1_before_train = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/transformer/198/transformer_2_classes_Before_t*f1_score_per_epoch.tsv'),
+        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/sno_pseudo/transformer/198/transformer_sno_pseudo_*f1_score_per_epoch.tsv')
+    output:
+        learning_curve = 'results/figures/lineplot/transformer/198nt/sno_pseudo/transformer_sno_pseudo_training_f1_score_avg_across_fold.svg'
+    params:
+        num_epoch = 30
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/learning_curve_avg_f1_score_training_transformer.py"
