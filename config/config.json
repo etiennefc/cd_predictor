@@ -16,7 +16,7 @@
   "missing_tRNA_species": ["ostreococcus_tauri", "giardia_lamblia", "dictyostelium_discoideum", 
                             "gallus_gallus", "tetrahymena_thermophila", "macaca_mulatta", 
                             "ornithorhynchus_anatinus"],
-  "fixed_length": [198],
+  "fixed_length": [190],
   "cd_predictors": ["snoreport2", "snoscan", "infernal_rfam"],
   "simple_models": ["logreg", "svc", "rf", "gbm", "knn"],
   "intrinsic_feature": ["box_score", "terminal_stem_mfe", "structure_mfe", "length"],

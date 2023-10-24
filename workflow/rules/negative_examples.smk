@@ -90,12 +90,44 @@ rule format_blat_haca_output:
     script:
         "../scripts/python/format_blat_haca_output.py"
 
+rule get_human_snoRNA_pseudogenes:
+    """ Get human snoRNA pseudogenes (i.e. not expressed) extended sequence"""
+    input:
+        human_snoRNA_pseudogenes_dependency = expand(rules.get_expressed_snoRNAs_location.output.expressed_sno_df, species='homo_sapiens'),
+        human_genome = expand(rules.download_mammal_genome.output.genome, species='homo_sapiens'),
+        human_chr_size = expand(rules.get_chr_size_tgirt.output.chr_size, species='homo_sapiens')
+    output:
+        pseudogenes = 'data/references/negatives/snoRNA_pseudogenes/homo_sapiens_pseudogene_snoRNAs_{fixed_length}nt.tsv'
+    params:
+        human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/get_human_snoRNA_pseudogenes.py"
+
+rule get_mouse_snoRNA_pseudogenes:
+    """ Get mouse snoRNA pseudogenes (i.e. not expressed) extended sequence"""
+    input:
+        mouse_snoRNA_pseudogenes_dependency = expand(rules.get_expressed_snoRNAs_location.output.expressed_sno_df, species='mus_musculus'),
+        mouse_genome = expand(rules.download_mammal_genome.output.genome, species='mus_musculus'),
+        mouse_chr_size = expand(rules.get_chr_size_tgirt.output.chr_size, species='mus_musculus')
+    output:
+        pseudogenes = 'data/references/negatives/snoRNA_pseudogenes/mus_musculus_pseudogene_snoRNAs_{fixed_length}nt.tsv'
+    params:
+        mouse_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.mouse_pseudosno
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/get_mouse_snoRNA_pseudogenes.py"
+
 rule get_intergenic_intronic_exonic_regions:
     """ Select all intronic, exonic and intergenic regions in the genomes 
-        of various species that do not overlap with expressed C/D 
+        of various species that do not overlap with expressed C/D, C/D pseudogenes 
         or other chosen random ncRNAs."""
     input:
         expressed_cd_all_sets = expand(rules.tuning_train_test_split_rfam_fixed_length.output.all_positives, **config),
+        human_pseudogene = expand(rules.get_human_snoRNA_pseudogenes.output.pseudogenes, **config),
+        mouse_pseudogene = expand(rules.get_mouse_snoRNA_pseudogenes.output.pseudogenes, **config),
         ncRNA = rules.filter_rnacentral_tRNA_snRNA_pre_miRNA.output.df,
         haca = expand(rules.format_blat_haca_output.output.df, 
                     species=[sp for sp in config['species']+config['species_tgirt'] 

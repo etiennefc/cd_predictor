@@ -43,14 +43,14 @@ rule metrics_lineplot_predictors:
         snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
         snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
         infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv,
-        pseudosno_preds = rules.filter_cd_predictors_pseudosno.output.pseudosno_preds,
-        simple_models_preds = expand(rules.test_simple_models.output.y_preds, 
-                                    simple_models=config['simple_models'], allow_missing=True),
-        simple_models_pseudosno_preds = expand(rules.test_simple_models.output.pseudosno_preds, 
-                                    simple_models=config['simple_models'], allow_missing=True)
+        #pseudosno_preds = rules.filter_cd_predictors_pseudosno.output.pseudosno_preds,
+        #simple_models_preds = expand(rules.test_simple_models.output.y_preds, 
+         #                           simple_models=config['simple_models'], allow_missing=True),
+        #simple_models_pseudosno_preds = expand(rules.test_simple_models.output.pseudosno_preds, 
+         #                           simple_models=config['simple_models'], allow_missing=True)
     output:
         dotplot = 'results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}.svg',
-        dotplot_simple_models = 'results/figures/lineplot/metrics_simple_models_{fixed_length}.svg'
+        #dotplot_simple_models = 'results/figures/lineplot/metrics_simple_models_{fixed_length}.svg'
     params:
         predictors_colors = config['colors']['predictors'],
         simple_models_colors = config['colors']['simple_models']

@@ -15,10 +15,10 @@ infernal_rfam = pd.read_csv(snakemake.input.infernal_rfam, sep='\t')
 #                                snakemake.input.simple_models_preds], axis=1).replace(dictio)
 
 # Best transformer yet 
-metrics_transformer = [['accuracy', 0.9894194248507867, 'CD_predictor'], 
-                ['precision', 0.9156626506024096, 'CD_predictor'], 
-                ['recall', 0.8587570621468926, 'CD_predictor'],
-                ['f1_score', 0.8862973760932944, 'CD_predictor']] 
+metrics_transformer = [['accuracy', 0.9859, 'CD_predictor'], 
+                ['precision', 0.9327, 'CD_predictor'], 
+                ['recall', 0.8818, 'CD_predictor'],
+                ['f1_score', 0.9065, 'CD_predictor']] 
                 #['specificity on\nsnoRNA_pseudogenes', None, 'CD_predictor']]
 transformer = pd.DataFrame(metrics_transformer, columns=['score_name', 'score_value', 'predictor'])
 
@@ -85,7 +85,7 @@ color_dict = {'snoreport2': '#fda47a', 'snoscan': '#80b1d3', 'infernal_rfam': '#
 
 # Create graph
 ft.lineplot(final_df, 'score_name', 'score_value', 'predictor', 
-            'Metrics', 'Metrics value', '', color_dict, output)
+            'Metrics', 'Metrics value', '', color_dict, output, markersize=15, linewidth=8)
 
 ## For simple models (which were designed to predict the 3 classes)
 # Compute the accuracy, precision, recall and f1_score based on the expressed_CD_snoRNA and other

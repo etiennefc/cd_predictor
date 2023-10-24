@@ -39,6 +39,7 @@ rule get_expressed_snoRNAs_location:
         expressed_sno_df = 'data/references/tgirt_seq_output/{species}_expressed_snoRNAs.tsv'
     params:
         human_pseudosno = 'data/references/tgirt_seq_output/homo_sapiens_pseudogene_snoRNAs.tsv',
+        mouse_pseudosno = 'data/references/tgirt_seq_output/mus_musculus_pseudogene_snoRNAs.tsv',
         extension = 15
     wildcard_constraints:
         species=join_list(config['species'], ["homo_sapiens", "mus_musculus", 

@@ -12,6 +12,8 @@ chr_size_file = [path for path in snakemake.input.genome_size
                 if species in path][0]
 cd_path = snakemake.input.expressed_cd_all_sets
 ncRNA_path = snakemake.input.ncRNA
+human_pseudo_path = snakemake.input.human_pseudogene
+mouse_pseudo_path = snakemake.input.mouse_pseudogene
 
 if species == 'tetrahymena_thermophila':
     haca_path = None  # There are no annotated H/ACA snoRNAs in that species
@@ -49,7 +51,19 @@ else:
     haca_df = haca_df.rename(columns={'gene_name': 'gene_id'})
     haca_df = haca_df[df_cols]
 
-all_ncRNA_df = pd.concat([cd_df, ncRNA_df, haca_df])
+# Load C/D pseudogene dfs
+if species == 'homo_sapiens':
+    human_pseudo = pd.read_csv(human_pseudo_path[0], sep='\t')
+    human_pseudo['score'] = '.'
+    human_pseudo = human_pseudo[df_cols]
+    all_ncRNA_df = pd.concat([cd_df, ncRNA_df, haca_df, human_pseudo])
+elif species == 'mus_musculus':
+    mouse_pseudo = pd.read_csv(mouse_pseudo_path[0], sep='\t')
+    mouse_pseudo['score'] = '.'
+    mouse_pseudo = mouse_pseudo[df_cols]
+    all_ncRNA_df = pd.concat([cd_df, ncRNA_df, haca_df, mouse_pseudo])
+else:
+    all_ncRNA_df = pd.concat([cd_df, ncRNA_df, haca_df])
 
 def get_bed_ncRNA(a_ncRNA_df, species_name):
     """ Convert a ncRNA df into a temp bed"""

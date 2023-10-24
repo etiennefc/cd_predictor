@@ -37,10 +37,8 @@ sno_rfam = sno_rfam.drop_duplicates(subset=['extended_sequence'])
 sno_rfam = sno_rfam.drop_duplicates(subset=[f'extended_{fixed_length}nt_sequence'])
 
 
-# Remove U3 (RF00012, RF01846, RF01848) snoRNA families and a SCARNA (RF01296), as they are way larger and 
-# different (other types of boxes) than other types of C/D snoRNAs
-#sno_to_remove = ['RF00012', 'RF01846', 'RF01848', 'RF01296']
-#sno_rfam = sno_rfam[~sno_rfam['rfam_family_id'].isin(sno_to_remove)]
+
+
 
 # Exclude all snoRNAs over 95th percentile because they 
 # are too long and would affect the model's accuracy
@@ -175,8 +173,8 @@ print(selected_sno_nb)
 # Count the remaining number of sno needed in each set
 tuning_nb, train_nb, test_nb = round(selected_sno_nb * 0.1), round(selected_sno_nb * 0.7), round(selected_sno_nb * 0.2)
 tuning_nb_remaining = tuning_nb - len(sno_no_or_1_rfam_tuning)  # 28 C/D
-train_nb_remaining = train_nb - len(sno_no_or_1_rfam_train)  # 200 C/D
-test_nb_remaining = test_nb - len(sno_no_or_1_rfam_test)  # 57 C/D
+train_nb_remaining = train_nb - len(sno_no_or_1_rfam_train)  # 201 C/D
+test_nb_remaining = test_nb - len(sno_no_or_1_rfam_test)  # 58 C/D
 
 print(tuning_nb_remaining)
 print(train_nb_remaining)
@@ -215,20 +213,20 @@ filtered_sno = [item for sublist in filtered_sno for item in sublist]
 filtered_df = sno_rfam[sno_rfam['gene_id'].isin(filtered_sno)]
 tuning_df = filtered_df[filtered_df['rfam_family_id'].isin(tuning)]  # 28 C/D
 
-# For test set, randomly choose a family of 10, 10, 8, 7, 5, 4, 3, 3, 3, 2, 2 snoRNAs (57 snoRNAs)
-# This combination of 10, 10, 8, 7, ... 2 was manually picked to ensure a total of 57
-test_occurences = [2, 1, 1, 1, 1, 3, 2]
+# For test set, randomly choose a family of 10, 10, 8, 7, 5, 4, 4, 3, 3, 2, 2 snoRNAs (58 snoRNAs)
+# This combination of 10, 10, 8, 7, ... 2 was manually picked to ensure a total of 58
+test_occurences = [2, 1, 1, 1, 2, 2, 2]
 for i, number in enumerate([10, 8, 7, 5, 4, 3, 2]):
     ids = sample_cd(d, number, tuning_ids, sno_rfam, test_occurences[i], seed)
     test += ids
     for id in ids:
         tuning_ids.append(id)
 
-test_df = filtered_df[filtered_df['rfam_family_id'].isin(test)]  # 57 C/D
+test_df = filtered_df[filtered_df['rfam_family_id'].isin(test)]  # 58 C/D
 
 # For training set, select the remaining snoRNAs not in the test nor tuning sets
 train_df = filtered_df[~filtered_df['rfam_family_id'].isin(
-                        test+tuning+rfam_ids_chosen_clans+list(sno_no_or_1_rfam_tuning.rfam_family_id))]  # 200 C/D
+                        test+tuning+rfam_ids_chosen_clans+list(sno_no_or_1_rfam_tuning.rfam_family_id))]  # 201 C/D
 
 # Concat the sets composed of families of 2-10 members to their respective set 
 # composed of families with 0 or 1 rfam id

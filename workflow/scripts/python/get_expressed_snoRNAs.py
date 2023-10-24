@@ -107,5 +107,10 @@ if snakemake.wildcards.species == 'homo_sapiens':
     sno_pseudogenes = sno_df[~sno_df['gene_id'].isin(expressed_sno)]
     sno_pseudogenes.to_csv(snakemake.params.human_pseudosno, sep='\t', index=False)
 
+# Get snoRNA pseudogenes in mouse only 
+if snakemake.wildcards.species == 'mus_musculus':
+    sno_pseudogenes = sno_df[~sno_df['gene_id'].isin(expressed_sno)]
+    sno_pseudogenes.to_csv(snakemake.params.mouse_pseudosno, sep='\t', index=False)
+
 # Remove temp file
 sp.call(f'rm sno_bed_temp_{species}.tsv', shell=True)

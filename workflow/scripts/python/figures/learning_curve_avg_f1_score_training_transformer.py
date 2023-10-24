@@ -25,6 +25,7 @@ f1_score_df = pd.concat(dfs)
 mean = f1_score_df.groupby('epoch').mean().reset_index().rename(columns={'f1_score_per_epoch': 'avg_f1_score'})
 std = f1_score_df.groupby('epoch').std().reset_index().rename(columns={'f1_score_per_epoch': 'std_f1_score'})
 merged_df = mean.merge(std, how='left', on='epoch')
+print(merged_df)
 
 # Create lineplot of average f1_score across folds and epochs +/- stdev across folds
 ft.lineplot_errorbars(merged_df, 'epoch', 'avg_f1_score', 'std_f1_score', None, 'Number of epoch', 'Average F1 score across folds', 

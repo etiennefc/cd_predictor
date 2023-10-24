@@ -31,6 +31,7 @@ intronic = concat_dfs(snakemake.input.random_intronic_regions)
 intergenic = concat_dfs(snakemake.input.random_intergenic_regions)
 exonic = concat_dfs(snakemake.input.random_exonic_regions)
 pseudosno = pd.read_csv(snakemake.input.human_snoRNA_pseudogenes, sep='\t')
+pseudosno_mouse = pd.read_csv(snakemake.input.mouse_snoRNA_pseudogenes, sep='\t')
 
 # Filter out shuffled C/D sequences that are not present in the positives 
 # (because we limited the number of sno per RFAM family to max 10)
@@ -45,6 +46,7 @@ intronic['species'] = intronic['gene_id'].replace(r'_intronic_region_[0-9]*', ''
 intergenic['species'] = intergenic['gene_id'].replace(r'_intergenic_region_[0-9]*', '', regex=True)
 exonic['species'] = exonic['gene_id'].replace(r'_exonic_region_[0-9]*', '', regex=True)
 pseudosno['species'] = pseudosno['species_name']
+pseudosno_mouse['species'] = pseudosno_mouse['species_name']
 
 # Format biotype column
 haca['gene_biotype'] = 'HACA_snoRNA'
@@ -64,7 +66,7 @@ for i, df in enumerate([shuffle_sno, intronic, intergenic, exonic]):
 
 # Concat all negatives
 all_dfs = []
-for neg_df in [ncRNA, haca, shuffle_sno, intronic, intergenic, exonic, pseudosno]:
+for neg_df in [ncRNA, haca, shuffle_sno, intronic, intergenic, exonic, pseudosno, pseudosno_mouse]:
     df_ = neg_df[['gene_id', 'gene_biotype', 'species', f'extended_{fixed_length}nt_sequence']]
     all_dfs.append(df_)
 

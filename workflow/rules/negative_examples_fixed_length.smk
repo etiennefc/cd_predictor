@@ -80,18 +80,7 @@ rule select_random_intergenic_intronic_exonic_regions_fixed_length:
     script:
         "../scripts/python/select_random_intergenic_intronic_exonic_regions_fixed_length.py"
 
-rule get_human_snoRNA_pseudogenes:
-    """ Get human snoRNA pseudogenes (i.e. not expressed) extended sequence"""
-    input:
-        human_snoRNA_pseudogenes = rules.get_expressed_snoRNAs_location.params.human_pseudosno,
-        human_genome = expand(rules.download_mammal_genome.output.genome, species='homo_sapiens'),
-        human_chr_size = expand(rules.get_chr_size_tgirt.output.chr_size, species='homo_sapiens')
-    output:
-        pseudogenes = 'data/references/negatives/snoRNA_pseudogenes/homo_sapiens_pseudogene_snoRNAs_{fixed_length}nt.tsv'
-    conda:
-        "../envs/python_new.yaml"
-    script:
-        "../scripts/python/get_human_snoRNA_pseudogenes.py"
+
 
 rule get_all_initial_negatives_fixed_length:
     """ From all negative examples (other ncRNA sequences (H/ACA, 
@@ -119,7 +108,8 @@ rule get_all_initial_negatives_fixed_length:
                     species=[sp for sp in config['species']+config['species_tgirt'] 
                         if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']], fixed_length=config['fixed_length']),
         positives = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives,
-        human_snoRNA_pseudogenes = rules.get_human_snoRNA_pseudogenes.output.pseudogenes
+        human_snoRNA_pseudogenes = rules.get_human_snoRNA_pseudogenes.output.pseudogenes,
+        mouse_snoRNA_pseudogenes = rules.get_mouse_snoRNA_pseudogenes.output.pseudogenes
     output:
         tuning = 'data/references/negatives/initial/negatives_tuning_set_fixed_length_{fixed_length}nt.tsv',
         training = 'data/references/negatives/initial/negatives_training_set_fixed_length_{fixed_length}nt.tsv',
