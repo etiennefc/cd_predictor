@@ -72,6 +72,12 @@ test_before_training_transformer_2_classes:
     mem-per-cpu: 16000
     time: 0-0:20:00
 
+test_before_training_transformer_sno_pseudo:
+    gpus-per-node: 1
+    cpus-per-task: 2
+    mem-per-cpu: 16000
+    time: 0-0:20:00
+
 test_transformer_sno_pseudo:
     gpus-per-node: 1
     cpus-per-task: 2

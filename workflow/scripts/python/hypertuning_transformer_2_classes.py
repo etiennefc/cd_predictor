@@ -166,8 +166,11 @@ def objective(trial):
             # Compute F1 score
             # The 'macro' makes it that each class (0 or 1) are taken into account equally (which is what we want)
             fscore = f1_score(ev_labels, ev_preds, average='macro')
-            f1_scores.append(fscore)
             sp.call(f'echo Fscore: {fscore}', shell=True)
+
+            # Save fscore for last epoch of training of given fold
+            if epoch + 1 == num_epochs:
+                f1_scores.append(fscore)
         
             # Save that f1_score for each epoch
             if epoch == num_epochs - 1:

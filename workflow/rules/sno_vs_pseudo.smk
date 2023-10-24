@@ -65,12 +65,34 @@ rule test_transformer_sno_pseudo:
         "{input.model} {output.df_metrics_on_test} {output.test_predictions} "
         "{params.python_script} &> {log}"
 
+rule test_before_training_transformer_sno_pseudo:
+    """ Get the Transformer predictions before training (baseline!) with the best hyperparams. ONLY 2 classes to predict: pseudosno (0) or expressed CD (1). Must be connected to internet to load the pretrained model for the first time."""
+    input:
+        X_train = rules.get_three_sets_initial_fixed_length.output.training,        
+        y_train = rules.get_three_sets_initial_fixed_length.output.training_target,
+        best_hyperparams = rules.hypertuning_transformer_sno_pseudo.output.best_hyperparams
+    output:
+        fold_loss = 'results/predictions/sno_pseudo/transformer/{fixed_length}/transformer_sno_pseudo_Before_trained_fold_{fold_num}_loss_per_epoch.tsv',
+        fold_f1_score = 'results/predictions/sno_pseudo/transformer/{fixed_length}/transformer_sno_pseudo_Before_trained_fold_{fold_num}_f1_score_per_epoch.tsv'
+    params:
+        random_state = 42,
+        pretrained_model = "zhihan1996/DNA_bert_6"
+    log:
+        "logs/test_before_training_transformer_sno_pseudo_{fixed_length}nt_{fold_num}.log"
+    shell:
+        "bash scripts/bash/test_before_training_transformer_sno_pseudo.sh "
+        "{params.pretrained_model} {wildcards.fold_num} "
+        "{params.random_state} "
+        "{input.X_train} {input.y_train} {input.best_hyperparams} "
+        "{output.fold_loss} {output.fold_f1_score} &> {log}"
+
+
 rule learning_curve_avg_f1_score_training_transformer_sno_pseudo:
     """ Create average learning curve (of avg f1-score across 2 classes (other vs sno (sno|pseudosno))) 
         across 10 folds on training set for transformer trained w sequence only."""
     input:
-        f1_before_train = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/transformer/198/transformer_2_classes_Before_t*f1_score_per_epoch.tsv'),
-        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/sno_pseudo/transformer/198/transformer_sno_pseudo_*f1_score_per_epoch.tsv')
+        f1_before_train = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/sno_pseudo/transformer/198/transformer_sno_pseudo_Before_t*f1_score_per_epoch.tsv'),
+        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/sno_pseudo/transformer/198/transformer_sno_pseudo_t*f1_score_per_epoch.tsv')
     output:
         learning_curve = 'results/figures/lineplot/transformer/198nt/sno_pseudo/transformer_sno_pseudo_training_f1_score_avg_across_fold.svg'
     params:

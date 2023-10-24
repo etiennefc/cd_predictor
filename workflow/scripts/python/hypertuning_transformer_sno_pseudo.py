@@ -20,6 +20,7 @@ from optuna import pruners
 # Load params
 rs = int(float(sys.argv[1]))  # random_state
 pretrained_model = sys.argv[2]  # pretrained DNABert6 model
+fixed_length = sys.argv[3].split('nt.ts')[0].split('_')[-1]
 
 # Load input tuning set
 X_tuning = pd.read_csv(sys.argv[3], sep='\t')
@@ -57,7 +58,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 search_space = {"batch_size": [16, 32, 100], "learning_rate": [0.00002, 0.00003, 0.00004, 0.00005]}
 
 # Set number of epochs
-num_epochs = 20
+num_epochs = 30
 
 
 # Transform sequence of examples in training set into kmers (6-mers)
@@ -69,7 +70,7 @@ def seq2kmer(seq, k):
     kmers = " ".join(kmer)
     return kmers
 
-tuning_seqs = list(X_tuning['extended_211nt_sequence'])
+tuning_seqs = list(X_tuning[f'extended_{fixed_length}nt_sequence'])
 kmer_seqs = [seq2kmer(s, 6) for s in tuning_seqs]
 
 # Load tokenizer
@@ -167,8 +168,11 @@ def objective(trial):
             # Compute F1 score
             # The 'macro' makes it that each class (0 or 1) are taken into account equally (which is what we want)
             fscore = f1_score(ev_labels, ev_preds, average='macro')
-            f1_scores.append(fscore)
             sp.call(f'echo Fscore: {fscore}', shell=True)
+
+            # Save fscore for last epoch of training of given fold
+            if epoch + 1 == num_epochs:
+                f1_scores.append(fscore)
         
             # Save that f1_score for each epoch
             if epoch == num_epochs - 1:

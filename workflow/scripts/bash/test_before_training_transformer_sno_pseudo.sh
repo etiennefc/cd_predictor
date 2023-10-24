@@ -9,9 +9,8 @@ random_state=$3
 x_train=$4
 y_train=$5
 best_hyperparams=$6
-output_model=$7
-output_loss=$8
-output_f1=$9
+output_loss=$7
+output_f1=$8
 
 # Load modules
 module load StdEnv/2020
@@ -29,14 +28,13 @@ pip install transformers==4.31.0 --no-index
 echo Activated env
 
 
-python3 scripts/python/training_sno_pseudo_transformer.py \
+python3 scripts/python/test_before_training_sno_pseudo_transformer.py \
 $pretrained_model \
 $fold_num \
 $random_state \
 $x_train \
 $y_train \
 $best_hyperparams \
-$output_model \
 $output_loss \
 $output_f1
 

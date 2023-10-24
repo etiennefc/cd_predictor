@@ -10,6 +10,7 @@ import sklearn
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score, accuracy_score, precision_recall_fscore_support
 from torch.utils.data import TensorDataset, DataLoader
+import torch.optim.lr_scheduler as lr_scheduler
 import transformers
 from transformers import AutoTokenizer, BertForSequenceClassification, logging
 #logging.set_verbosity_error()
@@ -18,6 +19,8 @@ from transformers import AutoTokenizer, BertForSequenceClassification, logging
 pretrained_model = sys.argv[1]  # pretrained DNABert6 model
 fold_num = str(sys.argv[2])  # training fold number
 rs = int(sys.argv[3])  # random_state
+fixed_length = sys.argv[4].split('nt.ts')[0].split('_')[-1]
+best_hyperparams = pd.read_csv(sys.argv[6], sep='\t')
 
 # Load inputs
 X_train = pd.read_csv(sys.argv[4], sep='\t')
@@ -31,9 +34,9 @@ y_simple['target'] = y_simple['target'].replace(1, 0)
 y_simple['target'] = y_simple['target'].replace(2, 1)
 
 # Get path of outputs
-output_model = sys.argv[6]
-output_loss = sys.argv[7]
-output_f1 = sys.argv[8]
+output_model = sys.argv[7]
+output_loss = sys.argv[8]
+output_f1 = sys.argv[9]
 
 # Show packages versions
 sp.call(f'echo PANDAS VERSION: {pd.__version__}', shell=True)
@@ -62,7 +65,7 @@ def seq2kmer(seq, k):
     kmers = " ".join(kmer)
     return kmers
 
-train_seqs = list(X_train['extended_211nt_sequence'])
+train_seqs = list(X_train[f'extended_{fixed_length}nt_sequence'])
 kmer_seqs = [seq2kmer(s, 6) for s in train_seqs]
 
 # Load pre-trained DNABERT model
@@ -73,12 +76,13 @@ model.to(device)
 model.classifier.to(device)
 
 # Set number of batches (per epoch) and epochs and learning rate
-num_epochs = 30
-batch_size = 16  # nb of example per batch
-learning_rate = 4e-5
+num_epochs = 5
+batch_size = int(best_hyperparams.batch_size.values[0])  # nb of example per batch
+peak_lr = best_hyperparams.learning_rate.values[0]
+fraction = 0.01  # end factor of LR (e.g. 4e-5*0.25=1e-5)
 
 # Define optimizer and loss function (equal weight for both expressed and pseudogene CD)
-optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.AdamW(model.parameters(), lr=peak_lr)
 loss_fn = torch.nn.CrossEntropyLoss().to(device)
 
 
@@ -105,6 +109,10 @@ labels = torch.tensor(Y_train).to(device)
 dataset = TensorDataset(inputs.input_ids, inputs.attention_mask, labels)
 train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
+# Decrease linearly from peak value 4e-5 to 1e-5 over num_epochs
+total_steps = len(train_dataloader) * num_epochs
+scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=fraction, total_iters=num_epochs)
+
 # Iterate over epochs and batches per epoch
 epoch_f_scores, epoch_loss = [], []
 for epoch in range(num_epochs):
@@ -126,6 +134,10 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+    before_lr = optimizer.param_groups[0]["lr"]
+    scheduler.step()  # update learning rate
+    after_lr = optimizer.param_groups[0]["lr"]
+    sp.call(f"echo Before LR update {before_lr} After LR update {after_lr}", shell=True)
 
     avg_loss = total_loss / len(train_dataloader)  # across batches
     epoch_loss.append(avg_loss)

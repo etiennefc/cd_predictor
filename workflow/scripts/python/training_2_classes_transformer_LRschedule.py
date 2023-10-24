@@ -74,10 +74,10 @@ model.to(device)
 model.classifier.to(device)
 
 # Set number of batches (per epoch) and epochs
-num_epochs = 25
+num_epochs = 50 
 batch_size = int(best_hyperparams.batch_size.values[0])  # nb of example per batch
 peak_lr = best_hyperparams.learning_rate.values[0]
-fraction = 0.01  # end factor of LR (e.g. 4e-5*0.25=1e-5)
+fraction = 0.1  # end factor of LR (e.g. 4e-5*0.25=1e-5)
 
 # Define optimizer and loss function
 optimizer = torch.optim.AdamW(model.parameters(), lr=peak_lr)
