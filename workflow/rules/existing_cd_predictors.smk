@@ -1,3 +1,20 @@
+rule compare_snoreport_w_snoBIRD:
+    """ Test the performance of snoreport2 on C/D in one chr in C. albicans 
+        to compare its speed with snoBIRD's. **WARNING**: Snoreport2 must 
+        be installed manually on your computer before 
+        using this rule and you might need to change the
+        path in the command line below to access snoreport2."""
+    input:
+        test_fa = "data/references/genome_fa/candida_albicans/Ca22chrM_C_albicans_SC5314.fa"
+    output:
+        predictions = 'results/predictions/snoBIRD_comparison/snoreport2_predicted_cd.txt',
+        time_predictions = 'results/predictions/snoBIRD_comparison/snoreport2_time_predicted_cd.txt'
+    shell:
+        """/usr/bin/time -f "%E" -o {output.time_predictions} ~/snoReport_2/snoreport_2 -i {input.test_fa} """
+        """-CD """
+        """--positives """
+        """-o {output.predictions}"""
+
 rule test_snoreport:
     """ Test the performance of snoreport2 on the test 
         set of fixed C/D length (by first converting the 
@@ -51,6 +68,20 @@ rule test_snoreport_pseudosno:
         """-o {output.predictions} && """
         """rm temp_snoreport_pseudosno_{wildcards.fixed_length}.fa"""
 
+rule compare_snoscan_w_snoBIRD:
+    """ Predict with snoscan the presence of 
+        C/D in one chr in C. albicans to compare its speed with snoBIRD's."""
+    input:
+        target_rDNA = "data/references/genome_fa/candida_albicans/rDNA.fa",
+        test_fa = "data/references/genome_fa/candida_albicans/Ca22chrM_C_albicans_SC5314.fa"
+    output:
+        predictions = 'results/predictions/snoBIRD_comparison/snoscan_predicted_cd.txt',
+        time_predictions = 'results/predictions/snoBIRD_comparison/snoscan_time_predicted_cd.txt'
+    conda: 
+        "../envs/snoscan.yaml"
+    script:
+        "../scripts/python/compare_snoscan_w_snoBIRD.py"
+
 rule test_snoscan:
     """ Predict with snoscan the presence of 
         expressed C/D in the test set."""
@@ -89,6 +120,24 @@ rule test_snoscan_pseudosno:
         "../envs/snoscan.yaml"
     script:
         "../scripts/python/test_sno_scan_pseudosno.py"
+
+rule compare_rfam_infernal_w_snoBIRD:
+    """ Predict with infernal the presence of 
+        C/D in one chr in C. albicans to compare its speed with snoBIRD's."""
+    input:
+        rfam_cm = rules.download_rfam_covariance_models.output.rfam_cm,
+        test_fa = "data/references/genome_fa/candida_albicans/Ca22chrM_C_albicans_SC5314.fa"
+    output:
+        predictions_tblout = 'results/predictions/snoBIRD_comparison/infernal_rfam_predicted_cd.tblout',
+        predictions_alignments = 'results/predictions/snoBIRD_comparison/infernal_rfam_predicted_cd.txt',
+        time_predictions = 'results/predictions/snoBIRD_comparison/infernal_rfam_time_predicted_cd.txt'
+    conda: 
+        "../envs/infernal.yaml"
+    shell:
+        """/usr/bin/time -f "%E" -o {output.time_predictions} """
+        """cmpress -F {input.rfam_cm} && """
+        """/usr/bin/time -f "%E" -a -o {output.time_predictions} cmscan --cut_ga --rfam --nohmmonly -o {output.predictions_alignments} """
+        """--tblout {output.predictions_tblout} {input.rfam_cm} {input.test_fa} """
 
 rule test_rfam_infernal:
     """ Use Infernal and Rfam covariance 
@@ -172,4 +221,97 @@ rule confusion_matrix_cd_predictors:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/confusion_matrix_cd_predictors.py"
+
+rule test_rfam_infernal_cerevisiae:
+    """ Use Infernal and Rfam covariance 
+        models to predict on the genome of S. cerevisiae to see if some sequences 
+        are part of a C/D Rfam family."""
+    input:
+        test_genome = 'data/references/genome_fa/saccharomyces_cerevisiae_genome.fa',
+        rfam_cm = rules.download_rfam_covariance_models.output.rfam_cm
+    output:
+        infernal_tblout = 'results/predictions/infernal_rfam/S_cerevisiae/predicted_cd.tblout',
+        infernal_alignments = 'results/predictions/infernal_rfam/S_cerevisiae/predicted_cd.txt'
+    conda:
+        "../envs/infernal.yaml"
+    shell:
+        """cmpress -F {input.rfam_cm} && """
+        """cmscan --cut_ga --rfam --nohmmonly -o {output.infernal_alignments} """
+        """--tblout {output.infernal_tblout} {input.rfam_cm} {input.test_genome}"""
+
+rule overlap_rfam_infernal_cerevisiae_CD:
+    """ Filter rfam_infernal predictions on S. cerevisiae genome to see the overlap between 
+        the predictions and the existing expressed C/D. Return the precision and recall."""
+    input:
+        infernal_rfam = rules.test_rfam_infernal_cerevisiae.output.infernal_tblout,
+        cd_sno = 'data/references/positives/cd_rfam_filtered_all_fixed_length_190nt.tsv',
+        haca_yeast = 'data/references/sno_type_df/saccharomyces_cerevisiae_snotype_umass.tsv'
+    output:
+        df = 'results/predictions/infernal_rfam/S_cerevisiae/precision_recall_cerevisiae.tsv'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/overlap_rfam_infernal_cerevisiae_CD.py"
+
+rule test_snoscan_cerevisiae:
+    """ Predict with snoscan the presence of 
+        C/D in S. cerevisiae genome."""
+    input:
+        target_rDNA = rules.download_rDNA.output.rDNA_fa,
+        test_genome = 'data/references/genome_fa/saccharomyces_cerevisiae_genome.fa'
+    output:
+        predictions = 'results/predictions/snoscan/S_cerevisiae/predicted_cd.txt'
+    conda: 
+        "../envs/snoscan.yaml"
+    shell:
+        "snoscan {input.target_rDNA} {input.test_genome} -o {output.predictions}"
+
+rule overlap_snoscan_cerevisiae_CD:
+    """ Filter snoscan predictions on S. cerevisiae genome to see the overlap between 
+        the predictions and the existing expressed C/D. Return the precision and recall."""
+    input:
+        snoscan = rules.test_snoscan_cerevisiae.output.predictions,
+        cd_sno = 'data/references/positives/cd_rfam_filtered_all_fixed_length_190nt.tsv',
+    output:
+        df = 'results/predictions/snoscan/S_cerevisiae/precision_recall_cerevisiae.tsv'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/overlap_snoscan_cerevisiae_CD.py"
+
+rule test_snoreport_cerevisiae:
+    """ Test the performance of snoreport2 on S cerevisiae genome. **WARNING**: Snoreport2 must 
+        be installed manually on your computer before 
+        using this rule and you might need to change the
+        path in the command line below to access snoreport2."""
+    input:
+        pos_strand_genome = 'data/references/genome_fa/saccharomyces_cerevisiae_genome.fa',
+        neg_strand_genome = 'data/references/genome_fa/negative_strand/saccharomyces_cerevisiae_genome_negative_strand.fa'
+    output:
+        predictions_strand_pos = 'results/predictions/snoreport2/S_cerevisiae/predicted_cd.fa',
+        predictions_strand_neg = 'results/predictions/snoreport2/S_cerevisiae/predicted_cd_negative_strand.fa'
+    shell:
+        """~/snoReport_2/snoreport_2 -i {input.pos_strand_genome} """
+        """-CD """
+        """--positives """
+        """-o {output.predictions_strand_pos} && """
+        """~/snoReport_2/snoreport_2 -i {input.neg_strand_genome} """
+        """-CD """
+        """--positives """
+        """-o {output.predictions_strand_neg} """
+
+rule overlap_snoreport_cerevisiae_CD:
+    """ Filter snoreport predictions on S. cerevisiae genome to see the overlap between 
+        the predictions and the existing expressed C/D. Return the precision and recall."""
+    input:
+        snoreport_pos = rules.test_snoreport_cerevisiae.output.predictions_strand_pos,
+        snoreport_neg = rules.test_snoreport_cerevisiae.output.predictions_strand_neg,
+        cd_sno = 'data/references/positives/cd_rfam_filtered_all_fixed_length_190nt.tsv',
+        chr_size = 'data/references/chr_size/saccharomyces_cerevisiae_chr_size.tsv'
+    output:
+        df = 'results/predictions/snoreport2/S_cerevisiae/precision_recall_cerevisiae.tsv'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/overlap_snoreport_cerevisiae_CD.py"
 
