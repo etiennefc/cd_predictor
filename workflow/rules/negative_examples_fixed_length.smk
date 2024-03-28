@@ -109,11 +109,15 @@ rule get_all_initial_negatives_fixed_length:
                         if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']], fixed_length=config['fixed_length']),
         positives = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives,
         human_snoRNA_pseudogenes = rules.get_human_snoRNA_pseudogenes.output.pseudogenes,
-        mouse_snoRNA_pseudogenes = rules.get_mouse_snoRNA_pseudogenes.output.pseudogenes
+        mouse_snoRNA_pseudogenes = rules.get_mouse_snoRNA_pseudogenes.output.pseudogenes,
+        droso_snoRNA_pseudogenes = rules.get_drosophila_snoRNA_pseudogenes.output.pseudogenes,
+        rfam_pseudo = rules.filter_infernal_pseudosno.output.df,
+        rfam_clans = rules.download_rfam_clans.output.df
     output:
         tuning = 'data/references/negatives/initial/negatives_tuning_set_fixed_length_{fixed_length}nt.tsv',
         training = 'data/references/negatives/initial/negatives_training_set_fixed_length_{fixed_length}nt.tsv',
-        test = 'data/references/negatives/initial/negatives_test_set_fixed_length_{fixed_length}nt.tsv'
+        test = 'data/references/negatives/initial/negatives_test_set_fixed_length_{fixed_length}nt.tsv',
+        all_negatives = 'data/references/negatives/initial/all_negatives_fixed_length_{fixed_length}nt.tsv'
     params:
         short_name_dict = config['species_short_name'],
         random_state = 42
@@ -122,4 +126,78 @@ rule get_all_initial_negatives_fixed_length:
     script:
         "../scripts/python/get_all_initial_negatives_fixed_length.py"
 
-        
+rule get_all_initial_negatives_wo_pseudo_fixed_length:
+    """ From all negative examples (other ncRNA sequences (H/ACA, 
+        tRNA, snRNA, pre-miRNA), shuffle of C/D sequences, random 
+        sequences in introns, exons, and intergenic regions, select the wanted proportion 
+        of each of these negatives relative to the number of positive 
+        examples (expressed C/D). The positives are used to filter out 
+        shuffled CD sequences that are not present in the positives 
+        (because we limited the number of sno per Rfam family to be max 100)"""
+    input:
+        ncRNA = rules.filter_rnacentral_tRNA_snRNA_pre_miRNA_fixed_length.output.df,
+        haca = expand(rules.format_blat_haca_output_fixed_length.output.df, 
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
+                        'tetrahymena_thermophila']], fixed_length=config['fixed_length']),
+        shuffle_sno = rules.random_shuffle_sno_fixed_length.output.shuffled_sno_df,
+        random_intronic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions_fixed_length.output.random_intronic_regions,
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']], fixed_length=config['fixed_length']),
+        random_intergenic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions_fixed_length.output.random_intergenic_regions,
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']], fixed_length=config['fixed_length']),
+        random_exonic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions_fixed_length.output.random_exonic_regions,
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']], fixed_length=config['fixed_length']),
+        positives = rules.tuning_train_test_split_rfam_sno_pseudo_fixed_length.output.all_positives
+    output:
+        tuning = 'data/references/negatives/initial/negatives_tuning_set_wo_pseudo_fixed_length_{fixed_length}nt.tsv',
+        training = 'data/references/negatives/initial/negatives_training_wo_pseudo_set_fixed_length_{fixed_length}nt.tsv',
+        test = 'data/references/negatives/initial/negatives_test_set_wo_pseudo_fixed_length_{fixed_length}nt.tsv',
+        all_negatives = 'data/references/negatives/initial/all_negatives_wo_pseudo_fixed_length_{fixed_length}nt.tsv'
+    params:
+        short_name_dict = config['species_short_name'],
+        random_state = 42
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/get_all_initial_negatives_wo_pseudo_fixed_length.py"
+
+rule get_all_initial_negatives_wo_pseudo_fixed_length_data_aug:
+    """ From all negative examples (other ncRNA sequences (H/ACA, 
+        tRNA, snRNA, pre-miRNA), shuffle of C/D sequences, random 
+        sequences in introns, exons, and intergenic regions, select the wanted proportion 
+        of each of these negatives relative to the number of positive 
+        examples (expressed C/D). The positives are used to filter out 
+        shuffled CD sequences that are not present in the positives 
+        (because we limited the number of sno per Rfam family to be max 100)"""
+    input:
+        ncRNA = rules.filter_rnacentral_tRNA_snRNA_pre_miRNA_fixed_length.output.df,
+        haca = expand(rules.format_blat_haca_output_fixed_length.output.df, 
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 
+                        'tetrahymena_thermophila']], fixed_length=config['fixed_length']),
+        shuffle_sno = rules.random_shuffle_sno_fixed_length.output.shuffled_sno_df,
+        random_intronic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions_fixed_length.output.random_intronic_regions,
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']], fixed_length=config['fixed_length']),
+        random_intergenic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions_fixed_length.output.random_intergenic_regions,
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']], fixed_length=config['fixed_length']),
+        random_exonic_regions = expand(rules.select_random_intergenic_intronic_exonic_regions_fixed_length.output.random_exonic_regions,
+                    species=[sp for sp in config['species']+config['species_tgirt'] 
+                        if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe']], fixed_length=config['fixed_length']),
+        positives = rules.tuning_train_test_split_rfam_sno_pseudo_fixed_length_data_aug.output.all_positives
+    output:
+        tuning = 'data/references/negatives/data_augmentation/negatives_tuning_set_wo_pseudo_fixed_length_{fixed_length}nt.tsv',
+        training = 'data/references/negatives/data_augmentation/negatives_training_wo_pseudo_set_fixed_length_{fixed_length}nt.tsv',
+        test = 'data/references/negatives/data_augmentation/negatives_test_set_wo_pseudo_fixed_length_{fixed_length}nt.tsv',
+        all_negatives = 'data/references/negatives/data_augmentation/all_negatives_wo_pseudo_fixed_length_{fixed_length}nt.tsv'
+    params:
+        short_name_dict = config['species_short_name'],
+        random_state = 42
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/get_all_initial_negatives_wo_pseudo_fixed_length_data_aug.py"    

@@ -1,3 +1,40 @@
+rule box_score_and_length_sno_pseudo:
+    """ Compute a box score for all examples (score of 0,
+        means all the C/D/C'/D' boxes are perfect, and
+        with each mutation wih regards to the consensus,
+        the score increases)."""
+    input:
+        positives_fa = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives,
+        negatives_fa = rules.get_all_initial_negatives_fixed_length.output
+        #positives_fa = 'data/references/positives/cd_rfam_filtered_all_fixed_length_190nt.tsv',
+        #negatives_fa = glob.glob('data/references/negatives/initial/negatives_t*')
+    output:
+        positives = 'data/references/box_score/sno_pseudo/all_positives_box_score_{fixed_length}nt.tsv',
+        negatives = 'data/references/box_score/sno_pseudo/all_negatives_and_pseudosno_box_score_{fixed_length}nt.tsv'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/box_score_and_length_sno_pseudo.py"
+
+rule shorten_sno_length:
+    """ Shorten the fixed_length window to keep only the predicted snoRNA sequence
+        based on the predicted C and D box positions."""
+    input:
+        positives = rules.box_score_and_length_sno_pseudo.output.positives,
+        negatives = rules.box_score_and_length_sno_pseudo.output.negatives,
+        initial_sets = rules.get_three_sets_initial_fixed_length.output
+    output:
+        X_tuning = 'data/references/positives_and_negatives/shortened/initial_tuning_set_fixed_length_{fixed_length}nt.tsv',
+        y_tuning = 'data/references/positives_and_negatives/shortened/initial_tuning_target_fixed_length_{fixed_length}nt.tsv',
+        X_train = 'data/references/positives_and_negatives/shortened/initial_training_set_fixed_length_{fixed_length}nt.tsv',
+        y_train = 'data/references/positives_and_negatives/shortened/initial_training_target_fixed_length_{fixed_length}nt.tsv',
+        X_test = 'data/references/positives_and_negatives/shortened/initial_test_set_fixed_length_{fixed_length}nt.tsv',
+        y_test = 'data/references/positives_and_negatives/shortened/initial_test_target_fixed_length_{fixed_length}nt.tsv'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/shorten_sno_length.py"
+
 rule hypertuning_transformer_sno_pseudo:
     """ Get the best hyperparameters of the transformer sno_pseudo predictor using Grid Search."""
     input:
@@ -91,12 +128,12 @@ rule learning_curve_avg_f1_score_training_transformer_sno_pseudo:
     """ Create average learning curve (of avg f1-score across 2 classes (other vs sno (sno|pseudosno))) 
         across 10 folds on training set for transformer trained w sequence only."""
     input:
-        f1_before_train = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/sno_pseudo/transformer/198/transformer_sno_pseudo_Before_t*f1_score_per_epoch.tsv'),
-        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/sno_pseudo/transformer/198/transformer_sno_pseudo_t*f1_score_per_epoch.tsv')
+        f1_before_train = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/sno_pseudo/transformer/shortened/190/transformer_sno_pseudo_Before_t*f1_score_per_epoch.tsv'),
+        f1_score_tsv = glob.glob('/home/etienne/Narval/scratch/cd_predictor/workflow/results/predictions/sno_pseudo/transformer/shortened/190/transformer_sno_pseudo_t*f1_score_per_epoch.tsv')
     output:
-        learning_curve = 'results/figures/lineplot/transformer/198nt/sno_pseudo/transformer_sno_pseudo_training_f1_score_avg_across_fold.svg'
+        learning_curve = 'results/figures/lineplot/transformer/190nt/sno_pseudo/shortened/transformer_sno_pseudo_training_f1_score_avg_across_fold.svg'
     params:
-        num_epoch = 30
+        num_epoch = 25
     conda:
         "../envs/python_new.yaml"
     script:
