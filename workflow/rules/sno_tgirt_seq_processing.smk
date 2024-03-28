@@ -10,7 +10,7 @@ rule get_chr_size_tgirt:
         chr_size = 'data/references/chr_size/{species}_chr_size.tsv'
     wildcard_constraints:
         species = join_list(config['species_tgirt'], ["homo_sapiens", "mus_musculus", 
-                "saccharomyces_cerevisiae"])
+                "saccharomyces_cerevisiae", "drosophila_melanogaster"])
     conda:
         "../envs/samtools.yaml"
     shell:
@@ -48,4 +48,26 @@ rule get_expressed_snoRNAs_location:
         "../envs/python_new.yaml"
     script: 
         "../scripts/python/get_expressed_snoRNAs.py"
+
+rule get_D_melanogaster_expressed_snoRNAs_location:
+    """ From the (Sklias et al., NAR, 2024) paper (table S6), get the expressed C/D snoRNA 
+        and snoRNA pseudogene based on their classification of expressed/not-expressed 
+        (cannot reprocess their ovary/head/S2R datasets because they are not yet available).
+        Get their location/sequence from the Drosophila gtf"""
+    input: 
+        tpm_df = 'data/references/tgirt_seq_output/{species}_expression_status_snoRNAs.tsv',  # TO DO:  Add these datasets on Zenodo
+        gtf = get_species_gtf,
+        genome = get_species_genome,
+        chr_size = rules.get_chr_size_tgirt.output.chr_size
+    output: 
+        expressed_sno_df = 'data/references/tgirt_seq_output/{species}_expressed_snoRNAs.tsv',
+        droso_pseudosno = 'data/references/tgirt_seq_output/{species}_pseudogene_snoRNAs.tsv'
+    params:
+        extension = 15
+    wildcard_constraints:
+        species=join_list(config['species'], ["drosophila_melanogaster"])
+    conda:
+        "../envs/python_new.yaml"
+    script: 
+        "../scripts/python/get_D_melanogaster_expressed_snoRNAs_location.py"
 

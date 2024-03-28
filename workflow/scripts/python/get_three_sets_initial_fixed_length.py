@@ -27,29 +27,28 @@ training_neg = pd.read_csv([p for p in negatives_paths
 test_neg = pd.read_csv([p for p in negatives_paths 
                         if 'test' in p][0], sep='\t')
 neg = [tuning_neg, training_neg, test_neg] 
-for df in neg:
-    print(coll.Counter(df.gene_biotype))
-    print(coll.Counter(df.species_name))
+
 
 # Add gene_biotype column and keep only relevant columns for positives
 pos = []
 for df in [tuning_pos, training_pos, test_pos]:
-    df['gene_biotype'] = 'expressed_CD_snoRNA'
     df = df[['gene_id', 'gene_biotype', 'species_name', 
             f'extended_{fixed_length}nt_sequence']]
     df['species_name'] = df['species_name'].map(short_name_dict)
+    # For droso
+    df.loc[df['gene_id'].str.startswith('FBg'), 'species_name'] = 'drosophila_melanogaster'
     pos.append(df)
 
 # Concat and shuffle respective sets; add also a target column 
 # (what will be predicted)
 for i, df in enumerate(pos):
-    concat_df = pd.concat([df, neg[i]])
+    concat_df = pd.concat([df, neg[i].drop(columns=['dataset'])])
     concat_df['target'] = 'other'
     concat_df.loc[concat_df['gene_biotype'] == 'expressed_CD_snoRNA', 
                             'target'] = 'expressed_CD_snoRNA'
+    concat_df.loc[concat_df['gene_biotype'] == 'snoRNA_pseudogene', 'target'] = 'snoRNA_pseudogene'
     concat_df = shuffle(shuffle(concat_df, random_state=rs), 
                         random_state=rs)
-    concat_df.loc[concat_df['gene_biotype'] == 'snoRNA_pseudogene', 'target'] = 'snoRNA_pseudogene'
     concat_df.to_csv(outputs[i], sep='\t', index=False)
     print(coll.Counter(concat_df.species_name))
 

@@ -13,10 +13,17 @@ sno_literature = pd.read_csv(snakemake.input.sno_literature, sep='\t')
 sno_literature = sno_literature[['gene_id', 'chr', 'strand', 'start', 
                     'end', 'sequence', 'extended_sequence', 'species_name']]
 
+# Remove Drosophila C/D from Huang et al. 2005 (since they overlap with those from Sklias et al 2024)
+sno_literature = sno_literature[sno_literature['species_name'] != 'D_melanogaster']
 sno_literature['species_name'] = sno_literature['species_name'].map(species_short_name_dict)
 
+# Load Drosophila expressed C/D (in TGIRT-Seq)
+droso = pd.read_csv(snakemake.input.sno_tgirt_droso[0], sep='\t')
+droso = droso[['gene_id', 'chr', 'strand', 'start', 'end', 'sequence', 
+            'extended_sequence', 'species_name']]
+
 # Load human, mouse and S. cerevisiae dfs (C/D expressed in TGIRT-Seq)
-sno_dfs = [sno_literature]
+sno_dfs = [sno_literature, droso]
 for path in snakemake.input.sno_tgirt:
     df = pd.read_csv(path, sep='\t')
     sp_name = path.split('/')[-1].split('_expressed_')[0]
@@ -49,8 +56,7 @@ for species in pd.unique(all_cd_df.species_name):
         else: # odd number: split the remaining nt almost equally each side of the sno (1 nt more on the 3'end)
             l_extension = int((row['diff'] - 1) / 2)
             r_extension = int(l_extension + 1)
-        bed = row[['chr', 'start', 'end', 'gene_id', 'dot', 
-                        'strand', 'species_name', 'feature', 'dot2', 'gene_biotype']]
+        bed = row[bed_cols]
         bed.to_csv(f'cd_fixed_bed_temp_{species}.tsv', sep='\t', index=False, header=False)
         sno_bed = BedTool(f'cd_fixed_bed_temp_{species}.tsv')
         extended_sno_bed = sno_bed.slop(g=chr_size_path, l=l_extension, r=r_extension)  # extend sequence to obtain 211 nt

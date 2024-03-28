@@ -14,6 +14,7 @@ cd_path = snakemake.input.expressed_cd_all_sets
 ncRNA_path = snakemake.input.ncRNA
 human_pseudo_path = snakemake.input.human_pseudogene
 mouse_pseudo_path = snakemake.input.mouse_pseudogene
+droso_pseudo_path = snakemake.input.droso_pseudogene
 
 if species == 'tetrahymena_thermophila':
     haca_path = None  # There are no annotated H/ACA snoRNAs in that species
@@ -62,6 +63,11 @@ elif species == 'mus_musculus':
     mouse_pseudo['score'] = '.'
     mouse_pseudo = mouse_pseudo[df_cols]
     all_ncRNA_df = pd.concat([cd_df, ncRNA_df, haca_df, mouse_pseudo])
+elif species == 'drosophila_melanogaster':
+    droso_pseudo = pd.read_csv(droso_pseudo_path[0], sep='\t')
+    droso_pseudo['score'] = '.'
+    droso_pseudo = droso_pseudo[df_cols]
+    all_ncRNA_df = pd.concat([cd_df, ncRNA_df, haca_df, droso_pseudo])
 else:
     all_ncRNA_df = pd.concat([cd_df, ncRNA_df, haca_df])
 
