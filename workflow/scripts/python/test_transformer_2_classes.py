@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import sys
+import os
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -38,6 +39,21 @@ df_metrics = sys.argv[6]
 df_preds = sys.argv[7]
 
 
+# Limit the number of threads that torch can spawn with (to avoid core oversubscription)
+# i.e. set the number of threads to the number of CPUs requested (not all CPUs physically installed)
+N_CPUS = os.environ.get("SLURM_CPUS_PER_TASK")
+torch.set_num_threads(int(N_CPUS))
+
+# Force to not parallelize tokenizing before dataloader (causes forking errors otherwise)
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# Allow TF32 on matrix multiplication to speed up computations
+torch.backends.cuda.matmul.allow_tf32 = True
+
+# Allow TF32 when using cuDNN library (GPU-related library usually automatically installed on the cluster)
+torch.backends.cudnn.allow_tf32 = True
+
+
 # Transform sequence of examples in test set into kmers (6-mers)
 def seq2kmer(seq, k):
     """
@@ -52,7 +68,7 @@ kmer_seqs = [seq2kmer(s, 6) for s in test_seqs]
 
 # Tokenize test data in right format and create dataloader
 tokenizer = AutoTokenizer.from_pretrained(pretrained_model)  # BertTokenizerFast
-eval_dataset = tokenizer(kmer_seqs, return_tensors='pt').to(device)
+eval_dataset = tokenizer(kmer_seqs, return_tensors='pt', padding=True).to(device)
 eval_labels = torch.tensor(list(y_simple.target)).to(device)
 eval_dataset = TensorDataset(eval_dataset.input_ids, eval_dataset.attention_mask, eval_labels)
 eval_dataloader = DataLoader(eval_dataset, batch_size=batch_size)
@@ -109,12 +125,15 @@ if TP_sno + FN_sno == 0:
     recall_sno = 0
 else:
     recall_sno = TP_sno/(TP_sno + FN_sno)
+
+f1_sno = 2 * precision_sno * recall_sno / (precision_sno + recall_sno)
 sp.call(f'echo PRECISION sno: {precision_sno}', shell=True)
 sp.call(f'echo RECALL sno: {recall_sno}', shell=True)
+sp.call(f'echo FSCORE sno: {f1_sno}', shell=True)
 
 metrics_df = pd.DataFrame([[accuracy, fscore, precision_sno,
-                            recall_sno]],
+                            recall_sno, f1_sno]],
                             columns=['accuracy_2_classes', 'f1_score_2_classes',
-                            'precision_sno', 'recall_sno'])
+                            'precision_sno', 'recall_sno', 'f1_score_sno'])
 metrics_df.to_csv(df_metrics, sep='\t', index=False)
 

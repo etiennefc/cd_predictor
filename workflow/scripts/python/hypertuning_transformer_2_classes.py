@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import sys
+import os
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -53,10 +54,26 @@ np.random.seed(rs)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define hyperparams space
-search_space = {"batch_size": [16, 32, 100], "learning_rate": [0.00002, 0.00003, 0.00004, 0.00005]}
+search_space = {"batch_size": [16, 32, 192, 208], "learning_rate": [0.00002, 0.00003, 0.00004, 0.00005]}
 
 # Set number of epochs
-num_epochs = 30
+num_epochs = 4
+
+
+# Limit the number of threads that torch can spawn with (to avoid core oversubscription)
+# i.e. set the number of threads to the number of CPUs requested (not all CPUs physically installed)
+N_CPUS = os.environ.get("SLURM_CPUS_PER_TASK")
+torch.set_num_threads(int(N_CPUS))
+
+# Force to not parallelize tokenizing before dataloader (causes forking errors otherwise)
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# Allow TF32 on matrix multiplication to speed up computations
+torch.backends.cuda.matmul.allow_tf32 = True
+
+# Allow TF32 when using cuDNN library (GPU-related library usually automatically installed on the cluster)
+torch.backends.cudnn.allow_tf32 = True
+
 
 
 # Transform sequence of examples in training set into kmers (6-mers)
@@ -173,8 +190,8 @@ def objective(trial):
                 f1_scores.append(fscore)
         
             # Save that f1_score for each epoch
-            if epoch == num_epochs - 1:
-                sp.call('nvidia-smi', shell=True)
+            #if epoch == num_epochs - 1:
+            #    sp.call('nvidia-smi', shell=True)
 
 
     # Compute the average f_score across the 3-fold CV
@@ -200,5 +217,3 @@ best_hyperparams_dict = best_trial.params
 best_hyperparams_dict['avg_f1_score_3fold_tuning'] = best_trial.value
 params_df = pd.DataFrame(best_hyperparams_dict, index=[0])
 params_df.to_csv(output_best_hyperparams, sep='\t', index=False)
-
-

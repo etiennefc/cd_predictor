@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import torch
 import torch.nn as nn
+import os
 import random
 import numpy as np
 import subprocess as sp
@@ -54,6 +55,22 @@ np.random.seed(rs)
 # Define if we use GPU (CUDA) or CPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+# Limit the number of threads that torch can spawn with (to avoid core oversubscription)
+# i.e. set the number of threads to the number of CPUs requested (not all CPUs physically installed)
+N_CPUS = os.environ.get("SLURM_CPUS_PER_TASK")
+torch.set_num_threads(int(N_CPUS))
+
+# Force to not parallelize tokenizing before dataloader (causes forking errors otherwise)
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# Allow TF32 on matrix multiplication to speed up computations
+torch.backends.cuda.matmul.allow_tf32 = True
+
+# Allow TF32 when using cuDNN library (GPU-related library usually automatically installed on the cluster)
+torch.backends.cudnn.allow_tf32 = True
+
+
 # Transform sequence of examples in training set into kmers (6-mers)
 def seq2kmer(seq, k):
     """
@@ -74,14 +91,15 @@ model.to(device)
 model.classifier.to(device)
 
 # Set number of batches (per epoch) and epochs
-num_epochs = 50 
+num_epochs = 4 
 batch_size = int(best_hyperparams.batch_size.values[0])  # nb of example per batch
 peak_lr = best_hyperparams.learning_rate.values[0]
+#peak_lr = 0.00004
 fraction = 0.1  # end factor of LR (e.g. 4e-5*0.25=1e-5)
 
 # Define optimizer and loss function
 optimizer = torch.optim.AdamW(model.parameters(), lr=peak_lr)
-loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1/20, 1]).to(device))
+loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1/17, 1]).to(device))
 
 
 # Train over given fold (fold_num) in stratified 10-fold CV
@@ -102,8 +120,11 @@ Y_test = [y_simple.loc[i, 'target'] for i in test_index]
 
 
 # Load input sequences in right format (tokenize it for BERT)
-inputs = tokenizer(x_train, return_tensors='pt').to(device)
+inputs = tokenizer(x_train, return_tensors='pt', padding=True).to(device)
 labels = torch.tensor(Y_train).to(device)
+sp.call(f'echo input_ids {inputs.input_ids.size()}', shell=True)
+sp.call(f'echo att_mask {inputs.attention_mask.size()}', shell=True)
+sp.call(f'echo labels {labels.size()}', shell=True)
 dataset = TensorDataset(inputs.input_ids, inputs.attention_mask, labels)
 train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -151,7 +172,7 @@ for epoch in range(num_epochs):
     model.eval()  # no more dropout
 
     # First, load input sequences in right format (tokenize it for BERT)
-    eval_dataset = tokenizer(x_test, return_tensors='pt').to(device)
+    eval_dataset = tokenizer(x_test, return_tensors='pt', padding=True).to(device)
     eval_labels = torch.tensor(Y_test).to(device)
     eval_dataset = TensorDataset(eval_dataset.input_ids, eval_dataset.attention_mask, eval_labels)
     eval_dataloader = DataLoader(eval_dataset, batch_size=batch_size)
