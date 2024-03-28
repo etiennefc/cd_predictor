@@ -6,9 +6,8 @@ import numpy as np
 
 species = str(snakemake.wildcards.species)
 rs = snakemake.params.random_state
-fixed_length = snakemake.wildcards.fixed_length
+fixed_length = int(snakemake.wildcards.fixed_length)
 np.random.seed(rs) # set a fixed reproducible randomness
-positives = pd.read_csv(snakemake.input.expressed_cd_all_sets, sep='\t')
 intergenic_regions = pd.read_csv(snakemake.input.intergenic_regions, 
                         sep='\t', names=['chr', 'start', 'end'])
 intronic_regions = pd.read_csv(snakemake.input.intronic_regions, 
@@ -24,9 +23,6 @@ output_intronic = snakemake.output.random_intronic_regions
 output_exonic = snakemake.output.random_exonic_regions
 
 
-# Get length of all positive examples (expressed C/D snoRNAs with flanking 15 nt) #Extended sequence!
-seqs = list(positives[f'extended_{fixed_length}nt_sequence'])
-max_length = max([len(seq) for seq in seqs])  # they're all 211 nt long
 
 # The intergenic/intronic regions are given without strand, so
 # we need to define a random choice between + or - for these
@@ -42,18 +38,15 @@ intergenic_regions['strand'] = intergenic_regions['strand'].map(strand_dict)
 
 
 def select_regions(df, location, output):
-    """ Select n intergenic/intronic regions of size s in the pool of regions, 
-        where n is the number of positive examples and s is the size of the
-        positive examples (i.e. 211  nt)."""
+    """ Select intergenic/intronic regions of size s (i.e. fixed_length) in the pool 
+        of all intervals (intronic/intergenic/exonic). Take one region per interval. """
     # Select only regions that are at least as large as the longest positive
     df['len'] = df['end'] - df['start']
-    df = df[df['len'] >= max_length + 2] # regions are least greater than 1 nt than sno length
-
-    # Select randomly n regions of size s (where n=nb of positives)
-    random_df = df.sample(n=len(positives), random_state=rs)
+    df = df[df['len'] >= fixed_length + 2] # regions are least greater than 1 nt than sno length
+    random_df = df.copy()
     random_df = random_df.reset_index(drop=True)
     rows = []
-    for i, length in enumerate([max_length] * len(positives)):
+    for i, length in enumerate([fixed_length] * len(random_df)):
         row_dict = dict(random_df.iloc[i, :])
         # Get a random start/end in the given region that respects the overall sno length
         random_start_index = int(np.random.choice(range(0, row_dict['len'] - length)))
@@ -65,6 +58,10 @@ def select_regions(df, location, output):
         rows.append(row)
 
     selected_region_df = pd.DataFrame(rows, columns=bed_cols)
+    if species == 'tetrahymena_thermophila':
+        # These regions are problematic (out of range for some reason, so we exclude them)
+        selected_region_df = selected_region_df[(selected_region_df['chr'] != 'chr_048') & (selected_region_df['start'] != 73714)]
+        selected_region_df = selected_region_df[(selected_region_df['chr'] != 'chr_170') & (selected_region_df['start'] != 1021476)]
     selected_region_df.to_csv(f'{location}_regions_{species}_temp.bed', 
                                         sep='\t', index=False, header=False)
 
