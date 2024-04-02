@@ -54,7 +54,7 @@ np.random.seed(rs)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define hyperparams space
-search_space = {"batch_size": [16, 32, 192, 208], "learning_rate": [0.00002, 0.00003, 0.00004, 0.00005]}
+search_space = {"batch_size": [16, 32, 64, 128], "learning_rate": [0.00002, 0.00003, 0.00004, 0.00005]}
 
 # Set number of epochs
 num_epochs = 4
@@ -69,10 +69,10 @@ torch.set_num_threads(int(N_CPUS))
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Allow TF32 on matrix multiplication to speed up computations
-torch.backends.cuda.matmul.allow_tf32 = True
+#torch.backends.cuda.matmul.allow_tf32 = True
 
 # Allow TF32 when using cuDNN library (GPU-related library usually automatically installed on the cluster)
-torch.backends.cudnn.allow_tf32 = True
+#torch.backends.cudnn.allow_tf32 = True
 
 
 
@@ -93,7 +93,7 @@ tokenizer = AutoTokenizer.from_pretrained(pretrained_model)  # BertTokenizerFast
 
 
 # Define optimizer loss function
-loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1/20, 1]).to(device))
+loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1/5, 1]).to(device))
 
 
 # Define objective function
@@ -128,7 +128,7 @@ def objective(trial):
         for epoch in range(num_epochs):
             sp.call(f'echo EPOCH {epoch + 1}', shell=True)
             # Load input sequences in right format (tokenize it for BERT)
-            inputs = tokenizer(x_train, return_tensors='pt').to(device)
+            inputs = tokenizer(x_train, return_tensors='pt', padding=True).to(device)
             labels = torch.tensor(y_train).to(device)
             dataset = TensorDataset(inputs.input_ids, inputs.attention_mask, labels)
             train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -149,7 +149,7 @@ def objective(trial):
                 optimizer.step()
 
             # First, load input sequences in right format (tokenize it for BERT)
-            eval_dataset = tokenizer(x_test, return_tensors='pt').to(device)
+            eval_dataset = tokenizer(x_test, return_tensors='pt', padding=True).to(device)
             eval_labels = torch.tensor(y_test).to(device)
             eval_dataset = TensorDataset(eval_dataset.input_ids, eval_dataset.attention_mask, eval_labels)
             eval_dataloader = DataLoader(eval_dataset, batch_size=batch_size)
