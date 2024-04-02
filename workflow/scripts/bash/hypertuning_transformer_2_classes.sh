@@ -26,6 +26,8 @@ pip install transformers==4.31.0 --no-index
 pip install optuna==3.1.0 --no-index
 echo Activated env
 
+# To fix bug happening on V100l (CUDA not available otherwise...)
+nvidia-modprobe
 
 python3 scripts/python/hypertuning_transformer_2_classes.py \
 $random_state \
