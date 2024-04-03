@@ -65,10 +65,10 @@ torch.set_num_threads(int(N_CPUS))
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Allow TF32 on matrix multiplication to speed up computations
-torch.backends.cuda.matmul.allow_tf32 = True
+#torch.backends.cuda.matmul.allow_tf32 = True
 
 # Allow TF32 when using cuDNN library (GPU-related library usually automatically installed on the cluster)
-torch.backends.cudnn.allow_tf32 = True
+#torch.backends.cudnn.allow_tf32 = True
 
 
 # Transform sequence of examples in training set into kmers (6-mers)
@@ -99,7 +99,7 @@ fraction = 0.1  # end factor of LR (e.g. 4e-5*0.25=1e-5)
 
 # Define optimizer and loss function
 optimizer = torch.optim.AdamW(model.parameters(), lr=peak_lr)
-loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1/17, 1]).to(device))
+loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1/5, 1]).to(device))
 
 
 # Train over given fold (fold_num) in stratified 10-fold CV

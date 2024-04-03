@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import subprocess as sp
 from Bio import SeqIO
+import os
 import numpy as np
 from math import ceil
 import time 
@@ -18,7 +19,7 @@ pretrained_model = str(sys.argv[4])
 window_size = int(sys.argv[5])
 step_size_defined = int(sys.argv[6])
 strand = str(sys.argv[7])
-batch_size = 128
+batch_size = 96
 num_labels = 2
 output = str(sys.argv[3])
 
@@ -26,6 +27,20 @@ sp.call(f'echo {model_path} {genome} {chr_name} {pretrained_model} {window_size}
 
 # Define if we use GPU (CUDA) or CPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Limit the number of threads that torch can spawn with (to avoid core oversubscription)
+# i.e. set the number of threads to the number of CPUs requested (not all CPUs physically installed)
+N_CPUS = os.environ.get("SLURM_CPUS_PER_TASK")
+torch.set_num_threads(int(N_CPUS))
+
+# Force to not parallelize tokenizing before dataloader (causes forking errors otherwise)
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# Allow TF32 on matrix multiplication to speed up computations
+#torch.backends.cuda.matmul.allow_tf32 = True
+
+# Allow TF32 when using cuDNN library (GPU-related library usually automatically installed on the cluster)
+#torch.backends.cudnn.allow_tf32 = True
 
 
 # Load model and tokenizer 

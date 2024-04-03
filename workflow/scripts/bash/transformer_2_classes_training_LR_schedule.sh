@@ -28,6 +28,8 @@ pip install numpy==1.24.2 --no-index
 pip install transformers==4.31.0 --no-index
 echo Activated env
 
+# To fix bug happening on V100l (CUDA not available otherwise...)
+nvidia-modprobe
 
 python3 scripts/python/training_2_classes_transformer_LRschedule.py \
 $pretrained_model \
