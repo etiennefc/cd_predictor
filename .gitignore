@@ -3,3 +3,8 @@ data/
 ML_info_URLs.odt
 results/
 logs/
+*functions.cpython-31*
+*/__pycache__/*
+*old_models/
+*transformer_explanation
+datasets_snoBIRD_final/
