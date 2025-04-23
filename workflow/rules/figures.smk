@@ -15,23 +15,6 @@ rule length_selection_positives_density:
     script:
         "../scripts/python/figures/length_selection_positives_density.py"
 
-rule roc_curve_cd_predictors:
-    """ Create a ROC curve of the existing CD predictors.*******NOT COMPLETED****"""
-    input:
-        snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
-        snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
-        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv
-    output:
-        roc = 'results/figures/roc/existing_cd_predictors_{fixed_length}.svg'
-    params:
-        colors = config['colors']['predictors']
-    conda:
-        "../envs/python_new.yaml"
-    script:
-        "../scripts/python/figures/roc_curve_cd_predictors.py"
-        
-
-#rule pr_curve_cd_predictor:
 
 rule metrics_lineplot_predictors:
     """ Compute the precision, recall, accuracy and f1-score 
@@ -40,17 +23,14 @@ rule metrics_lineplot_predictors:
         for the existing cd predictors and simple models (knn, gbm, 
         logreg, svc and rf) and display it as a dot plot."""
     input:
-        snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
-        snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
-        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv,
-        #pseudosno_preds = rules.filter_cd_predictors_pseudosno.output.pseudosno_preds,
-        #simple_models_preds = expand(rules.test_simple_models.output.y_preds, 
-         #                           simple_models=config['simple_models'], allow_missing=True),
-        #simple_models_pseudosno_preds = expand(rules.test_simple_models.output.pseudosno_preds, 
-         #                           simple_models=config['simple_models'], allow_missing=True)
+        #snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
+        #snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
+        #infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv,
+        #snoBIRD = 'results/predictions/snoBIRD/transformer/194/3e-5_3e-6_32_4_data_aug_1_ratio/transformer_2_classes_LR_schedule_test_predictions_194nt_fold_8.tsv'
     output:
-        dotplot = 'results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}.svg',
-        #dotplot_simple_models = 'results/figures/lineplot/metrics_simple_models_{fixed_length}.svg'
+        dotplot_all = 'results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}_w_pseudogenes.svg',
+        dotplot_expressed_cd = 'results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}_expressed_CD_only.svg',
+        dotplot_pseudo = 'results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}_pseudogenes_only.svg'
     params:
         predictors_colors = config['colors']['predictors'],
         simple_models_colors = config['colors']['simple_models']
@@ -58,6 +38,18 @@ rule metrics_lineplot_predictors:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/figures/metrics_lineplot_predictors.py"
+
+rule s_pombe_prediction_time_barplot:
+    """ Make a bar plot to show the prediction time of the 
+        predictors vs snoBIRD on the entirety of the S. pombe genome."""
+    output:
+        barplot = 'results/figures/barplot/s_pombe_prediction_time.svg'
+    params:
+        predictors_colors = config['colors']['predictors']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/s_pombe_prediction_time_barplot.py"
 
 rule FP_FN_initial_analyses_pie:
     """ Create pie charts showing the proportion of species
@@ -85,8 +77,8 @@ rule donut_positives_negatives:
         for the positive examples and the proportion of 
         negative types for the negatives."""
     input:
-        negatives = rules.get_all_initial_negatives_fixed_length.output,
-        positives = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives
+        #negatives = rules.get_all_initial_negatives_fixed_length.output,
+        #positives = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives
     output:
         pie_species = 'results/figures/pie/positives_per_species_{fixed_length}.svg',
         pie_neg_type = 'results/figures/pie/negatives_per_biotype_{fixed_length}.svg'
@@ -104,11 +96,11 @@ rule bar_confusion_value_per_species_test:
         predicted as FP, FN, TP, TN per species, with the total number of 
         examples in the set for the given species above the bars."""
     input:
-        snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,
-        snoscan = rules.filter_snoscan_predictions.output.predictions_tsv,
-        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv
+        #tool = 'results/predictions/{cd_predictors}/fixed_length_{fixed_length}nt/test_predictions.tsv',
+        #test_set = 'data/references/positives_and_negatives/data_augmentation/test_set_1_ratio_fixed_length_{fixed_length}nt.tsv',
+        snoBIRD = 'results/predictions/snoBIRD/transformer/194/3e-5_3e-6_32_4_data_aug_1_ratio/transformer_2_classes_LR_schedule_test_predictions_194nt_fold_8.tsv'
     output:
-        bar_all = 'results/figures/barplot/confusion_values_per_species_{cd_predictors}_{fixed_length}.svg',
+        #bar_all = 'results/figures/barplot/confusion_values_per_species_{cd_predictors}_{fixed_length}.svg',
         bar_FN_FP = 'results/figures/barplot/FN_FP_per_species_{cd_predictors}_{fixed_length}.svg'
     params:
         species_colors = config['colors']['species'],
@@ -117,6 +109,25 @@ rule bar_confusion_value_per_species_test:
         "../envs/python_new.yaml"
     script:
         "../scripts/python/figures/bar_confusion_value_per_species_test.py" 
+
+
+rule violin_sno_length_per_species:
+    """ Create a violin plot to show the length distribution of expressed C/D 
+        and snoRNA pseudogenes per species with a threshold of fixed_length."""
+    input:
+        #expressed_cd = rules.get_sno_sequences_fixed_length.output.df,  # real
+        human_pseudo = rules.get_human_snoRNA_pseudogenes.output.pseudogenes,
+        mouse_pseudo = rules.get_mouse_snoRNA_pseudogenes.output.pseudogenes,
+        drosophila_pseudo = rules.get_drosophila_snoRNA_pseudogenes.output.pseudogenes 
+    output:
+        violin = 'results/figures/violinplot/sno_pseudo_length_per_species_{fixed_length}.svg'
+    params:
+        target_colors = config['colors']['target'],
+        short_sp_names = config['species_short_name']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/violin_sno_length_per_species.py" 
 
 
 rule density_confusion_value_per_predictor:
@@ -269,6 +280,23 @@ rule learning_curve_avg_f1_score_training_added_features_half_normalized:
     script:
         "../scripts/python/figures/learning_curve_avg_f1_score_training_added_features.py"
 
+rule bar_cd_expression_species:
+    """ Create a stacked bar chart per species with TGIRT-Seq dataset to show 
+        the proportion of expressed CD vs pseudogenes."""
+    input:
+        fake_dep = expand(rules.get_expressed_snoRNAs_location.output, 
+                    species=['homo_sapiens', 'saccharomyces_cerevisiae', 'mus_musculus']),
+        fake_dep2 = expand(rules.get_D_melanogaster_expressed_snoRNAs_location.output, species='drosophila_melanogaster')
+    output:
+        bar = 'results/figures/barplot/cd_expression_per_species.svg'
+    params:
+        colors = config['colors']['target'],
+        tgirt_dir = 'data/references/tgirt_seq_output/',
+        species_short_name = config['species_short_name']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/bar_cd_expression_species.py"
 
 
 

@@ -126,7 +126,7 @@ df_d['down_stem_len'] = df_d.sno_length - df_d.D_end
 title = 'Distribution of the distance between the start/end\nof the snoRNA and the start/end of the C/D boxes'
 ft.density_x([df_c.up_stem_len, df_d.down_stem_len], 'Distance between box and\nsnoRNA boundaries (nt)', 
             'Density', 'linear', title, ['blue', 'red'], ['C box distance', 'D box distance'], path, 
-            xvline=5, yminvline=0, ymaxvline=0.2)
+            xvline=5, yminvline=0, ymaxvline=0.22)
 
 print(f'C distance median: {df_c.up_stem_len.median()} nt')
 print(f'C distance mean: {df_c.up_stem_len.mean()} nt')

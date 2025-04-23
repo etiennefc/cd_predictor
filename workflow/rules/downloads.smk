@@ -59,7 +59,7 @@ rule download_yeast_genome:
         genome = 'data/references/genome_fa/{species}_genome.fa'
     wildcard_constraints:
         species=join_list(config['species'], ["saccharomyces_cerevisiae",
-              "schizosaccharomyces_pombe", "aspergillus_fumigatus", "neurospora_crassa", "candida_albicans"])
+              "aspergillus_fumigatus", "neurospora_crassa", "candida_albicans"])
     params:
         link = "ftp://ftp.ensemblgenomes.org/pub/fungi/release-55/fasta/{species}/dna/*dna.toplevel.fa.gz"
     shell:
@@ -132,7 +132,7 @@ rule download_yeast_gtf:
         gtf = 'data/references/gtf/{species}.gtf'
     wildcard_constraints:
         species=join_list(config['species'], ["saccharomyces_cerevisiae", 
-                "schizosaccharomyces_pombe", "aspergillus_fumigatus", "neurospora_crassa", "candida_albicans"])
+                "aspergillus_fumigatus", "neurospora_crassa", "candida_albicans"])
     params:
         link = "ftp://ftp.ensemblgenomes.org/pub/fungi/release-55/gtf/{species}/*5.gtf.gz"
     shell:
@@ -270,3 +270,36 @@ rule download_rDNA:
         link = config['download']['rDNA'] 
     shell:
         "wget -O {output.rDNA_fa} {params.link}"
+
+rule download_all_genes_pombe:
+    """ Download from Pombase all genes and their description for S. pombe. 
+        This is to retrieve all potential genes known as snoRNAs."""
+    output:
+        df = 'data/references/s_pombe/all_genes_s_pombe.tsv'
+    params:
+        link = config['download']['all_genes_pombe'] 
+    shell:
+        "wget -O {output.df} {params.link}"
+
+rule download_CD_pombe_review:
+    """ From Fafard-Couture et al. 2024 RNA Biology, get the 
+        snoRNA type for snoRNAs in S. pombe."""
+    output:
+        df = 'data/references/s_pombe/cd_s_pombe_review.tsv'
+    params:
+        link = config['download']['cd_s_pombe_review']
+    shell:
+        "wget -O {output.df} {params.link}"
+
+rule download_sno_type_info:
+    """ Download snoRNA type per Rfam family. The snotype per Rfam 
+        family was obtained manually by saving (right-click) the 
+        Rfam webpage displaying all C/D (and then H/ACA) snoRNA 
+        families and parsing the rfam family id only using the following command: 
+        grep ">RF" ~/Downloads/HACA_RFAM_families_2024.html | sed -E 's/.*">//g; s/<.*//g'"""
+    output:
+        sno_type_rfam = 'data/references/snoRNA_type_rfam_families.tsv'
+    params:
+        link = config['download']['sno_type_rfam']
+    shell:
+        "wget -O {output.sno_type_rfam} {params.link}"

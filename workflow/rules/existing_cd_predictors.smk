@@ -23,7 +23,7 @@ rule test_snoreport:
         using this rule and you might need to change the
         path in the command line below to access snoreport2."""
     input:
-        test_set = rules.get_three_sets_initial_fixed_length.output.test
+        test_set = rules.get_three_sets_initial_fixed_length_data_aug.output.test
     output:
         predictions = 'results/predictions/snoreport2/fixed_length_{fixed_length}nt/predicted_cd.fa'
     shell:
@@ -40,7 +40,7 @@ rule filter_snoreport_predictions:
         and return a clear target prediction for each example."""
     input:
         predictions_fa = rules.test_snoreport.output.predictions,
-        test_set = rules.get_three_sets_initial_fixed_length.output.test
+        test_set = rules.get_three_sets_initial_fixed_length_data_aug.output.test
     output:
         predictions_tsv = 'results/predictions/snoreport2/fixed_length_{fixed_length}nt/test_predictions.tsv'
     conda:
@@ -87,7 +87,7 @@ rule test_snoscan:
         expressed C/D in the test set."""
     input:
         target_rDNA = rules.download_rDNA.output.rDNA_fa,
-        test_set = rules.get_three_sets_initial_fixed_length.output.test
+        test_set = rules.get_three_sets_initial_fixed_length_data_aug.output.test
     output:
         predictions = 'results/predictions/snoscan/fixed_length_{fixed_length}nt/predicted_cd.txt'
     conda: 
@@ -100,7 +100,7 @@ rule filter_snoscan_predictions:
         and return a clear target prediction for each example."""
     input:
         predictions_fa = rules.test_snoscan.output.predictions,
-        test_set = rules.get_three_sets_initial_fixed_length.output.test
+        test_set = rules.get_three_sets_initial_fixed_length_data_aug.output.test
     output:
         predictions_tsv = 'results/predictions/snoscan/fixed_length_{fixed_length}nt/test_predictions.tsv'
     conda:
@@ -123,14 +123,15 @@ rule test_snoscan_pseudosno:
 
 rule compare_rfam_infernal_w_snoBIRD:
     """ Predict with infernal the presence of 
-        C/D in one chr in C. albicans to compare its speed with snoBIRD's."""
+        C/D in one chr in C. albicans or Tetrahymena thermophila to compare its speed with snoBIRD's."""
     input:
         rfam_cm = rules.download_rfam_covariance_models.output.rfam_cm,
-        test_fa = "data/references/genome_fa/candida_albicans/Ca22chrM_C_albicans_SC5314.fa"
+        #test_fa = "data/references/genome_fa/candida_albicans/Ca22chrM_C_albicans_SC5314.fa"
+        test_fa = "data/references/genome_fa/tetrahymena_thermophila_genome.fa"
     output:
-        predictions_tblout = 'results/predictions/snoBIRD_comparison/infernal_rfam_predicted_cd.tblout',
-        predictions_alignments = 'results/predictions/snoBIRD_comparison/infernal_rfam_predicted_cd.txt',
-        time_predictions = 'results/predictions/snoBIRD_comparison/infernal_rfam_time_predicted_cd.txt'
+        predictions_tblout = 'results/predictions/snoBIRD_comparison/infernal_rfam_predicted_cd_tetrahymena.tblout',
+        predictions_alignments = 'results/predictions/snoBIRD_comparison/infernal_rfam_predicted_cd_tetrahymena.txt',
+        time_predictions = 'results/predictions/snoBIRD_comparison/infernal_rfam_time_predicted_cd_tetrahymena.txt'
     conda: 
         "../envs/infernal.yaml"
     shell:
@@ -144,7 +145,7 @@ rule test_rfam_infernal:
         models to predict if testset examples 
         are part of a C/D Rfam family."""
     input:
-        test_set = rules.get_three_sets_initial_fixed_length.output.test,
+        test_set = rules.get_three_sets_initial_fixed_length_data_aug.output.test,
         rfam_cm = rules.download_rfam_covariance_models.output.rfam_cm
     output:
         infernal_tblout = 'results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/predicted_cd.tblout',
@@ -163,7 +164,7 @@ rule filter_rfam_infernal_predictions:
         and return a clear target prediction for each example."""
     input:
         predictions_table = rules.test_rfam_infernal.output.infernal_tblout,
-        test_set = rules.get_three_sets_initial_fixed_length.output.test
+        test_set = rules.get_three_sets_initial_fixed_length_data_aug.output.test
     output:
         predictions_tsv = 'results/predictions/infernal_rfam/fixed_length_{fixed_length}nt/test_predictions.tsv'
     conda:

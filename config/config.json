@@ -152,7 +152,7 @@
       "species_name": "O_anatinus",
       "species_classification": "Animal",
       "validation_method": "cDNA_library;Manual_annotation",
-      "article": "Schmitz_et_al_NAR_2008"
+      "article": "Schmitz_et_al_Genome_Res_2008"
     },
     "gallus_gallus_cd_Shao_2009": 
     {
@@ -288,9 +288,10 @@
     "percent_colors": ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"],
     "predictors":
     {
-      "snoreport2": "#bebada",
+      "snoreport2": "#fda47a",
       "snoscan": "#80b1d3",
-      "infernal_rfam": "#b3de69"
+      "infernal_rfam": "#d73027",
+      "snoBIRD": "#66a61e"
     },
     "simple_models":
     {
@@ -302,9 +303,9 @@
     },
     "target":
     {
-      "Positives": "#a8ddb5",
-      "C/D pseudogenes": "#88419d",
-      "Negatives": "#9ebcda"
+      "expressed_CD_snoRNA": "#f46d43",
+      "snoRNA_pseudogene": "#66c2a5",
+      "negatives": "#9ebcda"
     },
     "species":
     {
@@ -329,15 +330,15 @@
     },
     "biotypes":
     {
-      "HACA_snoRNA": "#d73027",
+      "HACA_snoRNA": "#66a61e",
       "expressed_CD_snoRNA": "orange",
-      "pre_miRNA": "pink",
-      "random_exonic_region": "lightgrey",
-      "random_intergenic_region": "grey",
-      "random_intronic_region": "black",
-      "shuffled_expressed_CD_snoRNA": "green",
-      "snRNA": "blue",
-      "tRNA": "#4575b4"
+      "pre_miRNA": "#e6ab02",
+      "random_exonic_region": "#1b9e77",
+      "random_intergenic_region": "#d95f02",
+      "random_intronic_region": "#7570b3",
+      "shuffled_expressed_CD_snoRNA": "#e7298a",
+      "snRNA": "#a6761d",
+      "tRNA": "#666666"
     },
     "confusion_value":
     {
@@ -363,6 +364,9 @@
     "rnacentral": "ftp://ftp.ebi.ac.uk/pub/databases/RNAcentral/releases/21.0/genome_coordinates/bed/",
     "gallus_gallus_gff": "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/releases/21.0/genome_coordinates/gff3/gallus_gallus.bGalGal1.mat.broiler.GRCg7b.gff3.gz",
     "haca_rnacentral": "TO ADD ON ZENODO****",
-    "rDNA": "TO ADD ON ZENODO****"
+    "rDNA": "TO ADD ON ZENODO****",
+    "all_genes_pombe": "https://www.pombase.org/data/names_and_identifiers/gene_IDs_names_products.tsv",
+    "cd_s_pombe_review": "TO ADD ON ZENODO****",
+    "sno_type_rfam": "https://zenodo.org/records/10728477/files/snoRNA_type_rfam_families.tsv"
   }
 }

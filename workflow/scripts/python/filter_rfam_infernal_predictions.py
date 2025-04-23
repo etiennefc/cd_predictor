@@ -17,7 +17,7 @@ with open(preds, 'r') as f:
                 positives_dict[gene_id] = 'expressed_CD_snoRNA'
 
 # Drop snoRNA pseudogene predictions
-test_set = test_set[test_set['gene_biotype'] != 'snoRNA_pseudogene']
+#test_set = test_set[test_set['gene_biotype'] != 'snoRNA_pseudogene']
 
 # Create the infernal_rfam_prediction column
 test_set['infernal_rfam_prediction'] = test_set['gene_id'].map(positives_dict)

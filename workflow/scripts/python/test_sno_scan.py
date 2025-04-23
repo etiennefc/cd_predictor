@@ -23,7 +23,6 @@ for species in pd.unique(test_set.species_name):
     
     # Select examples in test set of given species and create fasta of these examples
     sp.call("""awk 'NR>1 && $3 == \""""+species+"""\" {print ">"$1" "$2" "$3"\\n"$4}' """+snakemake.input.test_set+""" > testt_"""+species, shell=True)
-    #sp.call("""awk 'NR>1 && $3 == \""""+species+"""\" {print ">"$1" "$2" "$3"\n"$4}' """+snakemake.input.test_set+""" > testt_"""+species, shell=True)
 
     # Run snoscan on each species 
     sp.call("snoscan temp_rDNA_"+species+".fa testt_"+species+" -o output__"+species, shell=True)

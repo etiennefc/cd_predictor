@@ -93,7 +93,7 @@ for mncRNA in ['HACA_snoRNA', 'pre_miRNA', 'tRNA', 'snRNA']:
 # a ratio of 1:1 for exonic, intronic and intergenic regions (total 3:1)
 for region in ['random_intronic_region', 'random_intergenic_region', 'random_exonic_region']:
     region_df = all_negatives[all_negatives.gene_biotype == region]
-    n_total = 5 * len(positives)
+    n_total = 1 * len(positives)
     # To ensure all species are at least well represented in the random regions negatives:
     # Take the species with the minimal nb of regions
     # Select that number for each species and then randomly select in the remaining regions to get to ~50:1 ratio

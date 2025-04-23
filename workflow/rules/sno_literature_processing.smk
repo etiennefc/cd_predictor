@@ -29,6 +29,62 @@ rule blat_sno_genome:
         "{params.blat_path} {input.genome} {input.sno_sequences} "
         "{output.sno_location}"
 
+rule format_rnacentral_output:
+    """ Format RNAcentral output that contains all ncRNA per species to keep 
+        only C/D snoRNAs."""
+    input:
+        ncRNA_rnacentral_bed = rules.download_rnacentral_ncRNA.output.bed,
+        cd_id_rnacentral = "data/references/rnacentral/{species}_cd_id.bed"
+    output:
+        df = 'data/references/{species}_snotype.tsv'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/format_rnacentral_output.py"  
+
+rule get_tetrahymena_sno_seq:
+    """ From tetrahymena C/D snoRNA from RNAcentral, get their sequence 
+        (based on Ensembl genome assembly). The sequences will be used to BLAT 
+        against the Tetrahymena genome version with 181 chromosomes"""
+    input:
+        df = expand(rules.format_rnacentral_output.output.df, species='tetrahymena_thermophila'),
+        genome_ensembl = 'data/references/genome_fa/Tetrahymena_thermophila.JCVI-TTA1-2.2.dna.toplevel.fa'
+    output:
+        fa = 'data/references/tetrahymena_rnacentral_cd.fa'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/get_tetrahymena_sno_seq.py"  
+    
+
+rule blat_sno_tetrahymena:
+    """ Get the genomic location (in genome assembly with 181 chr) of given snoRNA sequence s
+        in Tetrahymena using BLAT (snoRNA from RNAcentral)."""
+    input:
+        blat_fake_dependency = rules.download_blat.output.tmp_file,
+        sno_sequences = rules.get_tetrahymena_sno_seq.output.fa,
+        genome = "data/references/genome_fa/tetrahymena_thermophila_genome.fa"
+    output:
+        sno_location = "data/references/tetrahymena_thermophila_snotype_good_genome.tblout"
+    params:
+        blat_path = "data/references/blat/blat"
+    shell:
+        "{params.blat_path} {input.genome} {input.sno_sequences} "
+        "{output.sno_location}"
+
+rule format_blat_output_tetrahymena:
+    """ Format BLAT output to keep only the match with the highest 
+        number of matching nucleotide according to the original 
+        snoRNA sequence."""
+    input:
+        blat = rules.blat_sno_tetrahymena.output.sno_location
+    output:
+        df = 'data/references/tetrahymena_thermophila_snotype_good_genome.tsv'
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/format_blat_output_tetrahymena.py"    
+
 rule format_blat_output:
     """ Format BLAT output to keep only the match with the highest 
         number of matching nucleotide according to the original 

@@ -71,3 +71,30 @@ rule get_D_melanogaster_expressed_snoRNAs_location:
     script: 
         "../scripts/python/get_D_melanogaster_expressed_snoRNAs_location.py"
 
+rule tgirt_seq_control:
+    """ Check the quality of TGIRT-Seq samples (chicken, macaque and human SKOV). 
+        Compare the size-selected SKOV vs fragmented to see if there are differences 
+        in snoRNA TPM and TPM ranks. Create also a pie chart of TPM % per biotype."""
+    input: 
+        tpm_tgirt = expand('data/references/tgirt_seq_validation/{sp}_merged_tpm.tsv', sp=['homo_sapiens', 'macaca_mulatta', 'gallus_gallus']),
+        gtf = expand('data/references/gtf/{sp}.gtf', sp=['homo_sapiens', 'macaca_mulatta', 'gallus_gallus']),
+        human_tpm = 'data/references/tgirt_seq_output/homo_sapiens_merged_tpm_w_biotype.tsv'
+    output: 
+        tpm_skov = 'results/figures/scatterplot/TPM_SKOV_comparison_frag_size_selected.svg',
+        tpm_skov_rank = 'results/figures/scatterplot/TPM_Rank_SKOV_comparison_frag_size_selected.svg',
+        pie_biotype = 'results/figures/pie/biotype_proportion_TGIRT_chicken_monkey_skov.svg',
+        df_skov = 'data/references/tgirt_seq_validation/homo_sapiens_SKOV_expressed_tpm_w_biotype.tsv',
+        df_chicken = 'data/references/tgirt_seq_validation/gallus_gallus_expressed_tpm_w_biotype.tsv',
+        df_macaque = 'data/references/tgirt_seq_validation/macaca_mulatta_expressed_tpm_w_biotype.tsv'
+    params:
+        tpm_tgirt = '_SEP_'.join(expand('data/references/tgirt_seq_validation/{sp}_merged_tpm.tsv', sp=['homo_sapiens', 'macaca_mulatta', 'gallus_gallus'])),
+        gtf = '_SEP_'.join(expand('data/references/gtf/{sp}.gtf', sp=['homo_sapiens', 'macaca_mulatta', 'gallus_gallus'])),
+    #conda:
+    #    "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/tgirt_seq_control.py"
+    #shell:
+    #    "source pyenv/bin/activate && " 
+    #    "python3 scripts/python/figures/tgirt_seq_control.py {params.tpm_tgirt} "
+    #    "{params.gtf} {input.human_tpm} {output.tpm_skov} {output.tpm_skov_rank} "
+    #    "{output.pie_biotype}"

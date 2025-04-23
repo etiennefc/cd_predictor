@@ -254,3 +254,30 @@ rule tuning_train_test_split_rfam_sno_pseudo_fixed_length_data_aug:
     script:
         "../scripts/python/tuning_train_test_split_rfam_sno_pseudo_fixed_length_data_aug.py"
 
+rule tuning_train_test_split_rfam_sno_pseudo_fixed_length_data_aug_equal_ratio:
+    """ Create sets for the training of the second model (expressed sno vs pseudo).
+        Split expressed C/D and pseudogenes in 3 datasets (tuning (10%), training (70%) 
+        and test set (20%)). SnoRNAs of a same Rfam clan (then Rfam family) 
+        are all kept within the same set so that we limit overfitting. After split, do 
+        data augmentation by taking 15 windows before and 15 after the actual pseudosno 
+        windows and 5 windows for expressed C/D (so to keep the ~ same number of examples per class)."""
+    input:
+        tuning = rules.tuning_train_test_split_rfam_sno_pseudo_fixed_length.output.tuning,
+        training = rules.tuning_train_test_split_rfam_sno_pseudo_fixed_length.output.training,
+        test = rules.tuning_train_test_split_rfam_sno_pseudo_fixed_length.output.test,
+        genomes = get_all_genomes('data/references/genome_fa/*.fa')
+    output:
+        tuning = 'data/references/data_augmentation_equal_ratio/cd_rfam_filtered_tuning_set_sno_pseudo_equal_ratio_fixed_length_{fixed_length}nt.tsv',
+        training = 'data/references/data_augmentation_equal_ratio/cd_rfam_filtered_training_set_sno_pseudo_equal_ratio_fixed_length_{fixed_length}nt.tsv',
+        test = 'data/references/data_augmentation_equal_ratio/cd_rfam_filtered_test_set_sno_pseudo_equal_ratio_fixed_length_{fixed_length}nt.tsv',
+        all_positives = 'data/references/data_augmentation_equal_ratio/cd_rfam_filtered_all_sno_pseudo_equal_ratio_fixed_length_{fixed_length}nt.tsv'
+    params:
+        random_seed = 42,
+        species_dict = config['species_short_name'],
+        chr_size_dir = 'data/references/chr_size/',
+        data_aug_num = 5,  # how many nt on each side do we want to increase sno length
+        data_aug_num_pseudo = 15
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/tuning_train_test_split_rfam_sno_pseudo_fixed_length_data_aug_equal_ratio.py"

@@ -19,7 +19,7 @@ with open(fa, 'r') as f:
                 positives_dict[id] = 'expressed_CD_snoRNA'
 
 # Drop snoRNA pseudogene predictions
-test_set = test_set[test_set['gene_biotype'] != 'snoRNA_pseudogene']
+#test_set = test_set[test_set['gene_biotype'] != 'snoRNA_pseudogene']
 
 # Create the snoreport2_prediction column
 test_set['snoreport2_prediction'] = test_set['gene_id'].map(positives_dict)

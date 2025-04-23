@@ -15,7 +15,7 @@ with open(fa, 'r') as f:
                 predictions_id[gene_id] = 'expressed_CD_snoRNA'
 
 # Drop snoRNA pseudogene predictions
-test_set = test_set[test_set['gene_biotype'] != 'snoRNA_pseudogene']
+#test_set = test_set[test_set['gene_biotype'] != 'snoRNA_pseudogene']
 
 # Create the snoscan_prediction column
 test_set['snoscan_prediction'] = test_set['gene_id'].map(predictions_id)

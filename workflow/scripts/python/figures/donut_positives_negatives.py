@@ -3,10 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 import seaborn as sns 
 import functions as ft 
+import collections as coll
 
-
-positives = pd.read_csv(snakemake.input.positives, sep='\t')
-negatives = pd.concat([pd.read_csv(path, sep='\t') for path in snakemake.input.negatives])
+#positives = pd.read_csv(snakemake.input.positives, sep='\t')
+positives = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/data/references/data_augmentation/cd_rfam_filtered_all_sno_pseudo_fixed_length_194nt.tsv', sep='\t')
+#negatives = pd.concat([pd.read_csv(path, sep='\t') for path in snakemake.input.negatives])
+negatives = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/data/references/negatives/data_augmentation/all_negatives_wo_pseudo_1_ratio_fixed_length_194nt.tsv', sep='\t')
 pie_species = snakemake.output.pie_species
 pie_neg_type = snakemake.output.pie_neg_type
 sp_colors = snakemake.params.species_colors
@@ -20,15 +22,15 @@ positives['species_name'] = positives['species_name'].replace(sp_name)
 negatives = negatives[negatives['gene_biotype'] != 'snoRNA_pseudogene']
 
 # Count the number of examples that are part of a given species/gene_biotype
-species = ['gallus_gallus', 'macaca_mulatta', 'drosophila_melanogaster', 'caenorhabditis_elegans', 
-            'ornithorhynchus_anatinus', 'mus_musculus', 'homo_sapiens',
+species = ['homo_sapiens', 'mus_musculus', 'drosophila_melanogaster', 'ornithorhynchus_anatinus', 
+            'caenorhabditis_elegans', 'macaca_mulatta', 'gallus_gallus', 
             'tetrahymena_thermophila', 'dictyostelium_discoideum', 'giardia_lamblia', 'leishmania_major', 
-            'saccharomyces_cerevisiae', 'arabidopsis_thaliana', 
-            'oryza_sativa', 'ostreococcus_tauri']
-biotype = ['random_exonic_region', 'random_intergenic_region', 'random_intronic_region',
-            'shuffled_expressed_CD_snoRNA', 'HACA_snoRNA', 'pre_miRNA', 'snRNA', 'tRNA']
-print(species)
-print(biotype)
+            'neurospora_crassa', 'saccharomyces_cerevisiae', 'candida_albicans', 'aspergillus_fumigatus',
+            'arabidopsis_thaliana', 'oryza_sativa', 'ostreococcus_tauri']
+biotype = ['random_exonic_region', 'random_intronic_region', 'random_intergenic_region',
+            'tRNA', 'HACA_snoRNA', 'snRNA', 'pre_miRNA', 'shuffled_expressed_CD_snoRNA']
+print(coll.Counter(positives.species_name))
+print(coll.Counter(negatives.gene_biotype))
 species_colors = [sp_colors[sp] for sp in species]
 biotype_colors = [ty_colors[biot] for biot in biotype]
 species_count, neg_type_count = [], []

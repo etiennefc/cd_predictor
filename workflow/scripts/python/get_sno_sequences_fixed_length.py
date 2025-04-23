@@ -56,7 +56,7 @@ for species in pd.unique(all_cd_df.species_name):
         else: # odd number: split the remaining nt almost equally each side of the sno (1 nt more on the 3'end)
             l_extension = int((row['diff'] - 1) / 2)
             r_extension = int(l_extension + 1)
-        bed = row[bed_cols]
+        bed = row[['chr', 'start', 'end', 'gene_id', 'dot', 'strand']]
         bed.to_csv(f'cd_fixed_bed_temp_{species}.tsv', sep='\t', index=False, header=False)
         sno_bed = BedTool(f'cd_fixed_bed_temp_{species}.tsv')
         extended_sno_bed = sno_bed.slop(g=chr_size_path, l=l_extension, r=r_extension)  # extend sequence to obtain 211 nt
