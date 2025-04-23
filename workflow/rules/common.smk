@@ -8,9 +8,10 @@ def get_species_genome(wildcards):
     # The wildcard here is sno_fasta
     species_name = str(wildcards).split('_cd_')[0]
     species_name = species_name.split(' ')[0]
-    protists = ["leishmania_major", "dictyostelium_discoideum", "giardia_lamblia"]
+    protists = ["leishmania_major", "dictyostelium_discoideum", "giardia_lamblia", "plasmodium_falciparum"]
     fungi = ['saccharomyces_cerevisiae', 'schizosaccharomyces_pombe', 
             'aspergillus_fumigatus', 'neurospora_crassa', 'candida_albicans']
+    plants = ['arabidopsis_thaliana']
     if species_name == 'tetrahymena_thermophila':
         path = rules.download_tetrahymena_genome.output.genome
     elif species_name == 'ostreococcus_tauri':
@@ -21,6 +22,8 @@ def get_species_genome(wildcards):
         path = rules.download_mammal_genome.output.genome
     elif species_name in fungi:
         path = expand(rules.download_yeast_genome.output.genome, species=species_name)
+    elif species_name in plants:
+        path = rules.download_plant_genome.output.genome
     else:
         path = expand(rules.download_genome.output.genome, species=species_name)
     return path

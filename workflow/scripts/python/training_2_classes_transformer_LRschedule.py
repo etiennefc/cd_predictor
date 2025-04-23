@@ -15,27 +15,32 @@ import torch.optim.lr_scheduler as lr_scheduler
 import transformers
 from transformers import AutoTokenizer, BertForSequenceClassification, logging
 #logging.set_verbosity_error()
+import collections as coll
 
 # Load params
-pretrained_model = sys.argv[1]  # pretrained DNABert6 model
-fold_num = str(sys.argv[2])  # training fold number
-rs = int(sys.argv[3])  # random_state
+pretrained_model = snakemake.params.pretrained_model  # pretrained DNABert6 model
+fold_num = str(snakemake.wildcards.fold_num)  # training fold number
+rs = int(snakemake.params.random_state)  # random_state
 
 # Load inputs
-X_train = pd.read_csv(sys.argv[4], sep='\t')
-y_train = pd.read_csv(sys.argv[5], sep='\t')
-y_simple = y_train.drop(columns=['gene_id'])
-best_hyperparams = pd.read_csv(sys.argv[6], sep='\t')
-fixed_length = sys.argv[4].split('nt.ts')[0].split('_')[-1]
+X_train = pd.read_csv(snakemake.input.X_train, sep='\t')
+y_train = pd.read_csv(snakemake.input.y_train, sep='\t')
+X_train = X_train[X_train['target'] != 'other'].reset_index(drop=True)
+y_train = y_train[y_train['gene_id'].isin(X_train.gene_id)]
+y_simple = y_train.drop(columns=['gene_id']).reset_index(drop=True)
+#best_hyperparams = pd.read_csv(sys.argv[6], sep='\t')
+y_simple['target'] = y_simple['target'].replace(1, 0)
+y_simple['target'] = y_simple['target'].replace(2, 1)
+fixed_length = str(snakemake.input.X_train).split('nt.ts')[0].split('_')[-1]
 
 # Convert sno labels so that expressed and pseudogene 
 # snoRNAs are considered the same label (i.e. 1)
 y_simple = y_simple.replace(2, 1)
 
 # Get path of outputs
-output_model = sys.argv[7]
-output_loss = sys.argv[8]
-output_f1 = sys.argv[9]
+#output_model = sys.argv[7]
+#output_loss = sys.argv[8]
+#output_f1 = sys.argv[9]
 
 # Show packages versions
 sp.call(f'echo PANDAS VERSION: {pd.__version__}', shell=True)
@@ -84,11 +89,10 @@ train_seqs = list(X_train[f'extended_{fixed_length}nt_sequence'])
 kmer_seqs = [seq2kmer(s, 6) for s in train_seqs]
 
 # Load pre-trained DNABERT model
-tokenizer = AutoTokenizer.from_pretrained(pretrained_model)  # BertTokenizerFast
-model = BertForSequenceClassification.from_pretrained(pretrained_model, num_labels=2)  # BertModel
-print(model)
-model.to(device)
-model.classifier.to(device)
+#tokenizer = AutoTokenizer.from_pretrained(pretrained_model)  # BertTokenizerFast
+#model = BertForSequenceClassification.from_pretrained(pretrained_model, num_labels=2)  # BertModel
+#model.to(device)
+#model.classifier.to(device)
 
 # Set number of batches (per epoch) and epochs
 num_epochs = 4 
@@ -107,10 +111,26 @@ skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=rs)
 fold_dict = {str(fold_index+1): [train_index, test_index]
             for fold_index, (train_index, test_index) in
             enumerate(skf.split(kmer_seqs, y_simple))}
+print(X_train.columns)
+for k,v in fold_dict.items():
+    print(k)
+    train_index = v[0]
+    test_index = v[1]
+    print(coll.Counter(X_train.iloc[train_index].target))
+    print(coll.Counter(X_train.iloc[test_index].target))
+    print(coll.Counter(X_train.iloc[train_index].species_name))
+    print(coll.Counter(X_train.iloc[test_index].species_name))
+    print('\n\n')
+
+real_test = pd.read_csv('data/references/positives_and_negatives/initial/initial_test_set_fixed_length_190nt.tsv', sep='\t')
+real_test = real_test[real_test['target'] != 'other'].reset_index(drop=True)
+
+print(real_test)
+print(coll.Counter(real_test.target))
+print(coll.Counter(real_test.species_name))
 
 train_index = fold_dict[fold_num][0]
 test_index = fold_dict[fold_num][1]
-
 
 # Load train and eval (test) datasets
 x_train = [k for k in kmer_seqs if kmer_seqs.index(k) in train_index]
@@ -119,6 +139,7 @@ Y_train = [y_simple.loc[i, 'target'] for i in train_index]
 Y_test = [y_simple.loc[i, 'target'] for i in test_index]
 
 
+'''
 # Load input sequences in right format (tokenize it for BERT)
 inputs = tokenizer(x_train, return_tensors='pt', padding=True).to(device)
 labels = torch.tensor(Y_train).to(device)
@@ -222,4 +243,4 @@ l_df.to_csv(output_loss, sep='\t', index=False)
 # Save model for that given fold (only save weights and parameters as it is lighter than saving the whole model)
 model.to('cpu')
 torch.save(model.state_dict(), output_model)
-
+'''

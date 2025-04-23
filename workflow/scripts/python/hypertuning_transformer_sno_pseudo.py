@@ -18,23 +18,24 @@ from optuna import pruners
 #logging.set_verbosity_error()
 
 # Load params
-rs = int(float(sys.argv[1]))  # random_state
-pretrained_model = sys.argv[2]  # pretrained DNABert6 model
-fixed_length = sys.argv[3].split('nt.ts')[0].split('_')[-1]
+rs = int(float(snakemake.params.random_state))  # random_state
+pretrained_model = snakemake.params.pretrained_model  # pretrained DNABert6 model
+fixed_length = snakemake.input.X_tuning.split('nt.ts')[0].split('_')[-1]
 
 # Load input tuning set
-X_tuning = pd.read_csv(sys.argv[3], sep='\t')
-y_tuning = pd.read_csv(sys.argv[4], sep='\t')
+X_tuning = pd.read_csv(snakemake.input.X_tuning, sep='\t')
+y_tuning = pd.read_csv(snakemake.input.y_tuning, sep='\t')
 
-# Select only the C/D pseudogenes (0) and expressed C/D (1) for the tuning
+# Select only the C/D pseudogenes (0) and expressed C/D (1) for the tuning and drop duplicate sequences
 X_tuning = X_tuning[X_tuning['target'] != 'other'].reset_index(drop=True)
+X_tuning = X_tuning.drop_duplicates(subset=[f'extended_{fixed_length}nt_sequence'])
 y_tuning = y_tuning[y_tuning['gene_id'].isin(X_tuning.gene_id)]
 y_simple = y_tuning.drop(columns=['gene_id']).reset_index(drop=True)
 y_simple['target'] = y_simple['target'].replace(1, 0)
 y_simple['target'] = y_simple['target'].replace(2, 1)
 
 # Get path of outputs
-output_best_hyperparams = sys.argv[5]
+output_best_hyperparams = snakemake.output.best_hyperparams
 
 # Show packages versions
 sp.call(f'echo PANDAS VERSION: {pd.__version__}', shell=True)
@@ -58,7 +59,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 search_space = {"batch_size": [16, 32, 100], "learning_rate": [0.00002, 0.00003, 0.00004, 0.00005]}
 
 # Set number of epochs
-num_epochs = 30
+num_epochs = 1
 
 
 # Transform sequence of examples in training set into kmers (6-mers)
@@ -79,6 +80,10 @@ tokenizer = AutoTokenizer.from_pretrained(pretrained_model)  # BertTokenizerFast
 
 # Define optimizer loss function (weight equal for both expressed and pseudogene CD)
 loss_fn = torch.nn.CrossEntropyLoss().to(device)
+
+skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=rs)
+for fold_index, (train_index, test_index) in enumerate(skf.split(kmer_seqs, y_simple)):
+    print(fold_index + 1, len(train_index), len(test_index))
 
 
 # Define objective function
@@ -113,7 +118,7 @@ def objective(trial):
         for epoch in range(num_epochs):
             sp.call(f'echo EPOCH {epoch + 1}', shell=True)
             # Load input sequences in right format (tokenize it for BERT)
-            inputs = tokenizer(x_train, return_tensors='pt').to(device)
+            inputs = tokenizer(x_train, return_tensors='pt', padding=True).to(device)
             labels = torch.tensor(y_train).to(device)
             dataset = TensorDataset(inputs.input_ids, inputs.attention_mask, labels)
             train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -134,7 +139,7 @@ def objective(trial):
                 optimizer.step()
 
             # First, load input sequences in right format (tokenize it for BERT)
-            eval_dataset = tokenizer(x_test, return_tensors='pt').to(device)
+            eval_dataset = tokenizer(x_test, return_tensors='pt', padding=True).to(device)
             eval_labels = torch.tensor(y_test).to(device)
             eval_dataset = TensorDataset(eval_dataset.input_ids, eval_dataset.attention_mask, eval_labels)
             eval_dataloader = DataLoader(eval_dataset, batch_size=batch_size)

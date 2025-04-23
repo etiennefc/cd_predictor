@@ -14,17 +14,35 @@ from transformers import AutoTokenizer, BertForSequenceClassification, logging
 #logging.set_verbosity_error()
 
 # Load inputs and params
-pretrained_model = str(sys.argv[1])  # pretrained DNABert6 model
-best_hyperparams = pd.read_csv(sys.argv[4], sep='\t')
-batch_size = int(best_hyperparams.batch_size.values[0])  # nb of example per batch
+pretrained_model = str(snakemake.params.pretrained_model)  # pretrained DNABert6 model
+#best_hyperparams = pd.read_csv(sys.argv[4], sep='\t')
+batch_size = int(32)  # nb of example per batch
 num_labels = 2
-model_path = str(sys.argv[5])
-fixed_length = sys.argv[2].split('nt.ts')[0].split('_')[-1]
+model_path = str(snakemake.input.model)
+fixed_length = str(snakemake.input.X_test).split('nt.ts')[0].split('_')[-1]
 
 # Load test data and create tensor matrix (format used by pytorch)
-X_test = pd.read_csv(sys.argv[2], sep='\t')
+X_test = pd.read_csv(snakemake.input.X_test, sep='\t')
 X_test = X_test[X_test['target'] != 'other'].reset_index(drop=True)
-y_test = pd.read_csv(sys.argv[3], sep='\t')
+
+
+
+#pseudo_ = X_test[X_test['target'] == 'snoRNA_pseudogene']
+#cd_ = X_test[X_test['target'] == 'expressed_CD_snoRNA'].reset_index(drop=True)
+#print(f'RATIO CD/PSEUDO {cd_nb/pseudo_nb}')
+#pseudo_ = pseudo_.sample(frac=0.877, random_state=42).reset_index(drop=True)
+#X_test = pd.concat([pseudo_, cd_])
+#X_test = cd_
+print(X_test)
+#ls = [i[10:-10] for i in X_test['extended_190nt_sequence']]
+#l2 = [i[30:-50] for i in X_test['extended_190nt_sequence']]
+#X_test['test'] = ls[0:10] + l2[10:]
+
+#pseudo_nb = len(X_test[X_test['target'] == 'snoRNA_pseudogene'])
+#cd_nb = len(X_test[X_test['target'] == 'expressed_CD_snoRNA'].reset_index(drop=True))
+#print(f'RATIO CD/PSEUDO {cd_nb/pseudo_nb}')
+
+y_test = pd.read_csv(snakemake.input.y_test, sep='\t')
 y_simple = y_test[y_test['gene_id'].isin(X_test.gene_id)]
 y_simple = y_simple.drop(columns=['gene_id']).reset_index(drop=True)
 y_simple['target'] = y_simple['target'].replace(1, 0)
@@ -34,8 +52,8 @@ y_simple['target'] = y_simple['target'].replace(2, 1)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load outputs
-df_metrics = sys.argv[6]
-df_preds = sys.argv[7]
+df_metrics = snakemake.output.df_metrics_on_test
+df_preds = snakemake.output.test_predictions
 
 
 # Transform sequence of examples in test set into kmers (6-mers)
@@ -48,11 +66,12 @@ def seq2kmer(seq, k):
     return kmers
 
 test_seqs = list(X_test[f'extended_{fixed_length}nt_sequence'])
+#test_seqs = list(X_test[f'test'])
 kmer_seqs = [seq2kmer(s, 6) for s in test_seqs]
 
 # Tokenize test data in right format and create dataloader
 tokenizer = AutoTokenizer.from_pretrained(pretrained_model)  # BertTokenizerFast
-eval_dataset = tokenizer(kmer_seqs, return_tensors='pt').to(device)
+eval_dataset = tokenizer(kmer_seqs, return_tensors='pt', padding=True).to(device)
 eval_labels = torch.tensor(list(y_simple.target)).to(device)
 eval_dataset = TensorDataset(eval_dataset.input_ids, eval_dataset.attention_mask, eval_labels)
 eval_dataloader = DataLoader(eval_dataset, batch_size=batch_size)
@@ -110,6 +129,25 @@ else:
     recall_sno = TP_sno/(TP_sno + FN_sno)
 sp.call(f'echo PRECISION sno: {precision_sno}', shell=True)
 sp.call(f'echo RECALL sno: {recall_sno}', shell=True)
+
+
+TP_pseudosno = len(df[(df.y_true == 0) & (df.y_pred == 0)])
+FP_pseudosno = len(df[(df.y_true != 0) & (df.y_pred == 0)])
+FN_pseudosno = len(df[(df.y_true == 0) & (df.y_pred != 0)])
+if TP_pseudosno + FP_pseudosno == 0:
+    precision_pseudosno = 0
+else:
+    precision_pseudosno = TP_pseudosno/(TP_pseudosno + FP_pseudosno)
+if TP_pseudosno + FN_pseudosno == 0:
+    recall_pseudosno = 0
+else:
+    recall_pseudosno = TP_pseudosno/(TP_pseudosno + FN_pseudosno)
+sp.call(f'echo PRECISION pseudosno: {precision_pseudosno}', shell=True)
+sp.call(f'echo RECALL pseudosno: {recall_pseudosno}', shell=True)
+
+
+
+
 
 metrics_df = pd.DataFrame([[accuracy, fscore, precision_sno,
                             recall_sno]],
