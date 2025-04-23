@@ -174,6 +174,9 @@ def lineplot(df, x_col, y_col, hue_col, xlabel, ylabel, title, color_dict, path,
     ax.set_xticks(list(range(0, len(xtick_labels))))
     ax.set_xticklabels(xtick_labels, rotation=25)
     #ax.set_ylim(0, 1.05)
+    plt.legend(fontsize=35)
+    for handle in plt.gca().get_legend().legendHandles:
+        handle.set_linewidth(16)
     fig.suptitle(title, fontsize=30, x=0.5, y=1)
     plt.savefig(path, dpi=600, bbox_inches='tight')
 
@@ -218,8 +221,8 @@ def pie_multiple(y, x, count_list, labels, colors, ax_title, title, legend_title
         ax[i].add_artist(white_circle) #to create a donut chart
 
     fig.suptitle(title, x=0.5, y=0.9, fontsize=25)
-    fig.legend(labels=labels, loc='upper right', bbox_to_anchor=(1.1, 0.5),
-                prop={'size': 20}, title=legend_title)
+    fig.legend(labels=labels, loc='upper right', bbox_to_anchor=(0.5, 0.25),
+                prop={'size': 10}, title=legend_title)
     plt.savefig(path, dpi=600)
 
 def donut(count_list, labels, colors, ax_title, title, legend_title, path, **kwargs):
@@ -240,6 +243,48 @@ def donut(count_list, labels, colors, ax_title, title, legend_title, path, **kwa
     fig.legend(labels=labels, loc='upper right', bbox_to_anchor=(1.1, 0.5),
                 prop={'size': 20}, title=legend_title)
     plt.savefig(path, dpi=600)
+
+def stacked_bar(lists, x_tick_labels, labels, title, xlabel, ylabel, colors, min_y, max_y, optional_annot, path, **kwargs):
+    """
+    Create a stacked bar chart from a list of lists ('lists').
+    """
+    rc = {'ytick.labelsize': 30, 'xtick.labelsize': 35}
+    plt.rcParams.update(**rc)
+    plt.rcParams['svg.fonttype'] = 'none'
+    df = pd.DataFrame(lists, index=x_tick_labels, columns=labels)
+    print(df)
+    ax = df.plot.bar(stacked=True, figsize=(30, 12), color=colors, **kwargs)
+    ax.set_xticklabels(x_tick_labels, rotation=0)
+    
+    # Add optional annotation above bars (ex: number of sno in each bar)
+    n = len(labels)
+    
+    def chunker(list_, size):
+        # Get chunks of n elements from list_ where n=size
+        return (list_[pos:pos + size] for pos in range(0, len(list_), size))
+    
+    # Get the cumulative height of each bar until the before last stacked bar
+    previous_heigths = [0] * len(x_tick_labels)
+    for i, chunks_index in enumerate(chunker(list(range(0, n*len(x_tick_labels))[:-len(x_tick_labels)]), len(x_tick_labels))):  # from 0 to the before last bars
+        for index_ in chunks_index:
+            bar = list(ax.patches)[index_]
+            previous_heigths[index_ - len(x_tick_labels) * i] += bar.get_height()
+    
+    # Add the cumulative height of previous bars to the last stacked bar of each stack
+    last_bars = [bar_ for j, bar_ in enumerate(ax.patches) if j in list(range(0, n*len(x_tick_labels))[-len(x_tick_labels):])]  # last (i.e. topmost) bars
+    for i, bar in enumerate(last_bars):
+        ax.text((bar.get_x() + bar.get_width()/(len(x_tick_labels)/2) - 0.1), 
+                (bar.get_height() + previous_heigths[i] + 10), optional_annot[i], fontsize=35)
+    plt.legend(fontsize=30, loc='center right', bbox_to_anchor=(1.3, 0.5))
+
+
+    plt.title(title, fontsize=38)
+    plt.xlabel(xlabel, fontsize=40)
+    plt.ylabel(ylabel, fontsize=40)
+    plt.autoscale()
+    plt.margins(0.02)
+    plt.ylim(min_y, max_y)
+    plt.savefig(path, bbox_inches='tight', dpi=600)
 
 def stacked_bar2(lists, x_tick_labels, labels, title, xlabel, ylabel, colors, min_y, max_y, optional_annot, path, **kwargs):
     """
@@ -262,6 +307,49 @@ def stacked_bar2(lists, x_tick_labels, labels, title, xlabel, ylabel, colors, mi
     plt.title(title, fontsize=40, y=1.1, x=0.5)
     plt.xlabel(xlabel, fontsize=40)
     plt.ylabel(ylabel, fontsize=40)
+    plt.autoscale()
+    plt.margins(0.02)
+    plt.ylim(min_y, max_y)
+    plt.savefig(path, bbox_inches='tight', dpi=600)
+
+def stacked_bar3(lists, x_tick_labels, labels, title, xlabel, ylabel, colors, min_y, max_y, optional_annot, path, **kwargs):
+    """
+    Create a stacked bar chart from a list of lists ('lists').
+    """
+    rc = {'ytick.labelsize': 30, 'xtick.labelsize': 35}
+    plt.rcParams.update(**rc)
+    plt.rcParams['svg.fonttype'] = 'none'
+    df = pd.DataFrame(lists, index=x_tick_labels, columns=labels)
+    print(df)
+    print(df['FN'].sum())
+    ax = df.plot.bar(stacked=True, figsize=(40, 10), color=colors, **kwargs)
+    #ax.set_xticklabels(x_tick_labels, rotation=45)
+    
+    # Add optional annotation above bars (ex: number of sno in each bar)
+    n = len(labels)
+    
+    def chunker(list_, size):
+        # Get chunks of n elements from list_ where n=size
+        return (list_[pos:pos + size] for pos in range(0, len(list_), size))
+    
+    # Get the cumulative height of each bar until the before last stacked bar
+    previous_heigths = [0] * len(x_tick_labels)
+    for i, chunks_index in enumerate(chunker(list(range(0, n*len(x_tick_labels))[:-len(x_tick_labels)]), len(x_tick_labels))):  # from 0 to the before last bars
+        for index_ in chunks_index:
+            bar = list(ax.patches)[index_]
+            previous_heigths[index_ - len(x_tick_labels) * i] += bar.get_height()
+    
+    # Add the cumulative height of previous bars to the last stacked bar of each stack
+    last_bars = [bar_ for j, bar_ in enumerate(ax.patches) if j in list(range(0, n*len(x_tick_labels))[-len(x_tick_labels):])]  # last (i.e. topmost) bars
+    for i, bar in enumerate(last_bars):
+        ax.text((bar.get_x() + bar.get_width()/(len(x_tick_labels)/2) - 0.1), 
+                551, optional_annot[i], fontsize=35)
+    plt.legend(fontsize=50, loc='center right', bbox_to_anchor=(1, 0.9))
+
+
+    plt.title(title, fontsize=38)
+    plt.xlabel(xlabel, fontsize=50)
+    plt.ylabel(ylabel, fontsize=50)
     plt.autoscale()
     plt.margins(0.02)
     plt.ylim(min_y, max_y)
