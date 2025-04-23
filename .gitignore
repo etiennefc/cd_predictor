@@ -8,3 +8,4 @@ logs/
 *old_models/
 *transformer_explanation
 datasets_snoBIRD_final/
+bertviz*
