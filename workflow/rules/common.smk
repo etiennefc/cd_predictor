@@ -27,7 +27,6 @@ def get_species_genome(wildcards):
     else:
         path = expand(rules.download_genome.output.genome, species=species_name)
     return path
-    print(path)
 
 def get_all_genomes(dir):
     # Get all the fasta files of genomes in a given directory

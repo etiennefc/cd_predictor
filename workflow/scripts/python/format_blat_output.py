@@ -91,7 +91,7 @@ sno_bed.to_csv('temp_sno_bed_seq_'+snakemake.wildcards.sno_fasta, index=False, h
 bed = BedTool('temp_sno_bed_seq_'+snakemake.wildcards.sno_fasta)
 
 # Update snoRNA sequence from the most recent genome 
-fasta = bed.sequence(fi=snakemake.input.genome, nameOnly=True, s=True)
+fasta = bed.sequence(fi=snakemake.params.genome, nameOnly=True, s=True)
 seq_dict = {}
 with open(fasta.seqfn, 'r') as fasta_file:
     for line in fasta_file:
@@ -128,7 +128,7 @@ tempo_df[['chr', 'start', 'end', 'gene_id', 'dot1', 'strand', 'source',
                                                 sep='\t', index=False, header=False)
 cd_bed = BedTool('temp_cd_'+snakemake.wildcards.sno_fasta+'.tsv')
 extended_cd = cd_bed.slop(g=snakemake.input.chr_size, l=extension+1, r=extension)
-sequences = extended_cd.sequence(fi=snakemake.input.genome, s=True, nameOnly=True)
+sequences = extended_cd.sequence(fi=snakemake.params.genome, s=True, nameOnly=True)
 extended_seq_dict = {}
 with open(sequences.seqfn, 'r') as f:
     for line in f:

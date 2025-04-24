@@ -20,13 +20,13 @@ rule blat_sno_genome:
     input:
         blat_fake_dependency = rules.download_blat.output.tmp_file,
         sno_sequences = "data/sno_literature_processing/{sno_fasta}.fa",
-        genome = get_species_genome
     output:
         sno_location = "data/sno_literature_processing/{sno_fasta}_location.psl"
     params:
+        genome = get_species_genome,
         blat_path = "data/references/blat/blat"
     shell:
-        "{params.blat_path} {input.genome} {input.sno_sequences} "
+        "{params.blat_path} {params.genome} {input.sno_sequences} "
         "{output.sno_location}"
 
 rule format_rnacentral_output:
@@ -93,13 +93,13 @@ rule format_blat_output:
         and potential mismatches mainly)."""
     input:
         blat = rules.blat_sno_genome.output.sno_location,
-        genome = get_species_genome,
         chr_size = rules.get_chr_size_literature.output.chr_size
     output:
         df = 'data/sno_literature_processing/{sno_fasta}_location_formated.tsv'
     params:
         dataset_attribute = lambda wildcards: config['dataset_attributes'][wildcards.sno_fasta],
-        extension = 15
+        extension = 15,
+        genome = get_species_genome
     conda:
         "../envs/python_new.yaml"
     script:
