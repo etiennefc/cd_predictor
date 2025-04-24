@@ -340,6 +340,12 @@
       "snRNA": "#a6761d",
       "tRNA": "#666666"
     },
+    "genomic_element":
+    {
+      "exonic": "#d0d1e6",
+      "intronic": "#014636",
+      "intergenic": "#02818a"
+    },
     "confusion_value":
     {
       "TP": "#f1b6da",
