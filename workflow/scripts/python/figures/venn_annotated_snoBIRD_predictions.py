@@ -7,8 +7,8 @@ from matplotlib_venn import venn2
 import matplotlib.patches as mpatches
 from glob import glob
 
-#inputs = snakemake.input.snoBIRD_preds
-inputs = glob('results/predictions/snoBIRD/bedgraph_overlap/multiple_filters/*_TGIRT_coverage.tsv')
+inputs = snakemake.input.snoBIRD_preds
+#inputs = glob('results/predictions/snoBIRD/bedgraph_overlap/multiple_filters/*_TGIRT_coverage.tsv')
 
 # Load dfs
 dfs = []

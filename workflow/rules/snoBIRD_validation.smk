@@ -1,35 +1,32 @@
-rule pred_overlap_bedgraph:
-    """ Find the overlap between the snoBIRD (and other tools) predictions and 
-        the bedgraph of expression (one representative per species or max/avg?) 
-        to see which predictions are expressed."""
-    input:
-        snoBIRD_preds = 'results/predictions/snoBIRD/final/{species}/',  # TO PUT ON ZENODO
-        #snocan_preds = '',
-        #snoreport_preds = '',
-        #infernal_preds = '',
-        known_cd = "data/references/sno_type_df/{species}_snotype.tsv",
-        known_cd_tetrahymena = 'data/references/sno_type_df/tetrahymena_thermophila_snotype_good_genome.tsv',
-        bedgraph = 'results/bedgraph_TGIRT/{species}/'
-    output:
-        coverage = 'results/predictions/snoBIRD/bedgraph_overlap/{species}_TGIRT_coverage.tsv'
-    params:
-        fixed_length = 194
-    conda:
-        "../envs/python_new2.yaml"
-    script:
-        "../scripts/python/pred_overlap_bedgraph.py"  # filter only for avg coverage >= 5 reads
-
+#rule pred_overlap_bedgraph:
+#    """ Find the overlap between the snoBIRD (and other tools) predictions and 
+#        the bedgraph of expression (one representative per species or max/avg?) 
+#        to see which predictions are expressed."""
+#    input:
+#        snoBIRD_preds = 'results/predictions/snoBIRD/final/{species}/',  # TO PUT ON ZENODO
+#        #snocan_preds = '',
+#        #snoreport_preds = '',
+#        #infernal_preds = '',
+#        known_cd = "data/references/sno_type_df/{species}_snotype.tsv",
+#        known_cd_tetrahymena = 'data/references/sno_type_df/tetrahymena_thermophila_snotype_good_genome.tsv',
+#        bedgraph = 'results/bedgraph_TGIRT/{species}/'
+#    output:
+#        coverage = 'results/predictions/snoBIRD/bedgraph_overlap/{species}_TGIRT_coverage.tsv'
+#    params:
+#        fixed_length = 194
+#    conda:
+#        "../envs/python_new2.yaml"
+#    script:
+#        "../scripts/python/pred_overlap_bedgraph.py"  # filter only for avg coverage >= 5 reads
+#
 rule pred_overlap_bedgraph_multiple_filters:
     """ Find the overlap between the snoBIRD predictions and 
         the bedgraph of expression to see which predictions are expressed."""
     input:
-        snoBIRD_preds = 'results/predictions/snoBIRD/final/{species}/',  # TO PUT ON ZENODO
-        #snocan_preds = '',
-        #snoreport_preds = '',
-        #infernal_preds = '',
-        known_cd = "data/references/sno_type_df/{species}_snotype.tsv",
-        known_cd_tetrahymena = 'data/references/sno_type_df/tetrahymena_thermophila_snotype_good_genome.tsv',
-        bedgraph = 'results/bedgraph_TGIRT/{species}/',
+        snoBIRD_preds = 'results/predictions/snoBIRD/final/{species}/',  # zenodo
+        known_cd = "data/references/sno_type_df/{species}_snotype.tsv",  # zenodo
+        known_cd_tetrahymena = 'data/references/sno_type_df/tetrahymena_thermophila_snotype_good_genome.tsv',  # zenodo
+        bedgraph = 'results/bedgraph_TGIRT/{species}/',  # zenodo
         chr_size = 'data/references/chr_size/{species}_chr_size.tsv',
         gtf = 'data/references/gtf/{species}.gtf'
     output:
@@ -68,12 +65,12 @@ rule snoBIRD_candidate_table:
 rule venn_annotated_snoBIRD_predictions:
     """ Find the overlap between snoBIRD predictions and annotated snoRNAs 
         (w/r to their expression). """
-    #input:
-    #    snoBIRD_preds = expand(rules.pred_overlap_bedgraph_multiple_filters.output.coverage, 
-    #                        species=['homo_sapiens', 'tetrahymena_thermophila', 
-    #                        'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
-    #                        'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
-    #                        'plasmodium_falciparum'])
+    input:
+        snoBIRD_preds = expand(rules.pred_overlap_bedgraph_multiple_filters.output.coverage, 
+                            species=['homo_sapiens', 'tetrahymena_thermophila', 
+                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
+                            'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
+                            'plasmodium_falciparum'])
     output:
         venn = 'results/figures/venn/overlap_expressed_annot_snoBIRD_preds_all_species.svg',
         donut = 'results/figures/donut/overlap_annot_snoBIRD_preds_all_species.svg'
@@ -82,40 +79,6 @@ rule venn_annotated_snoBIRD_predictions:
     script:
         "../scripts/python/figures/venn_annotated_snoBIRD_predictions.py"
 
-
-rule genome_stats:
-    """ Compute different stats on the genome of species with TGIRT-Seq to explain 
-        the number of SnoBIRD predictions. These stats include genome length, 
-        %GC, intron length, intron % of the genome, intron number"""
-    input:
-        snoBIRD_preds = expand('results/predictions/snoBIRD/final/{species}/', 
-                            species=['homo_sapiens', 'tetrahymena_thermophila', 
-                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
-                            'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
-                            'plasmodium_falciparum']),
-        genome = expand('data/references/genome_fa/{species}_genome.fa', 
-                            species=['homo_sapiens', 'tetrahymena_thermophila', 
-                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
-                            'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
-                            'plasmodium_falciparum']),
-        gtf = expand('data/references/gtf/{species}.gtf', 
-                            species=['homo_sapiens', 'tetrahymena_thermophila', 
-                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
-                            'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
-                            'plasmodium_falciparum']),
-        chr_size = expand('data/references/chr_size/{species}_chr_size.tsv', 
-                            species=['homo_sapiens', 'tetrahymena_thermophila', 
-                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
-                            'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
-                            'plasmodium_falciparum'])
-    output:
-        multi_plot = 'results/figures/genome_stats_snoBIRD_preds.svg'
-    params:
-        color_dict = config['colors']['species']
-    conda:
-        "../envs/python_new2.yaml"
-    script:
-        "../scripts/python/figures/genome_stats.py"
 
 rule bar_expressed_pseudo_species:
     """ Create a stacked bar plot to show the % of expressed vs 
@@ -142,11 +105,11 @@ rule filter_other_tools_predictions:
         H. sapiens to get a tsv in the end. These results were obtained after 
         running the tools on a HPC cluster (Narval)."""
     input:
-        snoscan_preds = expand('results/predictions/snoscan/{species}/', 
+        snoscan_preds = expand('results/predictions/snoscan/{species}/', # The user should run snoscan on these genomes
                 species=['schizosaccharomyces_pombe', 'homo_sapiens']),
-        snoreport_preds = expand('results/predictions/snoreport2/{species}/', 
+        snoreport_preds = expand('results/predictions/snoreport2/{species}/', # The user should run snoreport2 on these genomes
                 species=['schizosaccharomyces_pombe', 'homo_sapiens']),
-        infernal_preds = expand('results/predictions/infernal_rfam/{species}/', 
+        infernal_preds = expand('results/predictions/infernal_rfam/{species}/', # The user should run infernal on these genomes 
                 species=['schizosaccharomyces_pombe', 'homo_sapiens']),
         chr_size = expand('data/references/chr_size/{species}_chr_size.tsv', 
                 species=['schizosaccharomyces_pombe', 'homo_sapiens'])
@@ -166,7 +129,7 @@ rule pred_overlap_bedgraph_multiple_filters_other_tools:
     """ Find the overlap between the other tools' predictions and 
         the bedgraph of expression to see which predictions are expressed."""
     input:
-        preds = 'results/predictions/{cd_predictors}/{cd_predictors}_{species}_filtered.tsv', # TO PUT ON ZENODO (snoscan, snoreport, infernal predictions on S.  pombe and human)
+        preds = 'results/predictions/{cd_predictors}/{cd_predictors}_{species}_filtered.tsv', 
         known_cd = "data/references/sno_type_df/{species}_snotype.tsv",
         known_cd_tetrahymena = 'data/references/sno_type_df/tetrahymena_thermophila_snotype_good_genome.tsv',
         bedgraph = 'results/bedgraph_TGIRT/{species}/',
@@ -266,67 +229,6 @@ rule snoBIRD_species_preds_features:
         "../envs/python_new2.yaml"
     script:
         "../scripts/python/figures/snoBIRD_species_preds_features.py"
-
-
-rule create_windows_size_reduction_analysis:
-    """ From the positive examples in the test set, cerate windows with 
-        increasing number (from the edge to the center) of Ns instead of the 
-        actual sequence to see the window size reduction effect on SnoBIRD 
-        predictions."""
-    input:
-        test_set = 'data/references/positives_and_negatives/data_augmentation/test_set_1_ratio_fixed_length_194nt.tsv',
-        snoBIRD_test_set = 'results/predictions/snoBIRD/fixed_length_194nt/3e-5_3e-6_32_4_data_aug_1_ratio/test_set_snoBIRD_predictions.tsv'
-    output:
-        windows = 'data/references/window_size_reduction_analysis/test_set_reduced_windows_with_Ns.fa'
-    params:
-        fixed_length = 194
-    conda:
-        "../envs/python_new2.yaml"
-    script:
-        "../scripts/python/create_windows_size_reduction_analysis.py"
-
-rule window_size_reduction_analysis:
-    """ From the SnoBIRD predictions on all the test set reduced windows with increasing 
-        Ns (SnoBIRD was run locally), create a line plot showing the % of 
-        windows predicted as snoRNAs when we replace the input window sequence 
-        by increasing number of surrounding Ns. Also overlap on the plot a cumulative line 
-        showing the total of snoRNAs that are of length 194 nt up to 0nt."""
-    input:
-        positives_info = 'data/references/positives/cd_rfam_filtered_all_sno_pseudo_fixed_length_194nt.tsv',
-        snoBIRD_N_preds = 'results/predictions/snoBIRD/window_size_reduction_analysis/filtered_positive_windows_test_set_reduced_windows_with_Ns.bed'
-    output:
-        lineplot = 'results/figures/lineplot/window_size_reduction_analysis_test_set_with_Ns.svg'
-    params:
-        fixed_length = 194
-    conda:
-        "../envs/python_new2.yaml"
-    script:
-        "../scripts/python/figures/window_size_reduction_analysis.py"
-
-
-#rule upset_human_pombe:
-#    """ Create an upset plot for the predictions between tools for Human and S. pombe
-#        (also showing stacked bars of expressed predictions or not). 
-#        Show only merged overlapping predictions per tool. """
-#    input:
-#        snoBIRD_preds = expand('results/predictions/snoBIRD/final/{species}/', 
-#                            species=['homo_sapiens', 'schizosaccharomyces_pombe']),
-#        other_preds = rules.filter_other_tools_predictions.output
-#    output:
-#        human_upset = 'results/figures/upset/human_preds_overlap_all_tools.svg',
-#        pombe_upset = 'results/figures/upset/pombe_preds_overlap_all_tools.svg'
-#    conda:
-#        "../envs/python_new2.yaml"
-#    script:
-#        "../scripts/python/figures/upset_human_pombe.py"
-
-
-
-
-
-
-
-
 
 rule genomic_element_overlap_preds:
     """ Find the overlap between intron, exon, intergenic with the predictions 
@@ -472,7 +374,7 @@ rule step_size_analysis:
     """ Find which step_size is optimal to limit FP and FN in S. pombe and 
         human."""
     input:
-        preds_s1 = "results/predictions/snoBIRD/step_size_s1/{species}/",  # obtained after running snoBIRD with step_size=1
+        preds_s1 = "results/predictions/snoBIRD/step_size_s1/{species}/",  # all positive windows obtained after running snoBIRD with step_size=1
         known_cd = "data/references/sno_type_df/{species}_snotype.tsv",  # from get_s_pombe_sno_type or concat sno and pseudo CD from whole dataset
         input_fasta_dir = "data/references/genome_fa/{species}_chunks/" # from split_chr on HPC
     output:
@@ -504,3 +406,89 @@ rule snoBIRD_CO2_emission:
     script:
         "../scripts/python/snoBIRD_CO2_emission.py"
 
+
+#rule genome_stats:
+#    """ Compute different stats on the genome of species with TGIRT-Seq to explain 
+#        the number of SnoBIRD predictions. These stats include genome length, 
+#        %GC, intron length, intron % of the genome, intron number"""
+#    input:
+#        snoBIRD_preds = expand('results/predictions/snoBIRD/final/{species}/', 
+#                            species=['homo_sapiens', 'tetrahymena_thermophila', 
+#                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
+#                            'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
+#                            'plasmodium_falciparum']),
+#        genome = expand('data/references/genome_fa/{species}_genome.fa', 
+#                            species=['homo_sapiens', 'tetrahymena_thermophila', 
+#                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
+#                            'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
+#                            'plasmodium_falciparum']),
+#        gtf = expand('data/references/gtf/{species}.gtf', 
+#                            species=['homo_sapiens', 'tetrahymena_thermophila', 
+#                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
+#                            'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
+#                            'plasmodium_falciparum']),
+#        chr_size = expand('data/references/chr_size/{species}_chr_size.tsv', 
+#                            species=['homo_sapiens', 'tetrahymena_thermophila', 
+#                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
+#                            'drosophila_melanogaster', 'danio_rerio', 'arabidopsis_thaliana', 
+#                            'plasmodium_falciparum'])
+#    output:
+#        multi_plot = 'results/figures/genome_stats_snoBIRD_preds.svg'
+#    params:
+#        color_dict = config['colors']['species']
+#    conda:
+#        "../envs/python_new2.yaml"
+#    script:
+#        "../scripts/python/figures/genome_stats.py"
+
+#rule create_windows_size_reduction_analysis:
+#    """ From the positive examples in the test set, create windows with 
+#        increasing number (from the edge to the center) of Ns instead of the 
+#        actual sequence to see the window size reduction effect on SnoBIRD 
+#        predictions."""
+#    input:
+#        test_set = 'data/references/positives_and_negatives/data_augmentation/test_set_1_ratio_fixed_length_194nt.tsv',
+#        snoBIRD_test_set = 'results/predictions/snoBIRD/fixed_length_194nt/3e-5_3e-6_32_4_data_aug_1_ratio/test_set_snoBIRD_predictions.tsv'
+#    output:
+#        windows = 'data/references/window_size_reduction_analysis/test_set_reduced_windows_with_Ns.fa'
+#    params:
+#        fixed_length = 194
+#    conda:
+#        "../envs/python_new2.yaml"
+#    script:
+#        "../scripts/python/create_windows_size_reduction_analysis.py"
+#
+#rule window_size_reduction_analysis:
+#    """ From the SnoBIRD predictions on all the test set reduced windows with increasing 
+#        Ns (SnoBIRD was run locally), create a line plot showing the % of 
+#        windows predicted as snoRNAs when we replace the input window sequence 
+#        by increasing number of surrounding Ns. Also overlap on the plot a cumulative line 
+#        showing the total of snoRNAs that are of length 194 nt up to 0nt."""
+#    input:
+#        positives_info = 'data/references/positives/cd_rfam_filtered_all_sno_pseudo_fixed_length_194nt.tsv',
+#        snoBIRD_N_preds = 'results/predictions/snoBIRD/window_size_reduction_analysis/filtered_positive_windows_test_set_reduced_windows_with_Ns.bed'
+#    output:
+#        lineplot = 'results/figures/lineplot/window_size_reduction_analysis_test_set_with_Ns.svg'
+#    params:
+#        fixed_length = 194
+#    conda:
+#        "../envs/python_new2.yaml"
+#    script:
+#        "../scripts/python/figures/window_size_reduction_analysis.py"
+
+
+#rule upset_human_pombe:
+#    """ Create an upset plot for the predictions between tools for Human and S. pombe
+#        (also showing stacked bars of expressed predictions or not). 
+#        Show only merged overlapping predictions per tool. """
+#    input:
+#        snoBIRD_preds = expand('results/predictions/snoBIRD/final/{species}/', 
+#                            species=['homo_sapiens', 'schizosaccharomyces_pombe']),
+#        other_preds = rules.filter_other_tools_predictions.output
+#    output:
+#        human_upset = 'results/figures/upset/human_preds_overlap_all_tools.svg',
+#        pombe_upset = 'results/figures/upset/pombe_preds_overlap_all_tools.svg'
+#    conda:
+#        "../envs/python_new2.yaml"
+#    script:
+#        "../scripts/python/figures/upset_human_pombe.py"
