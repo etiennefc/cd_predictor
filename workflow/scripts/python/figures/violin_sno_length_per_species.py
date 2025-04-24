@@ -5,8 +5,8 @@ import seaborn as sns
 import functions as ft 
 
 fixed_length = snakemake.wildcards.fixed_length
-#expressed_cd = pd.read_csv(snakemake.input.expressed_cd, sep='\t')
-expressed_cd = pd.read_csv('data/references/all_expressed_cd_sequences_location_fixed_length_194nt.tsv', sep='\t')
+expressed_cd = pd.read_csv(snakemake.input.expressed_cd, sep='\t')
+#expressed_cd = pd.read_csv('data/references/all_expressed_cd_sequences_location_fixed_length_194nt.tsv', sep='\t')
 expressed_cd['gene_biotype'] = 'expressed_CD_snoRNA'
 human_pseudo = pd.read_csv(snakemake.input.human_pseudo, sep='\t')
 mouse_pseudo = pd.read_csv(snakemake.input.mouse_pseudo, sep='\t')

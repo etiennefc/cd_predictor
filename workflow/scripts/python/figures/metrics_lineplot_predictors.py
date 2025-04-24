@@ -5,13 +5,13 @@ import seaborn as sns
 import functions as ft 
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, recall_score, matthews_corrcoef
 
-#snoreport = pd.read_csv(snakemake.input.snoreport, sep='\t')
-#snoscan = pd.read_csv(snakemake.input.snoscan, sep='\t')
-#infernal_rfam = pd.read_csv(snakemake.input.infernal_rfam, sep='\t')
-snoreport = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/results/predictions/snoreport2/fixed_length_194nt/test_predictions.tsv', sep='\t')
-snoscan = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/results/predictions/snoscan/fixed_length_194nt/test_predictions.tsv', sep='\t')
-infernal_rfam = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/results/predictions/infernal_rfam/fixed_length_194nt/test_predictions.tsv', sep='\t')
-snoBIRD = pd.read_csv('results/predictions/snoBIRD/transformer/194/3e-5_3e-6_32_4_data_aug_1_ratio/transformer_2_classes_LR_schedule_test_predictions_194nt_fold_8.tsv', sep='\t')
+snoreport = pd.read_csv(snakemake.input.snoreport, sep='\t')
+snoscan = pd.read_csv(snakemake.input.snoscan, sep='\t')
+infernal_rfam = pd.read_csv(snakemake.input.infernal_rfam, sep='\t')
+#snoreport = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/results/predictions/snoreport2/fixed_length_194nt/test_predictions.tsv', sep='\t')
+#snoscan = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/results/predictions/snoscan/fixed_length_194nt/test_predictions.tsv', sep='\t')
+#infernal_rfam = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/results/predictions/infernal_rfam/fixed_length_194nt/test_predictions.tsv', sep='\t')
+#snoBIRD = pd.read_csv('results/predictions/snoBIRD/transformer/194/3e-5_3e-6_32_4_data_aug_1_ratio/transformer_2_classes_LR_schedule_test_predictions_194nt_fold_8.tsv', sep='\t')
 snoBIRD['snoBIRD_prediction'] = snoBIRD['y_pred'].replace({0: 'other', 1: 'expressed_CD_snoRNA'})
 
 # with snoRNA_pseudogene included

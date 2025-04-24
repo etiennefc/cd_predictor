@@ -5,10 +5,8 @@ import seaborn as sns
 import functions as ft 
 import collections as coll
 
-#positives = pd.read_csv(snakemake.input.positives, sep='\t')
-positives = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/data/references/data_augmentation/cd_rfam_filtered_all_sno_pseudo_fixed_length_194nt.tsv', sep='\t')
-#negatives = pd.concat([pd.read_csv(path, sep='\t') for path in snakemake.input.negatives])
-negatives = pd.read_csv('~/Desktop/Etienne/cd_predictor/workflow/data/references/negatives/data_augmentation/all_negatives_wo_pseudo_1_ratio_fixed_length_194nt.tsv', sep='\t')
+positives = pd.read_csv(snakemake.input.positives, sep='\t')
+negatives = pd.concat([pd.read_csv(path, sep='\t') for path in snakemake.input.negatives])
 pie_species = snakemake.output.pie_species
 pie_neg_type = snakemake.output.pie_neg_type
 sp_colors = snakemake.params.species_colors

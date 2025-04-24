@@ -81,6 +81,24 @@ rule learning_curve_avg_f1_score_training_transformer_first_model:
     script:
         "../scripts/python/figures/learning_curve_avg_f1_score_training_transformer_first_model.py"
 
+rule shap_heatmap_all_positives:
+    """ Create a heatmap with the SHAP values of all positive examples"""
+    input:
+        #shap_df = rules.shap_snoBIRD.output.shap_df
+        shap_df = 'results/shap/snoBIRD/all_cd_shap_values.tsv',
+        cd_df = 'data/references/positives/cd_rfam_filtered_all_sno_pseudo_fixed_length_194nt.tsv'
+    output:
+        heatmap_clustered = 'results/figures/heatmap/shap_all_cd_sno_clustered.png',
+        heatmap = 'results/figures/heatmap/shap_all_cd_sno_length_filtered.svg',
+        heatmap_species = 'results/figures/heatmap/shap_all_cd_sno_species_filtered.png'
+    params:
+        species_dict = config['colors']['species'],
+        sp_name = config['species_short_name']
+    conda:
+        "../envs/python_new2.yaml"
+    script:
+        "../scripts/python/figures/shap_heatmap_all_positives.py"
+
 rule shap_heatmap_sno_pseudo_final:
     """ Create a heatmap with the SHAP values of all positive examples of the second snoBIRD model (sno vs pseudo)."""
     input:
@@ -118,8 +136,8 @@ rule clustal_omega_sf3b3:
         in the SF3B3 gene across droso, macaque, chicken and zebrafish. Return 
         the phylogenetic tree and multi-alignment"""
     input:
-        fasta = 'results/predictions/snoBIRD/sf3b3_snoRNAs_across_species.fa',  # manually taken from each prediction file (TO PUT ON ZENODO!)
-        phylo_tree_nwk = 'results/clustalo/sf3b3_snoRNAs_across_species.nwk'  # obtained from clustalo web server w default parameters
+        fasta = 'data/references/sf3b3_snoRNAs_across_species.fa',  # manually taken from each prediction file (TO PUT ON ZENODO!)
+        phylo_tree_nwk = 'data/references/sf3b3_snoRNAs_across_species.nwk'  # obtained from clustalo web server w default parameters
     output:
         tree_fig = 'results/figures/tree/sf3b3_snoRNAs_multi_species_phylogenetic_tree.svg'
     params:

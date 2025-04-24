@@ -10,14 +10,12 @@ if model == 'snoBIRD':
     df_path = snakemake.input.snoBIRD
     df = pd.read_csv(df_path, sep='\t')
     # Add species column
-    #df_sp = pd.read_csv(snakemake.input.test_set, sep='\t')
-    df_sp = pd.read_csv('data/references/positives_and_negatives/data_augmentation/test_set_1_ratio_fixed_length_194nt.tsv', sep='\t')
+    df_sp = pd.read_csv(snakemake.input.test_set, sep='\t')
     df = df.merge(df_sp[['gene_id', 'species_name']], on='gene_id', how='left')
     df['target'] = df['y_true'].replace({0: 'other', 1: 'expressed_CD_snoRNA'})
     df['snoBIRD_prediction'] = df['y_pred'].replace({0: 'other', 1: 'expressed_CD_snoRNA'})
 else:
-    #df_path = snakemake.input.tool
-    df_path = f'results/predictions/{model}/fixed_length_194nt/test_predictions.tsv'
+    df_path = snakemake.input.tool
     df = pd.read_csv(df_path, sep='\t')
 
 conf_val_colors = {'FN': '#737373', 'FP': '#bdbdbd'}
@@ -28,7 +26,6 @@ print(model)
 print(df[['gene_id', 'target', f'{model}_prediction']])
 
 #df = df[df['gene_biotype'] != 'snoRNA_pseudogene'] # don't count these as FP or FN
-#bar_all = snakemake.output.bar_all
 bar_FN_FP = snakemake.output.bar_FN_FP
 
 # Order species name by decreasing number of examples in the test set
