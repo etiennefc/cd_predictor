@@ -124,7 +124,7 @@ rule find_sno_limits_shap_num_eval:
         jointplot = 'results/figures/jointplot/len_diff_overlap.svg',
         jointplot_biotype = 'results/figures/jointplot/len_diff_overlap_gene_biotype.svg',
         jointplot_species = 'results/figures/jointplot/len_diff_overlap_gene_species.svg',
-        density_box_score = 'results/figures/density/box_score_{numeval}.svg'
+        density_box_score = 'results/figures/density/box_score.svg'
 
     params:
         species_short_name = config['species_short_name'],
