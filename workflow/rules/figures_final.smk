@@ -39,31 +39,6 @@ rule bar_cd_expression_species_initial:
     script:
         "../scripts/python/figures/bar_cd_expression_species.py"
 
-###TO DO:
-#rule violin_sno_length_per_species:
-#    """ Create a violin plot to show the length distribution of expressed C/D 
-#        and snoRNA pseudogenes per species with a threshold of fixed_length."""
-#    input:
-#        expressed_cd = rules.get_sno_sequences_fixed_length.output.df,
-#        human_pseudo = rules.get_human_snoRNA_pseudogenes.output.pseudogenes,
-#        mouse_pseudo = rules.get_mouse_snoRNA_pseudogenes.output.pseudogenes,
-#        drosophila_pseudo = rules.get_drosophila_snoRNA_pseudogenes.output.pseudogenes 
-#    output:
-#        violin = 'results/figures/violinplot/sno_pseudo_length_per_species_{fixed_length}.svg'
-#    params:
-#        target_colors = config['colors']['target'],
-#        short_sp_names = config['species_short_name']
-#    conda:
-#        "../envs/python_new.yaml"
-#    script:
-#        "../scripts/python/figures/violin_sno_length_per_species.py" 
-
-
-# rule stacked bar FP/FN test set on local PC
-#
-##
-#
-#
 
 
 rule learning_curve_avg_f1_score_training_transformer_first_model:
@@ -115,6 +90,19 @@ rule shap_heatmap_sno_pseudo_final:
         "../envs/python_new2.yaml"
     script:
         "../scripts/python/figures/shap_heatmap_sno_pseudo.py"
+
+rule lineplot_shap_pombe_candidate:
+    """ Create a lineplot using the avg SHAP values of SnoBIRD's first model 
+        for the given CD_531 prediction in S. pombe."""
+    input:
+        shap_df = 'results/shap/snoBIRD/all_pombe_preds_shap_values.tsv'  # obtained after running SnoBIRD on S. pombe on HPC (in results/intermediate/predictions/SHAP/shap_values_all_predictions.tsv)
+        #shap_df = '../../snoBIRD/workflow/results/intermediate/predictions/first_model/SHAP/all_cd_predicted_sno_limits_pombe.tsv'
+    output:
+        lineplot = 'results/figures/lineplot/s_pombe_CD_531_shap_lineplot.svg'
+    conda:
+        "../envs/python_new2.yaml"
+    script:
+        "../scripts/python/figures/lineplot_shap_pombe_candidate.py"
 
 
 rule bar_IP_Fib_NOP58:

@@ -51,27 +51,6 @@ rule s_pombe_prediction_time_barplot:
     script:
         "../scripts/python/figures/s_pombe_prediction_time_barplot.py"
 
-
-
-rule donut_positives_negatives:
-    """ Create donut charts showing the proportion of species
-        for the positive examples and the proportion of 
-        negative types for the negatives."""
-    input:
-        negatives = rules.get_all_initial_negatives_fixed_length.output,
-        positives = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives
-    output:
-        pie_species = 'results/figures/pie/positives_per_species_{fixed_length}.svg',
-        pie_neg_type = 'results/figures/pie/negatives_per_biotype_{fixed_length}.svg'
-    params:
-        species_colors = config['colors']['species'],
-        biotype_colors = config['colors']['biotypes'],
-        species_name = config['species_short_name']
-    conda:
-        "../envs/python_new.yaml"
-    script:
-        "../scripts/python/figures/donut_positives_negatives.py"
-
 rule bar_confusion_value_per_species_test:
     """ Create a stacked bar chart showing the proportion of test set examples 
         predicted as FP, FN, TP, TN per species, with the total number of 
@@ -125,6 +104,55 @@ rule density_stem_length:
     script:
         "../scripts/python/figures/density_stem_length.py"
 
+rule find_sno_limits_shap_num_eval:
+    """ Based on the SHAP values (depending on the max_evals parameters in 
+        the explainer used for SHAP computations), find the C and/or the D box 
+        to delimit the snoRNA start and end, as well as the C' and D' boxes. 
+        We use numeval=50 as it provides reliable results with the less amount 
+        of computing resources needed"""
+    input:
+        shap_df = 'results/shap/snoBIRD/all_cd_shap_values.tsv',
+        #shap_df = 'results/shap/snoBIRD/shap_values_all_cd_{numeval}.tsv',  # obtained from shap_snoBIRD on Narval
+        cd_df = 'data/references/positives/cd_rfam_filtered_all_sno_pseudo_fixed_length_194nt.tsv'
+    output:
+        #df = 'results/shap/snoBIRD/all_cd_predicted_sno_limits_{numeval}.tsv',
+        #jointplot = 'results/figures/jointplot/len_diff_overlap_{numeval}.svg',
+        #jointplot_biotype = 'results/figures/jointplot/len_diff_overlap_gene_biotype_{numeval}.svg',
+        #jointplot_species = 'results/figures/jointplot/len_diff_overlap_gene_species_{numeval}.svg',
+        #density_box_score = 'results/figures/density/box_score_{numeval}.svg'
+        df = 'results/shap/snoBIRD/all_cd_predicted_sno_limits.tsv',
+        jointplot = 'results/figures/jointplot/len_diff_overlap.svg',
+        jointplot_biotype = 'results/figures/jointplot/len_diff_overlap_gene_biotype.svg',
+        jointplot_species = 'results/figures/jointplot/len_diff_overlap_gene_species.svg',
+        density_box_score = 'results/figures/density/box_score_{numeval}.svg'
+
+    params:
+        species_short_name = config['species_short_name'],
+        species_colors = config['colors']['species']
+    conda:
+        "../envs/python_new2.yaml"
+    script:
+        "../scripts/python/find_sno_limits_shap.py"
+
+rule donut_positives_negatives:
+    """ Create donut charts showing the proportion of species
+        for the positive examples and the proportion of 
+        negative types for the negatives."""
+    input:
+        negatives = rules.get_all_initial_negatives_fixed_length.output,
+        positives = rules.tuning_train_test_split_rfam_fixed_length.output.all_positives
+    output:
+        pie_species = 'results/figures/pie/positives_per_species_{fixed_length}.svg',
+        pie_neg_type = 'results/figures/pie/negatives_per_biotype_{fixed_length}.svg'
+    params:
+        species_colors = config['colors']['species'],
+        biotype_colors = config['colors']['biotypes'],
+        species_name = config['species_short_name']
+    conda:
+        "../envs/python_new.yaml"
+    script:
+        "../scripts/python/figures/donut_positives_negatives.py"
+
 #rule FP_FN_initial_analyses_pie:
 #    """ Create pie charts showing the proportion of species
 #        or type of negatives predicted as false positives/negatives 
@@ -145,7 +173,7 @@ rule density_stem_length:
 #        "../envs/python_new.yaml"
 #    script:
 #        "../scripts/python/figures/FP_FN_initial_analyses_pie.py"   
-     
+
 #rule density_confusion_value_per_predictor:
 #    """ Create a density plot of the 4 intrinsic features 
 #        per confusion value (TP, TN, FP and FN) for each predictor 

@@ -152,7 +152,7 @@ def shap_lineplot(x_val, y_val, xtick_labels, xlabel, ylabel, title, path, **kwa
     plt.plot(x_val, y_val)
     plt.xlabel(xlabel, fontdict={'fontsize': 30})
     plt.ylabel(ylabel, fontdict={'fontsize': 30})
-    plt.xticks(range(len(xtick_labels)), xtick_labels, fontsize=12)
+    plt.xticks(range(len(xtick_labels)), xtick_labels, fontsize=10, rotation=90)
     plt.margins(x=0)
     #ax.set_ylim(0, 1.05)
     plt.title(title, fontsize=30, x=0.5, y=1)

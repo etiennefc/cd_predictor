@@ -1,24 +1,4 @@
-#rule pred_overlap_bedgraph:
-#    """ Find the overlap between the snoBIRD (and other tools) predictions and 
-#        the bedgraph of expression (one representative per species or max/avg?) 
-#        to see which predictions are expressed."""
-#    input:
-#        snoBIRD_preds = 'results/predictions/snoBIRD/final/{species}/',  # TO PUT ON ZENODO
-#        #snocan_preds = '',
-#        #snoreport_preds = '',
-#        #infernal_preds = '',
-#        known_cd = "data/references/sno_type_df/{species}_snotype.tsv",
-#        known_cd_tetrahymena = 'data/references/sno_type_df/tetrahymena_thermophila_snotype_good_genome.tsv',
-#        bedgraph = 'results/bedgraph_TGIRT/{species}/'
-#    output:
-#        coverage = 'results/predictions/snoBIRD/bedgraph_overlap/{species}_TGIRT_coverage.tsv'
-#    params:
-#        fixed_length = 194
-#    conda:
-#        "../envs/python_new2.yaml"
-#    script:
-#        "../scripts/python/pred_overlap_bedgraph.py"  # filter only for avg coverage >= 5 reads
-#
+
 rule pred_overlap_bedgraph_multiple_filters:
     """ Find the overlap between the snoBIRD predictions and 
         the bedgraph of expression to see which predictions are expressed."""
@@ -406,7 +386,27 @@ rule snoBIRD_CO2_emission:
     script:
         "../scripts/python/snoBIRD_CO2_emission.py"
 
-
+#rule pred_overlap_bedgraph:
+#    """ Find the overlap between the snoBIRD (and other tools) predictions and 
+#        the bedgraph of expression (one representative per species or max/avg?) 
+#        to see which predictions are expressed."""
+#    input:
+#        snoBIRD_preds = 'results/predictions/snoBIRD/final/{species}/',  # TO PUT ON ZENODO
+#        #snocan_preds = '',
+#        #snoreport_preds = '',
+#        #infernal_preds = '',
+#        known_cd = "data/references/sno_type_df/{species}_snotype.tsv",
+#        known_cd_tetrahymena = 'data/references/sno_type_df/tetrahymena_thermophila_snotype_good_genome.tsv',
+#        bedgraph = 'results/bedgraph_TGIRT/{species}/'
+#    output:
+#        coverage = 'results/predictions/snoBIRD/bedgraph_overlap/{species}_TGIRT_coverage.tsv'
+#    params:
+#        fixed_length = 194
+#    conda:
+#        "../envs/python_new2.yaml"
+#    script:
+#        "../scripts/python/pred_overlap_bedgraph.py"  # filter only for avg coverage >= 5 reads
+#
 #rule genome_stats:
 #    """ Compute different stats on the genome of species with TGIRT-Seq to explain 
 #        the number of SnoBIRD predictions. These stats include genome length, 
