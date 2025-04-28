@@ -39,17 +39,6 @@ rule metrics_lineplot_predictors:
     script:
         "../scripts/python/figures/metrics_lineplot_predictors.py"
 
-rule s_pombe_prediction_time_barplot:
-    """ Make a bar plot to show the prediction time of the 
-        predictors vs snoBIRD on the entirety of the S. pombe genome."""
-    output:
-        barplot = 'results/figures/barplot/s_pombe_prediction_time.svg'
-    params:
-        predictors_colors = config['colors']['predictors']
-    conda:
-        "../envs/python_new.yaml"
-    script:
-        "../scripts/python/figures/s_pombe_prediction_time_barplot.py"
 
 rule bar_confusion_value_per_species_test:
     """ Create a stacked bar chart showing the proportion of test set examples 
