@@ -45,12 +45,13 @@ rule learning_curve_avg_f1_score_training_transformer_first_model:
     """ Create average learning curve (of avg f1-score across 2 classes (other vs sno (sno|pseudosno))) 
         across 10 folds on training set for transformer trained w sequence only."""
     input:
-        f1_before_train = 'results/predictions/transformer/194/3e-5_3e-6_32_4_data_aug_1_ratio/',
-        f1_score_tsv = 'results/predictions/transformer/194/3e-5_3e-6_32_4_data_aug_1_ratio/'
+        fake_dep = rules.download_f1_score.output.f1
     output:
         learning_curve = 'results/figures/lineplot/transformer/194nt/transformer_2_classes_training_f1_score_avg_across_fold.svg'
     params:
-        num_epoch = 4
+        num_epoch = 4,
+        f1_before_train = 'results/predictions/transformer/194/3e-5_3e-6_32_4_data_aug_1_ratio/',
+        f1_score_tsv = 'results/predictions/transformer/194/3e-5_3e-6_32_4_data_aug_1_ratio/'
     conda:
         "../envs/python_new2.yaml"
     script:

@@ -6,8 +6,8 @@ import functions as ft
 import random
 from glob import glob 
 num_epoch = int(snakemake.params.num_epoch)
-before_path = glob(snakemake.input.f1_before_train + '/transformer_2_classes_Before_t*f1_score_per_epoch.tsv')
-f1 = glob(snakemake.input.f1_score_tsv+ '/transformer_2_classes_*LR*f1_score_per_epoch.tsv')
+before_path = glob(snakemake.params.f1_before_train + '/transformer_2_classes_Before_t*f1_score_per_epoch.tsv')
+f1 = glob(snakemake.params.f1_score_tsv+ '/transformer_2_classes_*LR*f1_score_per_epoch.tsv')
 
 # F1 score before the first epoch of training
 dfs_0 = [list(pd.read_csv(path, sep='\t').values[0])[0] for path in before_path]
