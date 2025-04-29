@@ -45,7 +45,8 @@ rule learning_curve_avg_f1_score_training_transformer_first_model:
     """ Create average learning curve (of avg f1-score across 2 classes (other vs sno (sno|pseudosno))) 
         across 10 folds on training set for transformer trained w sequence only."""
     input:
-        fake_dep = rules.download_f1_score.output.f1
+        fake_dep = expand(rules.download_f1_score.output.f1, stage=['Before', 'LR_schedule'], 
+                    fold_num=[1,2,3,4,5,6,7,8,9,10])
     output:
         learning_curve = 'results/figures/lineplot/transformer/194nt/transformer_2_classes_training_f1_score_avg_across_fold.svg'
     params:
