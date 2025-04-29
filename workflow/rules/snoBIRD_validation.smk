@@ -65,11 +65,7 @@ rule bar_expressed_pseudo_species:
         snoRNA_pseudogene predictions across the different species for which we 
         used SnoBIRD on."""
     input:
-        snoBIRD_preds = expand('results/predictions/snoBIRD/final/{species}/', 
-                            species=['homo_sapiens', 'tetrahymena_thermophila', 
-                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
-                            'drosophila_melanogaster', 'danio_rerio', 
-                            'plasmodium_falciparum']),
+        snoBIRD_preds = rules.download_snoBIRD_preds.output
     output:
         bar = 'results/figures/bar/expressed_pseudo_snoBIRD_all_species.svg'
     params:

@@ -15,7 +15,7 @@ all_spe = ['schizosaccharomyces_pombe', 'drosophila_melanogaster', 'tetrahymena_
 # Load prediction dfs
 dfs = []
 for p in pred_path:
-    df = pd.read_csv(glob(p+'/*tsv')[0], sep='\t')
+    df = pd.read_csv(glob(p)[0], sep='\t')
     species_ = p.split('/')[4]
     df['species'] = species_
     dfs.append(df[['gene_id', 'predicted_label', 'species']])
