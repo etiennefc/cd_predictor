@@ -195,10 +195,7 @@ rule snoBIRD_species_preds_features:
         pseudogenes predicted by SnoBIRD across different species genomes 
         (box scores, stability, terminal stem stability). """
     input:
-        snoBIRD = expand('results/predictions/snoBIRD/final/{species}/', 
-                        species=['homo_sapiens', 'tetrahymena_thermophila', 
-                            'macaca_mulatta', 'schizosaccharomyces_pombe', 'gallus_gallus', 
-                            'drosophila_melanogaster', 'danio_rerio', 'plasmodium_falciparum'])
+        snoBIRD = rules.download_snoBIRD_preds.output
     output:
         boxes_and_stability = 'results/figures/density/boxes_scores_and_stabilities_sno_pseudo_all_predicted_species.svg'
     params:

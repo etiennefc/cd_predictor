@@ -13,7 +13,7 @@ simplified_spe = [s.split('_')[0][0].upper() + '_' + s.split('_')[1] for s in al
 colors = snakemake.params.target_colors
 dfs = []
 for p in snakemake.input.snoBIRD:
-    path = glob(p+'/*tsv')[0]
+    path = glob(p)[0]
     species = path.split('/')[4]
     snoBIRD = pd.read_csv(path, sep='\t')
     snoBIRD['species'] = species
