@@ -152,7 +152,9 @@ rule upset_test_set:
         (one for TP and one for TN). Create also donut plot per confusion value 
         and per tool to highlight potential prediction biases in species and/or biotype"""
     input:
-        snoBIRD = 'results/predictions/snoBIRD/fixed_length_194nt/3e-5_3e-6_32_4_data_aug_1_ratio/transformer_2_classes_LR_schedule_test_predictions_194nt_fold_8.tsv',
+        #snoBIRD = 'results/predictions/snoBIRD/fixed_length_194nt/3e-5_3e-6_32_4_data_aug_1_ratio/transformer_2_classes_LR_schedule_test_predictions_194nt_fold_8.tsv',
+        snoBIRD = expand(rules.download_f1_score.output.f1, stage=['LR_schedule'], 
+                    fold_num=[8]),
         other_tool = expand('results/predictions/{cd_predictors}/fixed_length_194nt/test_predictions.tsv', 
                     cd_predictors=['infernal_rfam', 'snoscan', 'snoreport2'])
     output:
