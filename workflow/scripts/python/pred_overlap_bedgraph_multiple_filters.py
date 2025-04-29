@@ -15,7 +15,8 @@ gtf = snakemake.input.gtf
 chr_size = snakemake.input.chr_size
 fixed_length = snakemake.params.fixed_length
 species = snakemake.wildcards.species
-bedgraph_path = snakemake.input.bedgraph
+#bedgraph_path = snakemake.input.bedgraph
+bedgraph_path = snakemake.params.bedgraph
 bedgraph_names = [b for b in os.listdir(bedgraph_path) if 'final_' not in b]
 bedgraphs_pos = [bedgraph_path+'/'+p for p in bedgraph_names if '_fwd' in p]
 bedgraphs_neg = [bedgraph_path+'/'+p for p in bedgraph_names if '_rev' in p]
@@ -47,8 +48,8 @@ else:
     for i, b in enumerate(bedgraphs_neg):  # remove unwanted last line
         sp.call(f"sed '/type=bedGraph/d' {b} | LC_COLLATE=C sort -k1,1 -k2,2n > {bedgraphs_sorted_neg[i]}", 
         shell=True)
-pred_dir = snakemake.input.snoBIRD_preds
-preds = pd.read_csv(pred_dir+'/'+os.listdir(pred_dir)[0], sep='\t', 
+pred_dir_df = [i for i in snakemake.input.snoBIRD_preds if species in i]
+preds = pd.read_csv(pred_dir_df, sep='\t', 
             dtype={'chr': 'str'})
 if species != 'tetrahymena_thermophila':
     preds['chr'] = 'chr' + preds['chr'].astype(str)

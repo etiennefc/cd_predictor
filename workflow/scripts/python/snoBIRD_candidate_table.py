@@ -9,7 +9,7 @@ candidates = snakemake.input.new_cd_df
 snoBIRD = {}
 for p in snakemake.input.snoBIRD:
     sp = p.split('/')[4]
-    df = pd.read_csv(glob(p+'/*tsv')[0], sep='\t', dtype = {'chr': 'str'})
+    df = pd.read_csv(glob(p)[0], sep='\t', dtype = {'chr': 'str'})
     df['species'] = sp
     snoBIRD[sp] = df
 

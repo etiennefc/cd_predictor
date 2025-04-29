@@ -40,9 +40,10 @@ def get_chr_size(species):
 def get_species_gtf(species):
     # Get the gtf of the genome of a given species
     species = str(species)
-    protists = ["leishmania_major", "dictyostelium_discoideum", "giardia_lamblia"]
+    protists = ["leishmania_major", "dictyostelium_discoideum", "giardia_lamblia", 
+            "plasmodium_falciparum"]
     animals = ['macaca_mulatta', 'ornithorhynchus_anatinus', 'gallus_gallus', 
-                'caenorhabditis_elegans', 'drosophila_melanogaster']
+                'caenorhabditis_elegans', 'drosophila_melanogaster', 'danio_rerio']
     plants = ['arabidopsis_thaliana', 'oryza_sativa']
     fungi = ['saccharomyces_cerevisiae', 'schizosaccharomyces_pombe', 
             'aspergillus_fumigatus', 'neurospora_crassa', 'candida_albicans']
@@ -60,6 +61,27 @@ def get_species_gtf(species):
         path = rules.download_plant_gtf.output.gtf
     elif species in animals:
         path = rules.download_animal_gtf.output.gtf
+    return path
+
+def get_bedgraph(species):
+    # Get the gtf of the genome of a given species
+    species = str(species)
+    if species == 'homo_sapiens':
+        path = str(rules.download_human_bedgraph_1.output.bg).split('{species}')[0]
+    elif species == 'danio_rerio':
+        path = str(rules.download_danio_bedgraph.output.bg).split('{species}')[0]
+    elif species == 'drosophila_melanogaster':
+        path = str(rules.download_droso_bedgraph.output.bg).split('{species}')[0]
+    elif species == 'gallus_gallus':
+        path = str(rules.download_gallus_bedgraph.output.bg).split('{species}')[0]
+    elif species == 'macaca_mulatta':
+        path = str(rules.download_macaca_bedgraph.output.bg).split('{species}')[0]
+    elif species == 'tetrahymena_thermophila':
+        path = str(rules.download_ttherm_bedgraph.output.bg).split('{species}')[0]
+    elif species == 'plasmodium_falciparum':
+        path = str(rules.download_plasmodium_bedgraph.output.bg).split('{species}')[0]
+    elif species == 'schizosaccharomyces_pombe':
+        path = str(rules.download_pombe_bedgraph.output.bg).split('{species}')[0]
     return path
 
 def join_list(l, subl, remove=False):

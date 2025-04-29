@@ -3,12 +3,11 @@ rule pred_overlap_bedgraph_multiple_filters:
     """ Find the overlap between the snoBIRD predictions and 
         the bedgraph of expression to see which predictions are expressed."""
     input:
-        snoBIRD_preds = 'results/predictions/snoBIRD/final/{species}/',  # zenodo
+        snoBIRD_preds = rules.download_snoBIRD_preds.output,  # zenodo
         known_cd = "data/references/sno_type_df/{species}_snotype.tsv",  # zenodo
         known_cd_tetrahymena = 'data/references/sno_type_df/tetrahymena_thermophila_snotype_good_genome.tsv',  # zenodo
-        bedgraph = 'results/bedgraph_TGIRT/{species}/',  # zenodo
-        chr_size = 'data/references/chr_size/{species}_chr_size.tsv',
-        gtf = 'data/references/gtf/{species}.gtf'
+        chr_size = rules.get_chr_size_tgirt.output.chr_size,
+        gtf = get_species_gtf
     output:
         coverage = 'results/predictions/snoBIRD/bedgraph_overlap/multiple_filters/{species}_TGIRT_coverage.tsv',
         batch_script_known_cd = 'results/igv_scripts/snoBIRD_{species}_known_cd.batch',
@@ -16,6 +15,7 @@ rule pred_overlap_bedgraph_multiple_filters:
         known_cd_df = 'results/predictions/snoBIRD/bedgraph_overlap/multiple_filters/{species}_overlap_known_cd_w_snoBIRD_preds.tsv',
         new_cd_df = 'results/predictions/snoBIRD/bedgraph_overlap/multiple_filters/{species}_potential_new_cd_snoBIRD_preds.tsv'
     params:
+        bedgraph = get_bedgraph,
         fixed_length = 194,
         screenshot_dir = "~/lab_32GB/Desktop/Etienne/cd_predictor/workflow/results/figures/screenshots/{species}/"
     conda:
@@ -27,11 +27,8 @@ rule snoBIRD_candidate_table:
     """ Create a table of all interesting candidates that SnoBIRD predicted 
         across the different species."""
     input:
-        snoBIRD = expand('results/predictions/snoBIRD/final/{species}/', 
-                        species=['homo_sapiens', 'tetrahymena_thermophila', 
-                            'macaca_mulatta', 'schizosaccharomyces_pombe', 
-                            'gallus_gallus', 'danio_rerio']),
-        new_cd_df = expand('results/predictions/{cd_predictors}/bedgraph_overlap/multiple_filters/{species}_potential_new_cd_{cd_predictors}_preds.tsv', 
+        snoBIRD = rules.download_snoBIRD_preds.output,
+        new_cd_df = expand(rules.pred_overlap_bedgraph_multiple_filters.output.new_cd_df,
                         cd_predictors='snoBIRD', species=['homo_sapiens', 'tetrahymena_thermophila', 
                             'macaca_mulatta', 'schizosaccharomyces_pombe', 
                             'gallus_gallus', 'danio_rerio'])

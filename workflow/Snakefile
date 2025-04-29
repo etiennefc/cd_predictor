@@ -11,86 +11,129 @@ include: "rules/negative_examples.smk"
 include: "rules/negative_examples_fixed_length.smk"
 include: "rules/intrinsic_features.smk"
 include: "rules/tune_train_test_sets.smk"
-include: "rules/one_hot_encoding_and_normalization.smk"
 include: "rules/existing_cd_predictors.smk"
-include: "rules/simple_models.smk"
-include: "rules/neural_network.smk"
-include: "rules/LSTM.smk"
-include: "rules/hmm.smk"
 include: "rules/transformer.smk"
 include: "rules/sno_vs_pseudo.smk"
-include: "rules/flanking_nt.smk"
 include: "rules/figures.smk"
+include: "rules/figures_final.smk"
+include: "rules/snoBIRD_validation.smk"
+include: "rules/snoBIRD_species.smk"
 
 
 rule all:
-    """ Generate the tuning, training and test sets."""
+    """ Generate the tuning, training and test sets for the first and second model of SnoBIRD."""
     input:
-        test_set = expand('data/references/positives_and_negatives/initial/initial_test_set_fixed_length_{fixed_length}nt.tsv', **config),
-        test_set_data_aug = expand('data/references/positives_and_negatives/data_augmentation/test_set_fixed_length_{fixed_length}nt.tsv', **config)
+        test_set_first_model = expand('data/references/positives_and_negatives/data_augmentation/test_set_1_ratio_fixed_length_{fixed_length}nt.tsv', **config),
+        test_set_second_model = expand('data/references/positives_and_negatives/data_augmentation_equal_ratio/test_set_equal_ratio_fixed_length_{fixed_length}nt.tsv', **config),
 
-rule all_cd_predictor_training:
-    """ Create the C/D predictor (based on transformer) 
-        by tuning its hyperparameters, training it and 
-        testing it."""
+rule all_snoBIRD_training:
+    """ Create SnoBIRD's two models by tuning their hyperparameters, training 
+        them and testing them. These steps must be run on a HPC cluster."""
     input:
-        test_results_transformer = "test.txt"
-
-rule all_tools_comparison:
-    """ Test the performance of existing C/D predicting 
-        tools on the test set."""
-    input:
-        #matrix_snoreport = expand('results/predictions/snoreport2/fixed_length_{fixed_length}nt/confusion_matrix.tsv', **config)
-        #snoscan_predictions = 'results/predictions/snoBIRD_comparison/snoscan_predicted_cd.txt',
-        #snoreport_predictions = 'results/predictions/snoBIRD_comparison/snoreport2_predicted_cd.txt',
-        #predictions_alignments = 'results/predictions/snoBIRD_comparison/infernal_rfam_predicted_cd.txt',
-        ##infernal_tblout = 'results/predictions/infernal_rfam/S_cerevisiae/predicted_cd.tblout',
-        ##predictions_snoscan = 'results/predictions/snoscan/S_cerevisiae/predicted_cd.txt',
-        ##predictions_sno_report = 'results/predictions/snoreport2/S_cerevisiae/predicted_cd.fa',
-        df_cerevisiae = 'results/predictions/infernal_rfam/S_cerevisiae/precision_recall_cerevisiae.tsv',
-        df_snoscan = 'results/predictions/snoscan/S_cerevisiae/precision_recall_cerevisiae.tsv',
-        df_snoreport = 'results/predictions/snoreport2/S_cerevisiae/precision_recall_cerevisiae.tsv'
+        test_predictions_first_model = expand('results/predictions/transformer/{fixed_length}/transformer_2_classes_LR_schedule_test_predictions_{fixed_length}nt_fold_{fold_num}.tsv', **config),
+        baseline_before_first_model = expand('results/predictions/transformer/{fixed_length}/transformer_2_classes_Before_trained_fold_{fold_num}_f1_score_per_epoch.tsv', **config),
+        test_predictions_second_model = expand('results/predictions/sno_pseudo/transformer/{fixed_length}/transformer_sno_pseudo_test_predictions_{fixed_length}nt_fold_{fold_num}.tsv', **config),
+        baseline_before_second_model = expand('results/predictions/sno_pseudo/transformer/{fixed_length}/transformer_sno_pseudo_Before_trained_fold_{fold_num}_f1_score_per_epoch.tsv', **config)
 
 
 rule all_downloads:
     """ Download all tools and reference files needed to 
-        generate the tuning, training and test sets."""
+        generate the tuning, training and test sets and the different 
+        downstream figures."""
     input:
+        sno_literature = expand("data/sno_literature_processing/{sno_fasta}.fa", **config),
+        rDNA = 'data/references/rDNA/rDNA_species.fa',
+        haca_rnacentral = 'data/references/HACA/HACA_eukaryotes.fa',
+        pombe_all_genes = 'data/references/s_pombe/all_genes_s_pombe.tsv',
+        pombe_cd_genes = 'data/references/s_pombe/cd_s_pombe_review.tsv',
+        other_species_cd_bed = expand("data/references/rnacentral/{species}_cd_id.bed", 
+            species=['drosophila_melanogaster', 'gallus_gallus', 'macaca_mulatta', 'tetrahymena_thermophila']),
         blat_installation_file = "data/references/blat/blat_test.txt",
         genome = expand('data/references/genome_fa/{species}_genome.fa', **config),
+        pombe_negative_strand = 'data/references/genome_fa/negative_strand/schizosaccharomyces_pombe_genome_negative_strand.fa',
         bed = expand('data/references/rnacentral/{species}.bed', 
                 species=[sp for sp in config['species']+config['species_tgirt'] 
                         if sp not in ['ostreococcus_tauri', 'schizosaccharomyces_pombe', 'candida_albicans']]),
         gallus_gallus_gff = "data/references/rnacentral/gallus_gallus_bGalGal1_GRCg7b.gff3",
         gtf = expand('data/references/gtf/{species}.gtf', species=[sp for sp in 
                         config['species']+config['species_tgirt'] if sp not in 
-                        ['ostreococcus_tauri', 'schizosaccharomyces_pombe']]),
-        rfam_clans = "data/references/rfam/fam_clans_families.tsv"
+                        ['ostreococcus_tauri']]),
+        snotype_species_tgirt = expand('data/references/sno_type_df/{sp}.tsv', 
+            sp=['homo_sapiens_snotype_snoDB', 'mus_musculus_snotype_rnacentral', 
+            'saccharomyces_cerevisiae_snotype_umass', 
+            'tetrahymena_thermophila_snotype_good_genome', 'tetrahymena_thermophila_snotype']),
+        rfam_clans = "data/references/rfam/fam_clans_families.tsv",
+        fib_nop58_IP = expand('results/IP_cedric/{protein}_fold_enrichment.tsv', protein=['NOP58_TAP', 'Fib']),
+        sf3b3_snoRNAs = expand('data/references/sf3b3_snoRNAs_across_species.{ext}', ext=['fa', 'nwk']),
+        tgirt_seq_output = expand('data/references/tgirt_seq_output/{files}.tsv', 
+            files=['drosophila_melanogaster_expression_status_snoRNAs', 'homo_sapiens_merged_tpm_w_biotype', 
+            'mus_musculus_merged_tpm_w_biotype', 'saccharomyces_cerevisiae_merged_tpm_w_biotype', 
+            'gallus_gallus_expressed_tpm_w_biotype', 'macaca_mulatta_expressed_tpm_w_biotype']),
+        bedgraphs_human = expand('results/bedgraph_TGIRT/homo_sapiens/{sample}.bam_{sense}.bedgraph', sense=['fwd', 'rev'], sample=config['bedgraph']['human_1']+config['bedgraph']['human_2']),
+        bedgraphs_danio = expand('results/bedgraph_TGIRT/danio_rerio/{sample}.bam_{sense}.bedgraph', sense=['fwd', 'rev'], sample=config['bedgraph']['danio']),
+        bedgraphs_droso = expand('results/bedgraph_TGIRT/drosophila_melanogaster/{sample}.bam_{sense}.bedgraph', sense=['fwd', 'rev'], sample=config['bedgraph']['droso']),
+        bedgraphs_gallus = expand('results/bedgraph_TGIRT/gallus_gallus/{sample}.bam_{sense}.bedgraph', sense=['fwd', 'rev'], sample=config['bedgraph']['gallus']),
+        bedgraphs_macaca = expand('results/bedgraph_TGIRT/macaca_mulatta/{sample}.bam_{sense}.bedgraph', sense=['fwd', 'rev'], sample=config['bedgraph']['macaca']),
+        bedgraphs_tetrahymena = expand('results/bedgraph_TGIRT/tetrahymena_thermophila/{sample}.bam_{sense}.bedgraph', sense=['fwd', 'rev'], sample=config['bedgraph']['tetrahymena']),
+        bedgraphs_plasmodium = expand('results/bedgraph_TGIRT/plasmodium_falciparum/{sample}.bam_{sense}.bedgraph', sense=['fwd', 'rev'], sample=config['bedgraph']['plasmodium']),
+        bedgraphs_pombe = expand('results/bedgraph_TGIRT/schizosaccharomyces_pombe/{sample}.bam_{sense}.bedgraph', sense=['fwd', 'rev'], sample=config['bedgraph']['pombe']),
+        shap_val_first_second_model = expand('results/shap/snoBIRD/all_cd_shap_values{model}.tsv', model=['', '_sno_pseudo']),
+        snoBIRD_pred_danio = 'results/predictions/snoBIRD/final/danio_rerio/danio_rerio_s5_cs100.tsv',
+        snoBIRD_pred_droso = 'results/predictions/snoBIRD/final/drosophila_melanogaster/drosophila_melanogaster_s5_cs10.tsv',
+        snoBIRD_pred_gallus = 'results/predictions/snoBIRD/final/gallus_gallus/gallus_gallus_s5_cs10.tsv',
+        snoBIRD_pred_macaca = 'results/predictions/snoBIRD/final/macaca_mulatta/macaca_mulatta_s5_cs10.tsv',
+        snoBIRD_pred_human = 'results/predictions/snoBIRD/final/homo_sapiens/homo_sapiens_snoBIRD_s1_cs5.tsv',
+        snoBIRD_pred_ttherm = 'results/predictions/snoBIRD/final/tetrahymena_thermophila/tetrahymena_thermophila_s5.tsv',
+        snoBIRD_pred_plasmo = 'results/predictions/snoBIRD/final/plasmodium_falciparum/plasmodium_falciparum_s5_cs5.tsv',
+        snoBIRD_pred_pombe = 'results/predictions/snoBIRD/final/schizosaccharomyces_pombe/snoBIRD_complete_predictions.tsv',
+        all_jobs_cluster = expand('data/all_jobs_{cluster}.tsv', cluster=['narval', 'beluga'])
 
 rule all_figures:
-    """ Generate all figures from the manuscript."""
+    """ Generate figures from the manuscript."""
     input:
-        density = 'results/figures/density/length_selection_positives.svg',
-        #dotplot = expand('results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}.svg', **config),
-        ###learning_curve = 'results/figures/lineplot/transformer/190nt/transformer_2_classes_training_f1_score_avg_across_fold.svg',
-        ###learning_curve_sno_pseudo = 'results/figures/lineplot/transformer/190nt/sno_pseudo/transformer_sno_pseudo_training_f1_score_avg_across_fold.svg',
-        ###learning_curve_sno_pseudo_shortened = 'results/figures/lineplot/transformer/190nt/sno_pseudo/shortened/transformer_sno_pseudo_training_f1_score_avg_across_fold.svg',
-        ###dotplot = expand('results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}.svg', **config)
-        #pie_fp = expand('results/figures/pie/{error}_per_negative_type_existing_cd_predictors_{fixed_length}.svg', error=['FP', 'FN'], **config),
-        #bar_all = expand('results/figures/barplot/confusion_values_per_species_{cd_predictors}_{fixed_length}.svg', **config),
-        #box_score_density = expand('results/figures/density/box_score_positives_negatives_{fixed_length}nt.svg', **config),
-        #density_stem_length = expand('results/figures/density/terminal_stem_length_distributions_positives_{fixed_length}nt.svg', **config),
-        #density_structure_stability = expand('results/figures/density/structure_stability_positives_negatives_{fixed_length}nt.svg', **config),
-        #density_terminal_stem_stability = expand('results/figures/density/terminal_stem_stability_positives_negatives_{fixed_length}nt.svg', **config),
-        ##learning_curve = expand('results/figures/lineplot/gru/{fixed_length}nt/added_features/gru_training_f1_score_simplified2_{fixed_length}nt_avg_across_fold.svg', **config),
-        ##learning_curve_half_norm = expand('results/figures/lineplot/gru/{fixed_length}nt/added_features_half_normalized/gru_training_f1_score_simplified_{fixed_length}nt_avg_across_fold.svg', **config)
-        #pie_species = expand('results/figures/pie/positives_per_species_{fixed_length}.svg', **config),
-        #density_conf_val = expand('results/figures/density/{intrinsic_feature}_confusion_value_all_models_{fixed_length}.svg', **config),
-        #upset_TP = expand('results/figures/upset/upset_TP_all_models_{fixed_length}nt_species.svg', **config),
-        #learning_curve_transformer = expand('results/figures/lineplot/transformer/{fixed_length}nt/transformer_training_f1_score_avg_across_fold.svg', **config),
-        ##learning_curve_transformer_w_features = expand('results/figures/lineplot/transformer/{fixed_length}nt/transformer_training_f1_score_avg_across_fold_w_features.svg', **config),
-        #learning_curve_transformer_2_classes = expand('results/figures/lineplot/transformer/211nt/transformer_2_classes_training_f1_score_avg_across_fold.svg', **config),
-        #learning_curve_transformer_w_features_2_classes = expand('results/figures/lineplot/transformer/211nt/transformer_w_features_2_classes_training_f1_score_avg_across_fold.svg', **config)
+        pie_species = 'results/figures/pie/expressed_CD_per_species.svg',
+        initial_bar = 'results/figures/bar/cd_expression_per_species.svg',
+        density_sno_length = 'results/figures/density/length_selection_positives.svg',
+        density_stem_length = expand('results/figures/density/terminal_stem_length_distributions_positives_{fixed_length}nt.svg', **config),
+        violin = expand('results/figures/violinplot/sno_pseudo_length_per_species_{fixed_length}.svg', **config),
+        learning_curve = 'results/figures/lineplot/transformer/194nt/transformer_2_classes_training_f1_score_avg_across_fold.svg',
+        dotplot_metrics_test_set = expand('results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}_w_pseudogenes.svg', **config),
+        TP_FN_upset_test_set = 'results/figures/upset/TP_FN_test_set_all_tools.svg',
+        bar_FN_FP = expand('results/figures/barplot/FN_FP_per_species_{cd_predictors}_{fixed_length}.svg', fixed_length=194, 
+                    cd_predictors=['snoBIRD', 'snoreport2', 'snoscan', 'infernal_rfam']),
+        heatmap_shap = 'results/figures/heatmap/shap_all_cd_sno_length_filtered.svg',
+        heatmap_shap_sno_pseudo = 'results/figures/heatmap/shap_sno_pseudo_length_filtered_final.png',
+        jointplot_len_diff = 'results/figures/jointplot/len_diff_overlap.svg',
+        bar_snoBIRD_pred_prop_sp = 'results/figures/bar/expressed_pseudo_snoBIRD_all_species.svg',
+        densities_features_snoBIRD_preds_sp = 'results/figures/density/boxes_scores_and_stabilities_sno_pseudo_all_predicted_species.svg',
+        bar_fib_IP = 'results/figures/bar/fibrillarin_IP_enrichment.svg',
+        final_table= 'results/predictions/snoBIRD/final_candidates_cross_species.tsv',
+        tree_fig = 'results/figures/tree/sf3b3_snoRNAs_multi_species_phylogenetic_tree.svg'
 
+rule all_figures_independent:
+    """ Create the remaining independent figures which need one or more extra 
+        steps to work directly with this Snakemake. See below for the steps to 
+        necessarily run before running this rule."""
+    input:
+        ## Before producing the following figures, one MUST run:
+        # SnoBIRD on a HPC for the different species (including but not limited to 
+        # S. pombe and H. sapiens), as well as the other tools (snoscan, snoreport2 and infernal_rfam)
+        bar_genomic_overlap = 'results/figures/bar/overlap_preds_genomic_element_human_pombe.svg',
+        runtime_scatter = "results/figures/scatter/runtime_tools_species.svg",
+        runtime_bar_human = "results/figures/bar/runtime_tools_human_A100.svg",
+        cumul_runtime_lineplot = "results/figures/lineplot/snoBIRD_cumul_runtime_per_species.svg",
+        step_size_plot = expand("results/figures/lineplot/step_size_analysis_{species}.svg", 
+            species=['homo_sapiens', 'schizosaccharomyces_pombe']),
+        venn_snoBIRD_all_sp = 'results/figures/venn/overlap_expressed_annot_snoBIRD_preds_all_species.svg',
+        venn_other_tools = expand('results/figures/venn/overlap_expressed_annot_{cd_predictors}_preds_all_species.svg', **config),
+        # SnoBIRD on this S. pombe example using SHAP max_evals=500 
+        lineplot_shap_CD_531 = 'results/figures/lineplot/s_pombe_CD_531_shap_lineplot.svg',
+        # SnoBIRD on the test set to get the predicted boxes 
+        density_box_score_test_set = 'results/figures/density/box_score_sno_pseudo_test_set.svg',
+        # To recalculate co2 emission, a cookies.txt file must be created to access 
+        # automatically to DRAC's cluster info without having to reenter credentials each time a request is sent
+        co2_emission = "results/CO2_emission.tsv"
 
-
+# Do the training and testing of SnoBIRD by default, otherwise, download f1_score from Zenodo
+ruleorder: test_before_training_transformer_2_classes > download_f1_score
+ruleorder: training_transformer_2_classes_LR_schedule > download_f1_score
