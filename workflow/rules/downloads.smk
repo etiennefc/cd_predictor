@@ -573,3 +573,23 @@ rule download_snoBIRD_preds:
         "wget -O {output.ttherm} {params.link_ttherm} && "
         "wget -O {output.plasmo} {params.link_plasmo} && "
         "wget -O {output.pombe} {params.link_pombe}"
+
+rule download_snoglobe_git:
+    """ Download git repository of snoGloBe."""
+    output:
+        git_snoglobe_folder = directory('git_repos/snoglobe')
+    params:
+        git_snoglobe_link = "https://github.com/scottgroup/snoGloBe.git"
+    shell:
+        'mkdir -p {output.git_snoglobe_folder} && '
+        'git clone {params.git_snoglobe_link} {output.git_snoglobe_folder}'
+
+rule download_danio_rerio_rDNA:
+    """ Download ribosomal DNA fasta file of Danio rerio for target prediction 
+        with snoglobe""" 
+    output:
+        rDNA_fa = 'data/references/rDNA/rDNA_danio_rerio.fa'
+    params:
+        link = 'https://zenodo.org/records/15643894/files/rDNA_danio_rerio.fa'
+    shell:
+        "wget -O {output.rDNA_fa} {params.link}"
