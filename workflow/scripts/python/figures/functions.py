@@ -173,9 +173,9 @@ def lineplot(df, x_col, y_col, hue_col, xlabel, ylabel, title, color_dict, path,
     xtick_labels = [tick.get_text() for tick in ax.get_xticklabels()]
     ax.set_xticks(list(range(0, len(xtick_labels))))
     ax.set_xticklabels(xtick_labels, rotation=25)
-    #ax.set_ylim(0, 1.05)
+    ax.set_ylim(0, 1.05)
     plt.legend(fontsize=35)
-    for handle in plt.gca().get_legend().legendHandles:
+    for handle in plt.gca().get_legend().legend_handles:
         handle.set_linewidth(16)
     fig.suptitle(title, fontsize=30, x=0.5, y=1)
     plt.savefig(path, dpi=600, bbox_inches='tight')
@@ -200,6 +200,41 @@ def lineplot_errorbars(df, x_col, y_col, std_col, hue_col, xlabel, ylabel, title
     ax.set_ylim(0, 1.05)
     fig.suptitle(title, fontsize=30, x=0.5, y=1)
     plt.savefig(path, dpi=600, bbox_inches='tight')
+
+
+def lollipop(df, color_dict, title, path):
+    plt.rcParams['svg.fonttype'] = 'none'
+    rc = {'ytick.labelsize': 20, 'xtick.labelsize': 20}
+    plt.rcParams.update(**rc)  
+    score_order = ['accuracy', 'precision', 'recall', 'f1_score']
+    predictors = df['predictor'].unique()
+    x = np.arange(len(score_order))
+
+    # Set up the plot
+    plt.figure(figsize=(12, 10))
+    width = 0.15  # distance between side-by-side sticks
+
+    # Define colors
+    palette = color_dict
+
+    # Draw lollipops for each predictor
+    for i, predictor in enumerate(predictors):
+        subset = df[df['predictor'] == predictor]
+        values = subset.set_index('score_name').loc[score_order]['score_value']
+        offsets = x + (i - len(predictors)/2) * width + width/2
+        plt.vlines(offsets, 0, values, color=palette[predictor], linewidth=10)
+        plt.plot(offsets, values, 'o', label=predictor, color=palette[predictor], markersize=20)
+
+    # Formatting
+    plt.xticks(x, score_order)
+    plt.ylabel("Metrics value", fontsize=25)
+    plt.xlabel("Metrics", fontsize=25)
+    plt.ylim(0, 1.05)
+    plt.legend()
+    plt.tight_layout()
+    plt.title(title, fontsize=25)
+    plt.savefig(path, dpi=600, bbox_inches='tight')
+
 
 def pie_multiple(y, x, count_list, labels, colors, ax_title, title, legend_title, path, **kwargs):
     """

@@ -18,6 +18,7 @@ include: "rules/figures.smk"
 include: "rules/figures_final.smk"
 include: "rules/snoBIRD_validation.smk"
 include: "rules/snoBIRD_species.smk"
+include: "rules/target_predictions.smk"
 
 
 rule all:
@@ -86,7 +87,8 @@ rule all_downloads:
         snoBIRD_pred_ttherm = 'results/predictions/snoBIRD/final/tetrahymena_thermophila/tetrahymena_thermophila_s5.tsv',
         snoBIRD_pred_plasmo = 'results/predictions/snoBIRD/final/plasmodium_falciparum/plasmodium_falciparum_s5_cs5.tsv',
         snoBIRD_pred_pombe = 'results/predictions/snoBIRD/final/schizosaccharomyces_pombe/snoBIRD_complete_predictions.tsv',
-        all_jobs_cluster = expand('data/all_jobs_{cluster}.tsv', cluster=['narval', 'beluga'])
+        all_jobs_cluster = expand('data/all_jobs_{cluster}.tsv', cluster=['narval', 'beluga']),
+        snoglobe_repo = 'git_repos/snoglobe'
 
 rule all_figures:
     """ Generate figures from the manuscript."""
@@ -98,6 +100,7 @@ rule all_figures:
         violin = expand('results/figures/violinplot/sno_pseudo_length_per_species_{fixed_length}.svg', **config),
         learning_curve = 'results/figures/lineplot/transformer/194nt/transformer_2_classes_training_f1_score_avg_across_fold.svg',
         dotplot_metrics_test_set = expand('results/figures/lineplot/metrics_existing_cd_predictors_{fixed_length}_w_pseudogenes.svg', **config),
+        lollipopplot_metrics_test_set = expand('results/figures/lollipopplot/metrics_existing_cd_predictors_{fixed_length}_w_pseudogenes.svg', **config),
         TP_FN_upset_test_set = 'results/figures/upset/TP_FN_test_set_all_tools.svg',
         bar_FN_FP = expand('results/figures/barplot/FN_FP_per_species_{cd_predictors}_{fixed_length}.svg', fixed_length=194, 
                     cd_predictors=['snoBIRD', 'snoreport2', 'snoscan', 'infernal_rfam']),
@@ -108,7 +111,9 @@ rule all_figures:
         densities_features_snoBIRD_preds_sp = 'results/figures/density/boxes_scores_and_stabilities_sno_pseudo_all_predicted_species.svg',
         bar_fib_IP = 'results/figures/bar/fibrillarin_IP_enrichment.svg',
         final_table= 'results/predictions/snoBIRD/final_candidates_cross_species.tsv',
-        tree_fig = 'results/figures/tree/sf3b3_snoRNAs_multi_species_phylogenetic_tree.svg'
+        tree_fig = 'results/figures/tree/sf3b3_snoRNAs_multi_species_phylogenetic_tree.svg',
+        filtered_preds = 'results/predictions/snoBIRD/final_candidates_cross_species_filtered_w_targets.tsv'
+
 
 rule all_figures_independent:
     """ Create the remaining independent figures which need one or more extra 

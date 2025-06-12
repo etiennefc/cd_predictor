@@ -40,6 +40,30 @@ rule metrics_lineplot_predictors:
         "../scripts/python/figures/metrics_lineplot_predictors.py"
 
 
+rule metrics_lollipopplot_predictors:
+    """ Compute the precision, recall, accuracy and f1-score 
+        on the test set (relative to other vs expressed_CD_snoRNA) 
+        and also the precision/recall on the snoRNA_pseudogene class 
+        for the existing cd predictors and simple models (knn, gbm, 
+        logreg, svc and rf) and display it as a lollipop chart."""
+    input:
+        snoreport = rules.filter_snoreport_predictions.output.predictions_tsv,  # zenodo
+        snoscan = rules.filter_snoscan_predictions.output.predictions_tsv, # zenodo
+        infernal_rfam = rules.filter_rfam_infernal_predictions.output.predictions_tsv,  # zenodo
+        snoBIRD = 'results/predictions/snoBIRD/transformer/194/3e-5_3e-6_32_4_data_aug_1_ratio/transformer_2_classes_LR_schedule_test_predictions_194nt_fold_8.tsv'  # zenodo
+    output:
+        lollipopplot_all = 'results/figures/lollipopplot/metrics_existing_cd_predictors_{fixed_length}_w_pseudogenes.svg',
+        lollipopplot_expressed_cd = 'results/figures/lollipopplot/metrics_existing_cd_predictors_{fixed_length}_expressed_CD_only.svg',
+        lollipopplot_pseudo = 'results/figures/lollipopplot/metrics_existing_cd_predictors_{fixed_length}_pseudogenes_only.svg'
+    params:
+        predictors_colors = config['colors']['predictors'],
+        simple_models_colors = config['colors']['simple_models']
+    conda:
+        "../envs/python_new2.yaml"
+    script:
+        "../scripts/python/figures/metrics_lollipopplot_predictors.py"
+
+
 rule bar_confusion_value_per_species_test:
     """ Create a stacked bar chart showing the proportion of test set examples 
         predicted as FP, FN, TP, TN per species, with the total number of 
